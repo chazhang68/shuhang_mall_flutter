@@ -180,8 +180,9 @@ class OrderLog {
   });
 
   factory OrderLog.fromJson(Map<String, dynamic> json) {
-    if (json.isEmpty)
+    if (json.isEmpty) {
       return const OrderLog(create: '', pay: '', delivery: '', take: '', complete: '');
+    }
     return OrderLog(
       create: json['create']?.toString() ?? '',
       pay: json['pay']?.toString() ?? '',
@@ -207,8 +208,9 @@ class HelpInfo {
   });
 
   factory HelpInfo.fromJson(Map<String, dynamic> json) {
-    if (json.isEmpty)
+    if (json.isEmpty) {
       return const HelpInfo(payUid: 0, payNickname: '', payAvatar: '', helpStatus: 0);
+    }
     return HelpInfo(
       payUid: stringToInt(json['pay_uid']),
       payNickname: json['pay_nickname']?.toString() ?? '',
