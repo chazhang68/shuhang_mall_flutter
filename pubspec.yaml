@@ -44,10 +44,10 @@ dependencies:
   image_picker: ^1.2.1
 
   # 图片保存到相册
-  gal: ^2.3.0
+  gal: ^2.3.2
   
   # 路径处理
-  path_provider: ^2.1.2
+  path_provider: ^2.1.5
 
   # 权限管理
   permission_handler: ^12.0.1
@@ -95,6 +95,7 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_toast_pro: ^2.1.1
   talker_dio_logger: ^5.1.13
+  json_annotation: ^4.10.0
 
   # 穿山甲广告SDK（暂时禁用，存在兼容性问题）
   # flutter_unionad: ^2.2.4
@@ -103,6 +104,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.10.5
+  json_serializable: ^6.12.0
 
 flutter:
   uses-material-design: true
