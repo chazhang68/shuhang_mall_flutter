@@ -77,7 +77,7 @@ class ApiProvider {
   void _initInterceptors() {
     _dio.interceptors.addAll([
       InterceptorsWrapper(onRequest: _onRequest, onResponse: _onResponse, onError: _onError),
-      TalkerDioLogger(),
+      TalkerDioLogger(settings: TalkerDioLoggerSettings(printRequestHeaders: true)),
     ]);
   }
 

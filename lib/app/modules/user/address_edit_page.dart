@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 
@@ -266,7 +267,7 @@ class _AddressEditPageState extends State<AddressEditPage> {
     }
 
     if (_province.isEmpty) {
-      Get.snackbar('提示', '请选择所在地区');
+      FlutterToastPro.showMessage( '请选择所在地区');
       return;
     }
 
@@ -280,7 +281,9 @@ class _AddressEditPageState extends State<AddressEditPage> {
         _isLoading = false;
       });
       Get.back();
-      Get.snackbar('成功', '保存成功');
+      FlutterToastPro.showMessage( '保存成功');
     });
   }
 }
+
+

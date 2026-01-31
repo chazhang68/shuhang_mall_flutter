@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
@@ -444,7 +445,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
 
   void _submitOrder() {
     if (_selectedAddress == null) {
-      Get.snackbar('提示', '请选择收货地址');
+      FlutterToastPro.showMessage( '请选择收货地址');
       return;
     }
 
@@ -452,3 +453,5 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
     Get.toNamed(AppRoutes.orderPayStatus, parameters: {'order_id': '123456', 'remark': _remark});
   }
 }
+
+

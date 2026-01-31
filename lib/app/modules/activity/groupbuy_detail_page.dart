@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../theme/theme_colors.dart';
@@ -52,7 +53,7 @@ class _GroupBuyDetailPageState extends State<GroupBuyDetailPage> {
           _isLoading = false;
         });
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
         setState(() {
           _isLoading = false;
         });
@@ -583,3 +584,5 @@ class _GroupBuyDetailPageState extends State<GroupBuyDetailPage> {
     );
   }
 }
+
+

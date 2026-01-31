@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 
@@ -35,7 +36,7 @@ class _SpreadUserPageState extends State<SpreadUserPage> {
 
         // 检查推广权限
         if (userInfo['spread_status'] != true) {
-          Get.snackbar('提示', '您目前暂无推广权限');
+          FlutterToastPro.showMessage( '您目前暂无推广权限');
           Future.delayed(const Duration(seconds: 2), () {
             Get.offNamed('/home');
           });
@@ -45,7 +46,7 @@ class _SpreadUserPageState extends State<SpreadUserPage> {
       setState(() {
         isLoading = false;
       });
-      Get.snackbar('错误', '获取用户信息失败');
+      FlutterToastPro.showMessage( '获取用户信息失败');
     }
   }
 
@@ -372,3 +373,5 @@ class _SpreadUserPageState extends State<SpreadUserPage> {
     );
   }
 }
+
+

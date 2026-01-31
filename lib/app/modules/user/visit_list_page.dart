@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/store_provider.dart';
@@ -160,37 +161,37 @@ class _VisitListPageState extends State<VisitListPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      Get.snackbar('提示', '请选择删除商品');
+      FlutterToastPro.showMessage( '请选择删除商品');
       return;
     }
 
     try {
       final response = await _storeProvider.deleteVisit(_selectedIds.toList());
       if (response.isSuccess) {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
         _loadVisitList(isRefresh: true);
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
-      Get.snackbar('提示', '操作失败');
+      FlutterToastPro.showMessage( '操作失败');
     }
   }
 
   Future<void> _collectSelected() async {
     if (_selectedIds.isEmpty) {
-      Get.snackbar('提示', '请选择收藏商品');
+      FlutterToastPro.showMessage( '请选择收藏商品');
       return;
     }
 
     // TODO: 实现批量收藏
-    Get.snackbar('提示', '收藏成功');
+    FlutterToastPro.showMessage( '收藏成功');
   }
 
   void _goDetail(VisitProduct product) {
     if (_isManageMode) return;
     if (!product.isShow) {
-      Get.snackbar('提示', '该商品已下架');
+      FlutterToastPro.showMessage( '该商品已下架');
       return;
     }
     Get.toNamed('/goods/detail', arguments: {'id': product.productId});
@@ -498,3 +499,5 @@ class VisitProduct {
     required this.stock,
   });
 }
+
+

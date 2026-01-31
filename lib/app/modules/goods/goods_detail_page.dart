@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
@@ -1123,12 +1124,12 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         setState(() {
           _product['userCollect'] = !isCollect;
         });
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : (isCollect ? '取消收藏' : '收藏成功'));
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : (isCollect ? '取消收藏' : '收藏成功'));
       } else {
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '操作失败');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '操作失败');
       }
     } catch (e) {
-      Get.snackbar('提示', '网络请求失败');
+      FlutterToastPro.showMessage( '网络请求失败');
     }
   }
 
@@ -1256,7 +1257,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                             final shareUrl = 'https://test.shsd.top/pages/goods_details/index?id=$_productId';
                             Clipboard.setData(ClipboardData(text: shareUrl));
                             Get.back();
-                            Get.snackbar('成功', '链接已复制到剪贴板');
+                            FlutterToastPro.showMessage( '链接已复制到剪贴板');
                           },
                         ),
                         // 分享
@@ -1268,7 +1269,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                             Get.back();
                             final shareText = '$storeName\nhttps://test.shsd.top/pages/goods_details/index?id=$_productId';
                             Clipboard.setData(ClipboardData(text: shareText));
-                            Get.snackbar('成功', '分享内容已复制到剪贴板');
+                            FlutterToastPro.showMessage( '分享内容已复制到剪贴板');
                           },
                         ),
                         // 生成海报
@@ -1463,12 +1464,12 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         setState(() {
           coupon['is_use'] = 1;
         });
-        Get.snackbar('成功', response.msg.isNotEmpty ? response.msg : '领取成功');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '领取成功');
       } else {
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '领取失败');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '领取失败');
       }
     } catch (e) {
-      Get.snackbar('提示', '网络请求失败');
+      FlutterToastPro.showMessage( '网络请求失败');
     }
   }
 
@@ -1572,7 +1573,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   ElevatedButton(
                     onPressed: () {
                       Get.back();
-                      Get.snackbar('提示', '海报已保存到相册');
+                      FlutterToastPro.showMessage( '海报已保存到相册');
                     },
                     child: const Text('保存海报'),
                   ),
@@ -1638,13 +1639,13 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           final cartId = response.data?['cartId'];
           Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartId, 'new': 1});
         } else {
-          Get.snackbar('成功', '已加入购物车');
+          FlutterToastPro.showMessage( '已加入购物车');
         }
       } else {
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '加入购物车失败');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '加入购物车失败');
       }
     } catch (e) {
-      Get.snackbar('提示', '网络请求失败');
+      FlutterToastPro.showMessage( '网络请求失败');
     }
   }
 }
@@ -1743,7 +1744,7 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> {
                   ElevatedButton.icon(
                     onPressed: () {
                       // 使用系统浏览器打开视频
-                      Get.snackbar('提示', '请在浏览器中播放视频');
+                      FlutterToastPro.showMessage( '请在浏览器中播放视频');
                     },
                     icon: const Icon(Icons.open_in_browser),
                     label: const Text('在浏览器中打开'),
@@ -1754,3 +1755,5 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> {
     );
   }
 }
+
+

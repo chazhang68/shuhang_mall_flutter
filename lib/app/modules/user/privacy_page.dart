@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -46,13 +47,13 @@ class _PrivacyPageState extends State<PrivacyPage> {
         setState(() {
           _isLoading = false;
         });
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      Get.snackbar('提示', '加载失败');
+      FlutterToastPro.showMessage( '加载失败');
     }
   }
 
@@ -100,3 +101,5 @@ class _PrivacyPageState extends State<PrivacyPage> {
     );
   }
 }
+
+

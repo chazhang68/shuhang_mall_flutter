@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 
 class UserSignRecordController extends GetxController {
@@ -32,7 +33,7 @@ class UserSignRecordController extends GetxController {
       }
     } catch (e) {
       debugPrint('获取签到记录失败: $e');
-      Get.snackbar('错误', '获取签到记录失败');
+      FlutterToastPro.showMessage( '获取签到记录失败');
     } finally {
       _isLoading.value = false;
     }
@@ -44,3 +45,5 @@ class UserSignRecordController extends GetxController {
     await loadSignRecords();
   }
 }
+
+

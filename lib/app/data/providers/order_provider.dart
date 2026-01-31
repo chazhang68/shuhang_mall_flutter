@@ -1,3 +1,4 @@
+import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 
 /// 订单 API 服务
@@ -8,8 +9,16 @@ class OrderProvider {
   // ==================== 订单操作 ====================
 
   /// 获取购物车列表
-  Future<ApiResponse> getCartList(Map<String, dynamic>? params) async {
-    return await _api.get('cart/list', queryParameters: params);
+  Future<ApiResponse<CartListResponse>> getCartList({
+    int page = 1,
+    int limit = 20,
+    int status = 1,
+  }) async {
+    return await _api.get<CartListResponse>(
+      'cart/list',
+      queryParameters: {'page': page, 'limit': limit, 'status': status},
+      fromJsonT: (json) => CartListResponse.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   /// 添加购物车
@@ -23,10 +32,7 @@ class OrderProvider {
   }
 
   /// 修改购物车数量
-  Future<ApiResponse> changeCartNum({
-    required int id,
-    required int number,
-  }) async {
+  Future<ApiResponse> changeCartNum({required int id, required int number}) async {
     return await _api.post('cart/num', data: {'id': id, 'number': number});
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../data/providers/order_provider.dart';
@@ -62,7 +63,7 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
 
   Future<void> _uploadPic() async {
     if (_pics.length >= 8) {
-      Get.snackbar('提示', '最多上传8张图片', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '最多上传8张图片');
       return;
     }
 
@@ -86,7 +87,7 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
 
     String comment = _commentController.text.trim();
     if (comment.isEmpty) {
-      Get.snackbar('提示', '请填写你对宝贝的心得', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '请填写你对宝贝的心得');
       return;
     }
 
@@ -94,7 +95,7 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
     int serviceScore = _scoreList[1]['index'] + 1;
 
     if (productScore <= 0 || serviceScore <= 0) {
-      Get.snackbar('提示', '请为商品评分', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '请为商品评分');
       return;
     }
 
@@ -112,12 +113,12 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
       });
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '评价成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '评价成功');
         Future.delayed(const Duration(seconds: 1), () {
           Get.back();
         });
       } else {
-        Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( response.msg);
       }
     } finally {
       setState(() {
@@ -359,3 +360,5 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
     );
   }
 }
+
+

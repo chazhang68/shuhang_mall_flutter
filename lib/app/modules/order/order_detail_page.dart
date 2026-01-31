@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 
@@ -72,7 +73,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   void _copyOrderId() {
     Clipboard.setData(ClipboardData(text: orderId));
-    Get.snackbar('提示', '订单号已复制');
+    FlutterToastPro.showMessage( '订单号已复制');
   }
 
   void _goPayment() {
@@ -90,7 +91,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             onPressed: () {
               Get.back();
               // TODO: 调用取消订单API
-              Get.snackbar('提示', '订单已取消');
+              FlutterToastPro.showMessage( '订单已取消');
               Get.back();
             },
             child: const Text('确定'),
@@ -111,7 +112,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             onPressed: () {
               Get.back();
               // TODO: 调用确认收货API
-              Get.snackbar('提示', '已确认收货');
+              FlutterToastPro.showMessage( '已确认收货');
               _loadOrderDetail();
             },
             child: const Text('确定'),
@@ -465,3 +466,5 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 }
+
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/order_provider.dart';
@@ -71,7 +72,7 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
     String deliveryId = _orderInfo['delivery_id'] ?? '';
     if (deliveryId.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: deliveryId));
-      Get.snackbar('提示', '复制成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '复制成功');
     }
   }
 
@@ -350,3 +351,5 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
     );
   }
 }
+
+

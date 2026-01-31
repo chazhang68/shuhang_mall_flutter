@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/activity_provider.dart';
@@ -79,7 +80,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
 
   void _setBargainHelp() {
     // TODO: 实现帮砍一刀逻辑
-    Get.snackbar('提示', '帮砍一刀功能待实现', snackPosition: SnackPosition.BOTTOM);
+    FlutterToastPro.showMessage( '帮砍一刀功能待实现');
   }
 
   void _goBargainList() {
@@ -636,3 +637,5 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
     );
   }
 }
+
+

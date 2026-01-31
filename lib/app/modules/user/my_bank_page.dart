@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 
@@ -202,7 +203,9 @@ class _MyBankPageState extends State<MyBankPage> {
     await Future.delayed(const Duration(seconds: 1));
     
     Get.back();
-    Get.snackbar('提示', '解绑成功');
+    FlutterToastPro.showMessage( '解绑成功');
     _loadUserInfo();
   }
 }
+
+

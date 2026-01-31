@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/lottery_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -68,7 +69,7 @@ class _LotteryPageState extends State<LotteryPage> with SingleTickerProviderStat
   Future<void> _startLottery() async {
     if (_isAnimating) return;
     if (_lotteryNum <= 0) {
-      Get.snackbar('提示', '抽奖次数不足', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '抽奖次数不足');
       return;
     }
 
@@ -96,7 +97,7 @@ class _LotteryPageState extends State<LotteryPage> with SingleTickerProviderStat
       setState(() {
         _isAnimating = false;
       });
-      Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -445,3 +446,5 @@ class _LotteryPageState extends State<LotteryPage> with SingleTickerProviderStat
     );
   }
 }
+
+

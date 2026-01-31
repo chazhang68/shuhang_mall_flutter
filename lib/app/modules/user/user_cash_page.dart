@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 
@@ -79,23 +79,23 @@ class _UserCashPageState extends State<UserCashPage> {
     String money = _moneyController.text.trim();
 
     if (name.isEmpty) {
-      Get.snackbar('提示', '请填写姓名/账号', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('请填写姓名/账号');
       return;
     }
 
     if (money.isEmpty) {
-      Get.snackbar('提示', '请填写提现金额', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('请填写提现金额');
       return;
     }
 
     double moneyAmount = double.tryParse(money) ?? 0;
     if (moneyAmount < _minPrice) {
-      Get.snackbar('提示', '最低提现金额为$_minPrice元', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('最低提现金额为$_minPrice元');
       return;
     }
 
     if (moneyAmount > _commissionCount) {
-      Get.snackbar('提示', '可提现金额不足', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('可提现金额不足');
       return;
     }
 
@@ -112,7 +112,7 @@ class _UserCashPageState extends State<UserCashPage> {
     if (_currentTab == 0) {
       String cardNum = _cardNumController.text.trim();
       if (cardNum.isEmpty) {
-        Get.snackbar('提示', '请填写银行卡号', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage('请填写银行卡号');
         setState(() {
           _isSubmitting = false;
         });
@@ -129,13 +129,13 @@ class _UserCashPageState extends State<UserCashPage> {
     });
 
     if (response.isSuccess) {
-      Get.snackbar('提示', '提现申请成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('提现申请成功');
       _nameController.clear();
       _cardNumController.clear();
       _moneyController.clear();
       _getUserInfo();
     } else {
-      Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 

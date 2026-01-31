@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 
 /// 支付方式弹窗组件 - 对应 components/payment/index.vue
 class PaymentDialog extends StatefulWidget {
@@ -296,7 +297,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
     // 余额支付检查
     if (method.type == 'yue') {
       if (method.balance == null || method.balance! < widget.totalPrice) {
-        Get.snackbar('提示'.tr, '余额不足'.tr);
+        FlutterToastPro.showMessage( '余额不足'.tr);
         return;
       }
     }
@@ -542,3 +543,5 @@ class PayResultDialog extends StatelessWidget {
     );
   }
 }
+
+

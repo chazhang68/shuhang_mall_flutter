@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/public_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -125,9 +125,9 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
       setState(() {
         item['is_use'] = (item['is_use'] ?? 0) + 1;
       });
-      Get.snackbar('提示', '领取成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('领取成功');
     } else {
-      Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage(response.msg);
     }
 
     await Future.delayed(const Duration(milliseconds: 500));

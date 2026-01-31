@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../data/providers/order_provider.dart';
@@ -95,7 +96,7 @@ class _GoodsReturnPageState extends State<GoodsReturnPage> {
 
   Future<void> _uploadImage() async {
     if (_refundReasonWapImg.length >= 3) {
-      Get.snackbar('提示', '最多上传3张图片', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '最多上传3张图片');
       return;
     }
 
@@ -252,7 +253,7 @@ class _GoodsReturnPageState extends State<GoodsReturnPage> {
 
     String remark = _remarkController.text.trim();
     if (remark.isEmpty) {
-      Get.snackbar('提示', '请输入备注', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '请输入备注');
       return;
     }
 
@@ -281,12 +282,12 @@ class _GoodsReturnPageState extends State<GoodsReturnPage> {
       });
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '申请成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '申请成功');
         Future.delayed(const Duration(seconds: 1), () {
           Get.offNamed('/user/return-list', parameters: {'isT': '1'});
         });
       } else {
-        Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( response.msg);
       }
     } finally {
       setState(() {
@@ -573,3 +574,5 @@ class _GoodsReturnPageState extends State<GoodsReturnPage> {
     );
   }
 }
+
+

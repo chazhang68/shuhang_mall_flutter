@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../../data/providers/user_provider.dart';
 
 class UserAddressController extends GetxController {
@@ -127,27 +128,27 @@ class UserAddressController extends GetxController {
 
       // 验证输入
       if ((_addressInfo['real_name'] ?? '').toString().trim().isEmpty) {
-        Get.snackbar('错误', '请填写收货人姓名');
+        FlutterToastPro.showMessage( '请填写收货人姓名');
         return false;
       }
 
       if ((_addressInfo['phone'] ?? '').toString().trim().isEmpty) {
-        Get.snackbar('错误', '请填写联系电话');
+        FlutterToastPro.showMessage( '请填写联系电话');
         return false;
       }
 
       if (!RegExp(r'^1(3|4|5|7|8|9|6)\d{9}$').hasMatch(_addressInfo['phone'])) {
-        Get.snackbar('错误', '请输入正确的手机号码');
+        FlutterToastPro.showMessage( '请输入正确的手机号码');
         return false;
       }
 
       if (_region[0] == '省') {
-        Get.snackbar('错误', '请选择所在地区');
+        FlutterToastPro.showMessage( '请选择所在地区');
         return false;
       }
 
       if ((_addressInfo['detail'] ?? '').toString().trim().isEmpty) {
-        Get.snackbar('错误', '请填写详细地址');
+        FlutterToastPro.showMessage( '请填写详细地址');
         return false;
       }
 
@@ -167,18 +168,20 @@ class UserAddressController extends GetxController {
       // 调用API保存地址
       final response = await _userProvider.editAddress(submitData);
       if (response.isSuccess) {
-        Get.snackbar('成功', addressId != null ? '修改成功' : '添加成功');
+        FlutterToastPro.showMessage( addressId != null ? '修改成功' : '添加成功');
         return true;
       } else {
-        Get.snackbar('错误', response.msg);
+        FlutterToastPro.showMessage( response.msg);
         return false;
       }
     } catch (e) {
       debugPrint('保存地址失败: $e');
-      Get.snackbar('错误', '保存失败: $e');
+      FlutterToastPro.showMessage( '保存失败: $e');
       return false;
     } finally {
       _isLoading.value = false;
     }
   }
 }
+
+

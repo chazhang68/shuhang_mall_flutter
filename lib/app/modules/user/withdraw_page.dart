@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 
@@ -145,15 +146,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
     switch (currentTab) {
       case 0: // 银行卡
         if (_nameController.text.trim().isEmpty) {
-          Get.snackbar('提示', '请填写持卡人姓名');
+          FlutterToastPro.showMessage( '请填写持卡人姓名');
           return;
         }
         if (_cardNumController.text.trim().isEmpty) {
-          Get.snackbar('提示', '请填写卡号');
+          FlutterToastPro.showMessage( '请填写卡号');
           return;
         }
         if (selectedBankIndex == 0) {
-          Get.snackbar('提示', '请选择银行');
+          FlutterToastPro.showMessage( '请选择银行');
           return;
         }
         data = {
@@ -166,7 +167,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
         break;
       case 1: // 微信
         if (brokerageType == 0 && _nameController.text.trim().isEmpty) {
-          Get.snackbar('提示', '请填写微信号');
+          FlutterToastPro.showMessage( '请填写微信号');
           return;
         }
         data = {
@@ -179,7 +180,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
         break;
       case 2: // 支付宝
         if (_nameController.text.trim().isEmpty) {
-          Get.snackbar('提示', '请填写支付宝账号');
+          FlutterToastPro.showMessage( '请填写支付宝账号');
           return;
         }
         data = {
@@ -194,12 +195,12 @@ class _WithdrawPageState extends State<WithdrawPage> {
 
     // 验证金额
     if (_moneyController.text.trim().isEmpty) {
-      Get.snackbar('提示', '请填写提现金额');
+      FlutterToastPro.showMessage( '请填写提现金额');
       return;
     }
     final money = double.tryParse(_moneyController.text.trim()) ?? 0;
     if (money < minPrice) {
-      Get.snackbar('提示', '提现金额不能低于$minPrice');
+      FlutterToastPro.showMessage( '提现金额不能低于$minPrice');
       return;
     }
 
@@ -210,14 +211,14 @@ class _WithdrawPageState extends State<WithdrawPage> {
     try {
       final response = await _userProvider.extractCash(data);
       if (response.isSuccess) {
-        Get.snackbar('成功', response.msg);
+        FlutterToastPro.showMessage( response.msg);
         await _getUserInfo();
         Get.offNamed('/spread/user');
       } else {
-        Get.snackbar('错误', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
-      Get.snackbar('错误', '提现失败');
+      FlutterToastPro.showMessage( '提现失败');
     } finally {
       setState(() {
         isSubmitting = false;
@@ -535,7 +536,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
             GestureDetector(
               onTap: () {
                 // TODO: 实现图片上传
-                Get.snackbar('提示', '图片上传功能开发中');
+                FlutterToastPro.showMessage( '图片上传功能开发中');
               },
               child: Container(
                 width: 70,
@@ -616,3 +617,5 @@ class _WithdrawPageState extends State<WithdrawPage> {
     );
   }
 }
+
+

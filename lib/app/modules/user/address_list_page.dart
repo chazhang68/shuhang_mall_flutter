@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
@@ -182,7 +183,7 @@ class _AddressListPageState extends State<AddressListPage> {
         addr['is_default'] = addr['id'] == id ? 1 : 0;
       }
     });
-    Get.snackbar('成功', '设置默认地址成功');
+    FlutterToastPro.showMessage( '设置默认地址成功');
   }
 
   void _deleteAddress(int id) {
@@ -198,7 +199,7 @@ class _AddressListPageState extends State<AddressListPage> {
               setState(() {
                 _addressList.removeWhere((addr) => addr['id'] == id);
               });
-              Get.snackbar('成功', '删除成功');
+              FlutterToastPro.showMessage( '删除成功');
             },
             child: const Text('确定'),
           ),
@@ -207,3 +208,5 @@ class _AddressListPageState extends State<AddressListPage> {
     );
   }
 }
+
+

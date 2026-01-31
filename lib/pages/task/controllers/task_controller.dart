@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
@@ -168,7 +169,7 @@ class TaskController extends GetxController {
   Future<void> showAd() async {
     // 检查实名认证
     if (_userInfo.value?.isSign != true) {
-      Get.snackbar('提示', '请先实名认证哦');
+      FlutterToastPro.showMessage( '请先实名认证哦');
       await Future.delayed(const Duration(seconds: 1));
       Get.toNamed('/real-name');
       return;
@@ -188,13 +189,13 @@ class TaskController extends GetxController {
       },
       onError: (error) {
         _adLoading.value = false;
-        Get.snackbar('提示', '广告加载失败: $error');
+        FlutterToastPro.showMessage( '广告加载失败: $error');
       },
     );
 
     if (!success) {
       _adLoading.value = false;
-      Get.snackbar('提示', '暂无可用广告，请稍后重试');
+      FlutterToastPro.showMessage( '暂无可用广告，请稍后重试');
     }
   }
 
@@ -211,7 +212,7 @@ class TaskController extends GetxController {
         _adManager.preloadRewardedVideoAd();
       }
     } catch (e) {
-      Get.snackbar('提示', '领取奖励失败');
+      FlutterToastPro.showMessage( '领取奖励失败');
     }
   }
 
@@ -220,7 +221,7 @@ class TaskController extends GetxController {
   /// 领取奖励
   Future<void> lingqu() async {
     if (_taskDoneCount.value < 8) {
-      Get.snackbar('提示', '请先完成所有任务');
+      FlutterToastPro.showMessage( '请先完成所有任务');
       return;
     }
 
@@ -234,14 +235,14 @@ class TaskController extends GetxController {
       Get.back();
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '今日任务已完成，请查看您的奖励！');
+        FlutterToastPro.showMessage( '今日任务已完成，请查看您的奖励！');
         await loadData();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '领取奖励失败');
+      FlutterToastPro.showMessage( '领取奖励失败');
     }
   }
 
@@ -278,7 +279,7 @@ class TaskController extends GetxController {
   /// 购买种子
   Future<void> buySeed() async {
     if (_pwd.value.isEmpty) {
-      Get.snackbar('提示', '请输入交易密码');
+      FlutterToastPro.showMessage( '请输入交易密码');
       return;
     }
 
@@ -288,7 +289,7 @@ class TaskController extends GetxController {
     final userFudou = _userInfo.value?.fudou ?? 0;
 
     if (userFudou < dhNum * _buyNum.value) {
-      Get.snackbar('提示', '积分不够哦');
+      FlutterToastPro.showMessage( '积分不够哦');
       return;
     }
 
@@ -307,15 +308,15 @@ class TaskController extends GetxController {
       Get.back();
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '兑换成功');
+        FlutterToastPro.showMessage( '兑换成功');
         closeShopPopup();
         await loadData();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '兑换失败: $e');
+      FlutterToastPro.showMessage( '兑换失败: $e');
     }
   }
 
@@ -328,3 +329,5 @@ class TaskController extends GetxController {
     return _taskDoneCount.value / 8;
   }
 }
+
+

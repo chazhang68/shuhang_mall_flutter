@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 
@@ -77,18 +78,18 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
 
   Future<void> _xfqZhuan() async {
     if (_jfnum <= 0) {
-      Get.snackbar('提示', '请输入兑换数量');
+      FlutterToastPro.showMessage( '请输入兑换数量');
       return;
     }
 
     if (_jfnum < 1) {
-      Get.snackbar('提示', '兑换数量最少1个');
+      FlutterToastPro.showMessage( '兑换数量最少1个');
       return;
     }
 
     final fdKy = _userInfo?.fdKy ?? 0;
     if (_jfnum > fdKy) {
-      Get.snackbar('提示', '可用积分不足');
+      FlutterToastPro.showMessage( '可用积分不足');
       return;
     }
 
@@ -108,7 +109,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
       Get.back();
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '兑换成功');
+        FlutterToastPro.showMessage( '兑换成功');
         _controller.clear();
         setState(() {
           _xfqsxfnum = 0;
@@ -116,11 +117,11 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
         });
         await _getUserInfo();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '兑换失败: $e');
+      FlutterToastPro.showMessage( '兑换失败: $e');
     } finally {
       setState(() => _loading = false);
     }
@@ -310,3 +311,5 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
     );
   }
 }
+
+

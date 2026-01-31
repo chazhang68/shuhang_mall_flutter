@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/order_provider.dart';
 import '../../data/providers/public_provider.dart';
 import '../../routes/app_routes.dart';
@@ -38,7 +39,7 @@ class _CashierPageState extends State<CashierPage> {
     super.initState();
     _orderId = Get.arguments?['order_id']?.toString() ?? '';
     if (_orderId.isEmpty) {
-      Get.snackbar('提示', '请选择要支付的订单');
+      FlutterToastPro.showMessage( '请选择要支付的订单');
       return;
     }
 
@@ -114,7 +115,7 @@ class _CashierPageState extends State<CashierPage> {
         await _loadCashierOrder();
       }
     } catch (e) {
-      Get.snackbar('提示', '加载配置失败');
+      FlutterToastPro.showMessage( '加载配置失败');
     }
   }
 
@@ -152,13 +153,13 @@ class _CashierPageState extends State<CashierPage> {
         setState(() {
           _isLoading = false;
         });
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      Get.snackbar('提示', '获取订单信息失败');
+      FlutterToastPro.showMessage( '获取订单信息失败');
     }
   }
 
@@ -184,7 +185,7 @@ class _CashierPageState extends State<CashierPage> {
 
     // 余额支付检查
     if (method.value == 'yue' && _nowMoney < _payPriceShow) {
-      Get.snackbar('提示', '余额不足');
+      FlutterToastPro.showMessage( '余额不足');
       return;
     }
 
@@ -211,7 +212,7 @@ class _CashierPageState extends State<CashierPage> {
 
         switch (status) {
           case 'SUCCESS':
-            Get.snackbar('提示', '支付成功');
+            FlutterToastPro.showMessage( '支付成功');
             Get.offNamed(
               AppRoutes.orderPayStatus,
               arguments: {
@@ -223,17 +224,17 @@ class _CashierPageState extends State<CashierPage> {
             );
             break;
           case 'PAY_DEFICIENCY':
-            Get.snackbar('提示', response.msg);
+            FlutterToastPro.showMessage( response.msg);
             break;
           default:
-            Get.snackbar('提示', response.msg);
+            FlutterToastPro.showMessage( response.msg);
         }
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '支付失败');
+      FlutterToastPro.showMessage( '支付失败');
     }
   }
 
@@ -450,3 +451,5 @@ class PayMethod {
     this.balance,
   });
 }
+
+

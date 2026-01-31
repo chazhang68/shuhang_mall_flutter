@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/store_provider.dart';
@@ -129,7 +130,7 @@ class _CollectionPageState extends State<CollectionPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      Get.snackbar('提示', '请选择商品');
+      FlutterToastPro.showMessage( '请选择商品');
       return;
     }
 
@@ -138,13 +139,13 @@ class _CollectionPageState extends State<CollectionPage> {
         _selectedIds.map((e) => int.tryParse(e) ?? 0).toList(),
       );
       if (response.isSuccess) {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
         _loadCollectList(isRefresh: true);
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
-      Get.snackbar('提示', '操作失败');
+      FlutterToastPro.showMessage( '操作失败');
     }
   }
 
@@ -152,7 +153,7 @@ class _CollectionPageState extends State<CollectionPage> {
     if (item['is_show'] == true || item['is_show'] == 1) {
       Get.toNamed('/goods/detail', arguments: {'id': item['pid']});
     } else {
-      Get.snackbar('提示', '该商品已下架');
+      FlutterToastPro.showMessage( '该商品已下架');
     }
   }
 
@@ -364,3 +365,5 @@ class _CollectionPageState extends State<CollectionPage> {
     );
   }
 }
+
+

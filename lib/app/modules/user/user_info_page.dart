@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
@@ -226,7 +227,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
 
     if (image != null) {
       // TODO: 上传图片并更新头像
-      Get.snackbar('提示', '头像上传功能待实现');
+      FlutterToastPro.showMessage( '头像上传功能待实现');
     }
   }
 
@@ -270,7 +271,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Future<void> _saveUserInfo() async {
     String nickname = _nicknameController.text.trim();
     if (nickname.isEmpty) {
-      Get.snackbar('提示', '请输入昵称');
+      FlutterToastPro.showMessage( '请输入昵称');
       return;
     }
 
@@ -281,10 +282,12 @@ class _UserInfoPageState extends State<UserInfoPage> {
     });
 
     if (response.isSuccess) {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
       Get.back();
     } else {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 }
+
+

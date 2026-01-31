@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
@@ -334,15 +335,15 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _sendCode() async {
     String phone = _accountController.text.trim();
     if (phone.isEmpty) {
-      Get.snackbar('提示', '请填写手机号码');
+      FlutterToastPro.showMessage( '请填写手机号码');
       return;
     }
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      Get.snackbar('提示', '请输入正确的手机号码');
+      FlutterToastPro.showMessage( '请输入正确的手机号码');
       return;
     }
     if (!_protocol) {
-      Get.snackbar('提示', '请先阅读并同意协议');
+      FlutterToastPro.showMessage( '请先阅读并同意协议');
       return;
     }
 
@@ -351,10 +352,10 @@ class _LoginPageState extends State<LoginPage> {
       type: _currentTab == 2 ? 'register' : 'login',
     );
     if (response.isSuccess) {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
       _startCountdown();
     } else {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -374,13 +375,13 @@ class _LoginPageState extends State<LoginPage> {
   /// 提交
   Future<void> _submit() async {
     if (!_protocol) {
-      Get.snackbar('提示', '请先阅读并同意协议');
+      FlutterToastPro.showMessage( '请先阅读并同意协议');
       return;
     }
 
     String phone = _accountController.text.trim();
     if (phone.isEmpty) {
-      Get.snackbar('提示', '请填写手机号码');
+      FlutterToastPro.showMessage( '请填写手机号码');
       return;
     }
 
@@ -408,7 +409,7 @@ class _LoginPageState extends State<LoginPage> {
     String password = _passwordController.text;
 
     if (password.isEmpty) {
-      Get.snackbar('提示', '请填写密码');
+      FlutterToastPro.showMessage( '请填写密码');
       return;
     }
 
@@ -416,7 +417,7 @@ class _LoginPageState extends State<LoginPage> {
     if (response.isSuccess) {
       _handleLoginSuccess(response.data);
     } else {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -426,7 +427,7 @@ class _LoginPageState extends State<LoginPage> {
     String captcha = _captchaController.text.trim();
 
     if (captcha.isEmpty) {
-      Get.snackbar('提示', '请填写验证码');
+      FlutterToastPro.showMessage( '请填写验证码');
       return;
     }
 
@@ -434,7 +435,7 @@ class _LoginPageState extends State<LoginPage> {
     if (response.isSuccess) {
       _handleLoginSuccess(response.data);
     } else {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -449,40 +450,40 @@ class _LoginPageState extends State<LoginPage> {
 
     // 验证码检查
     if (captcha.isEmpty) {
-      Get.snackbar('提示', '请填写验证码');
+      FlutterToastPro.showMessage( '请填写验证码');
       return;
     }
     // 对应 uni-app: /^[\w\d]+$/i
     if (!RegExp(r'^[\w\d]+$').hasMatch(captcha)) {
-      Get.snackbar('提示', '请输入正确的验证码');
+      FlutterToastPro.showMessage( '请输入正确的验证码');
       return;
     }
 
     // 密码检查
     if (password.isEmpty) {
-      Get.snackbar('提示', '请填写密码');
+      FlutterToastPro.showMessage( '请填写密码');
       return;
     }
     // 对应 uni-app: /^([0-9]|[a-z]|[A-Z]){0,6}$/i 密码复杂度检查
     // 如果密码只包含数字或字母且长度<=6，则认为太简单
     if (RegExp(r'^[0-9a-zA-Z]{0,6}$').hasMatch(password)) {
-      Get.snackbar('提示', '您输入的密码过于简单');
+      FlutterToastPro.showMessage( '您输入的密码过于简单');
       return;
     }
 
     // 支付密码检查
     if (payPwd.isEmpty) {
-      Get.snackbar('提示', '请填写支付6位密码');
+      FlutterToastPro.showMessage( '请填写支付6位密码');
       return;
     }
     if (payPwd.length != 6) {
-      Get.snackbar('提示', '请填写6位数字支付密码');
+      FlutterToastPro.showMessage( '请填写6位数字支付密码');
       return;
     }
 
     // 邀请码检查
     if (spread.isEmpty) {
-      Get.snackbar('提示', '请填写邀请码');
+      FlutterToastPro.showMessage( '请填写邀请码');
       return;
     }
 
@@ -495,7 +496,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (response.isSuccess) {
-      Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '注册成功');
+      FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '注册成功');
       // 对应 uni-app: that.current = 0 注册成功后切换到登录
       setState(() => _currentTab = 0);
       // 清空表单
@@ -504,7 +505,7 @@ class _LoginPageState extends State<LoginPage> {
       _payPwdController.clear();
       _spreadController.clear();
     } else {
-      Get.snackbar('提示', response.msg);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -512,7 +513,7 @@ class _LoginPageState extends State<LoginPage> {
   /// 对应 uni-app: loginMobile/submit 成功回调
   Future<void> _handleLoginSuccess(dynamic data) async {
     if (data == null) {
-      Get.snackbar('提示', '登录失败');
+      FlutterToastPro.showMessage( '登录失败');
       return;
     }
 
@@ -521,7 +522,7 @@ class _LoginPageState extends State<LoginPage> {
     final int expiresTime = loginData['expires_time'] ?? 0;
 
     if (token.isEmpty) {
-      Get.snackbar('提示', '登录失败，token为空');
+      FlutterToastPro.showMessage( '登录失败，token为空');
       return;
     }
 
@@ -553,12 +554,12 @@ class _LoginPageState extends State<LoginPage> {
         _navigateAfterLogin(backUrl);
       } else {
         await appController.logout();
-        Get.snackbar('提示', '获取用户信息失败');
+        FlutterToastPro.showMessage( '获取用户信息失败');
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
       await appController.logout();
-      Get.snackbar('提示', '获取用户信息失败');
+      FlutterToastPro.showMessage( '获取用户信息失败');
     }
   }
 
@@ -575,3 +576,5 @@ class _LoginPageState extends State<LoginPage> {
     Get.back();
   }
 }
+
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'cached_image.dart';
 
 /// 商品规格选择弹窗 - 对应 components/productWindow/index.vue
@@ -330,7 +331,7 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
 
   void _handleConfirm() {
     if (_selectedSku == null) {
-      Get.snackbar('提示'.tr, '请选择规格'.tr);
+      FlutterToastPro.showMessage( '请选择规格'.tr);
       return;
     }
 
@@ -428,3 +429,5 @@ class QuantitySelector extends StatelessWidget {
     );
   }
 }
+
+

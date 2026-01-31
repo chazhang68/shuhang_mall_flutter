@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/order_provider.dart';
@@ -121,7 +122,7 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
 
   void _goOrderDetails(String orderId) {
     if (orderId.isEmpty) {
-      Get.snackbar('提示', '缺少订单号无法查看订单详情', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '缺少订单号无法查看订单详情');
       return;
     }
     Get.toNamed('/order/detail', parameters: {'id': orderId, 'isReturn': '1'});
@@ -335,3 +336,5 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
     );
   }
 }
+
+

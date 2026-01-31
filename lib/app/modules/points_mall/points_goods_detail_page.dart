@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -75,7 +76,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         setState(() {
           _userCollect = false;
         });
-        Get.snackbar('提示', '取消收藏成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '取消收藏成功');
       }
     } else {
       final response = await _storeProvider.collectProduct(productId);
@@ -83,7 +84,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         setState(() {
           _userCollect = true;
         });
-        Get.snackbar('提示', '收藏成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '收藏成功');
       }
     }
   }
@@ -91,7 +92,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
   void _goExchange() {
     int stock = _storeInfo['stock'] ?? 0;
     if (stock <= 0) {
-      Get.snackbar('提示', '库存不足', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '库存不足');
       return;
     }
 
@@ -124,9 +125,9 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
               Get.back();
               final response = await _pointsMallProvider.pointsExchange({'id': _id, 'num': 1});
               if (response.isSuccess) {
-                Get.snackbar('提示', '兑换成功', snackPosition: SnackPosition.BOTTOM);
+                FlutterToastPro.showMessage( '兑换成功');
               } else {
-                Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+                FlutterToastPro.showMessage( response.msg);
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: ThemeColors.red.primary),
@@ -367,3 +368,5 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
     );
   }
 }
+
+

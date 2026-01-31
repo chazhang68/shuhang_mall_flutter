@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/lottery_provider.dart';
@@ -128,10 +128,10 @@ class _LotteryRecordPageState extends State<LotteryRecordPage> {
     final response = await _lotteryProvider.exchangePrize({'id': id});
 
     if (response.isSuccess) {
-      Get.snackbar('提示', '领取成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('领取成功');
       _getRecordList(reset: true);
     } else {
-      Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 

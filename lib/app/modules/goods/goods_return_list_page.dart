@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/order_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -63,7 +64,7 @@ class _GoodsReturnListPageState extends State<GoodsReturnListPage> {
 
   void _goToRefund() {
     if (_cartList.isEmpty) {
-      Get.snackbar('提示', '请先选择退货商品', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '请先选择退货商品');
       return;
     }
 
@@ -212,3 +213,5 @@ class _GoodsReturnListPageState extends State<GoodsReturnListPage> {
     );
   }
 }
+
+

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../../data/providers/user_provider.dart';
 import '../../../data/models/user_model.dart';
 
@@ -42,7 +43,7 @@ class UserAccountSafeController extends GetxController {
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
-      Get.snackbar('错误', '获取用户信息失败: $e');
+      FlutterToastPro.showMessage( '获取用户信息失败: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -58,3 +59,5 @@ class UserAccountSafeController extends GetxController {
     Get.toNamed('/update-payment-pwd');
   }
 }
+
+

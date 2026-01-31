@@ -1,6 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/controllers/cart_store.dart';
+import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 
@@ -14,28 +18,18 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
-  bool _isEdit = false;
-  bool _selectAll = false;
+  final CartStore _store = CartStore.instance;
 
-  // 示例购物车数据
-  final List<Map<String, dynamic>> _cartItems = [
-    {'id': 1, 'name': '商品1', 'price': 99.00, 'count': 1, 'selected': true},
-    {'id': 2, 'name': '商品2', 'price': 199.00, 'count': 2, 'selected': false},
-    {'id': 3, 'name': '商品3', 'price': 299.00, 'count': 1, 'selected': true},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _store.loadCartList();
+    });
+  }
 
   @override
   bool get wantKeepAlive => true;
-
-  double get _totalPrice {
-    return _cartItems
-        .where((item) => item['selected'] == true)
-        .fold(0.0, (sum, item) => sum + (item['price'] as double) * (item['count'] as int));
-  }
-
-  int get _selectedCount {
-    return _cartItems.where((item) => item['selected'] == true).length;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,42 +39,85 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
       builder: (controller) {
         final themeColor = controller.themeColor;
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('购物车'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isEdit = !_isEdit;
-                  });
-                },
-                child: Text(_isEdit ? '完成' : '编辑', style: TextStyle(color: themeColor.primary)),
+        return Watch.builder(
+          builder: (context) {
+            final isLoading = _store.isLoading.value;
+            final items = _store.items.value;
+            final selectedIds = _store.selectedIds.value;
+            final isEdit = _store.isEdit.value;
+            final selectedCount = _store.selectedCount.value;
+            final totalPrice = _store.totalPrice.value;
+            final selectAll = items.isNotEmpty && selectedIds.length == items.length;
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('购物车'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      _store.isEdit.value = !isEdit;
+                    },
+                    child: Text(isEdit ? '完成' : '编辑', style: TextStyle(color: themeColor.primary)),
+                  ),
+                ],
               ),
-            ],
-          ),
-          body: _cartItems.isEmpty
-              ? _buildEmptyCart(themeColor)
-              : Column(
-                  children: [
-                    Expanded(
+              body: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : items.isEmpty
+                  ? _CartEmptyView(
+                      themeColor: themeColor,
+                      onBrowse: () => Get.offAllNamed(AppRoutes.main),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _store.loadCartList,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(12),
-                        itemCount: _cartItems.length,
+                        itemCount: items.length,
                         itemBuilder: (context, index) {
-                          return _buildCartItem(_cartItems[index], themeColor);
+                          final item = items[index];
+                          return _CartItemTile(
+                            item: item,
+                            selected: selectedIds.contains(item.id),
+                            themeColor: themeColor,
+                            onSelectedChanged: (value) {
+                              _store.toggleSelected(item.id, value == true);
+                            },
+                            onDecrease: () => _store.changeCartNum(item, item.cartNum - 1),
+                            onIncrease: () => _store.changeCartNum(item, item.cartNum + 1),
+                          );
                         },
                       ),
                     ),
-                    _buildBottomBar(themeColor),
-                  ],
-                ),
+              bottomNavigationBar: isLoading || items.isEmpty
+                  ? null
+                  : _CartBottomBar(
+                      themeColor: themeColor,
+                      selectAll: selectAll,
+                      totalPrice: totalPrice,
+                      selectedCount: selectedCount,
+                      isEdit: isEdit,
+                      onSelectAllChanged: (value) {
+                        _store.toggleSelectAll(value ?? false);
+                      },
+                      onDeleteSelected: _store.deleteSelected,
+                      onCheckout: () {},
+                    ),
+            );
+          },
         );
       },
     );
   }
+}
 
-  Widget _buildEmptyCart(ThemeColorData themeColor) {
+class _CartEmptyView extends StatelessWidget {
+  const _CartEmptyView({required this.themeColor, required this.onBrowse});
+
+  final ThemeColorData themeColor;
+  final VoidCallback onBrowse;
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +127,7 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
           const Text('购物车是空的', style: TextStyle(fontSize: 16, color: Color(0xFF999999))),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () => Get.offAllNamed(AppRoutes.main),
+            onPressed: onBrowse,
             style: ElevatedButton.styleFrom(
               backgroundColor: themeColor.primary,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
@@ -101,26 +138,37 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
       ),
     );
   }
+}
 
-  Widget _buildCartItem(Map<String, dynamic> item, themeColor) {
+class _CartItemTile extends StatelessWidget {
+  const _CartItemTile({
+    required this.item,
+    required this.selected,
+    required this.themeColor,
+    required this.onSelectedChanged,
+    required this.onDecrease,
+    required this.onIncrease,
+  });
+
+  final CartItem item;
+  final bool selected;
+  final ThemeColorData themeColor;
+  final ValueChanged<bool?> onSelectedChanged;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = item.productInfo?.image ?? item.productInfo?.attrInfo?.image ?? '';
+    final name = item.productInfo?.storeName ?? '商品';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          // 选择框
-          Checkbox(
-            value: item['selected'] as bool,
-            onChanged: (value) {
-              setState(() {
-                item['selected'] = value;
-              });
-            },
-            activeColor: themeColor.primary,
-          ),
-
-          // 商品图片
+          Checkbox(value: selected, onChanged: onSelectedChanged, activeColor: themeColor.primary),
           Container(
             width: 80,
             height: 80,
@@ -128,35 +176,56 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey[400])),
+            child: imageUrl.isEmpty
+                ? Center(child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey[400]))
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) =>
+                          Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                    ),
+                  ),
           ),
-
           const SizedBox(width: 12),
-
-          // 商品信息
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'] as String,
+                  name,
                   style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if ((item.productInfo?.attrInfo?.suk ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      item.productInfo?.attrInfo?.suk ?? '',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '¥${(item['price'] as double).toStringAsFixed(2)}',
+                      '¥${item.unitPrice.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 16,
                         color: themeColor.price,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    _buildQuantitySelector(item, themeColor),
+                    _QuantitySelector(
+                      count: item.cartNum,
+                      onDecrease: onDecrease,
+                      onIncrease: onIncrease,
+                    ),
                   ],
                 ),
               ],
@@ -166,8 +235,21 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
       ),
     );
   }
+}
 
-  Widget _buildQuantitySelector(Map<String, dynamic> item, themeColor) {
+class _QuantitySelector extends StatelessWidget {
+  const _QuantitySelector({
+    required this.count,
+    required this.onDecrease,
+    required this.onIncrease,
+  });
+
+  final int count;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0xFFEEEEEE)),
@@ -177,13 +259,7 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
         mainAxisSize: MainAxisSize.min,
         children: [
           GestureDetector(
-            onTap: () {
-              if ((item['count'] as int) > 1) {
-                setState(() {
-                  item['count'] = (item['count'] as int) - 1;
-                });
-              }
-            },
+            onTap: count > 1 ? onDecrease : null,
             child: Container(
               width: 28,
               height: 28,
@@ -198,14 +274,10 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
             decoration: const BoxDecoration(
               border: Border.symmetric(vertical: BorderSide(color: Color(0xFFEEEEEE))),
             ),
-            child: Text('${item['count']}', style: const TextStyle(fontSize: 14)),
+            child: Text('$count', style: const TextStyle(fontSize: 14)),
           ),
           GestureDetector(
-            onTap: () {
-              setState(() {
-                item['count'] = (item['count'] as int) + 1;
-              });
-            },
+            onTap: onIncrease,
             child: Container(
               width: 28,
               height: 28,
@@ -217,68 +289,73 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
       ),
     );
   }
+}
 
-  Widget _buildBottomBar(ThemeColorData themeColor) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            // 全选
-            Checkbox(
-              value: _selectAll,
-              onChanged: (value) {
-                setState(() {
-                  _selectAll = value ?? false;
-                  for (var item in _cartItems) {
-                    item['selected'] = _selectAll;
-                  }
-                });
-              },
-              activeColor: themeColor.primary,
-            ),
-            const Text('全选'),
+class _CartBottomBar extends StatelessWidget {
+  const _CartBottomBar({
+    required this.themeColor,
+    required this.selectAll,
+    required this.totalPrice,
+    required this.selectedCount,
+    required this.isEdit,
+    required this.onSelectAllChanged,
+    required this.onDeleteSelected,
+    required this.onCheckout,
+  });
 
-            const Spacer(),
+  final ThemeColorData themeColor;
+  final bool selectAll;
+  final double totalPrice;
+  final int selectedCount;
+  final bool isEdit;
+  final ValueChanged<bool?> onSelectAllChanged;
+  final VoidCallback onDeleteSelected;
+  final VoidCallback onCheckout;
 
-            // 合计
-            if (!_isEdit) ...[
-              const Text('合计：'),
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.sizeOf(context).width,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Checkbox(
+                value: selectAll,
+                onChanged: onSelectAllChanged,
+                activeColor: themeColor.primary,
+              ),
+              const Text('全选', style: TextStyle(fontSize: 14)),
+              const Spacer(),
+              Text('合计: ', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
               Text(
-                '¥${_totalPrice.toStringAsFixed(2)}',
+                '¥${totalPrice.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   color: themeColor.price,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 12),
-            ],
-
-            // 结算/删除按钮
-            ElevatedButton(
-              onPressed: () {
-                if (_isEdit) {
-                  // 删除选中商品
-                  setState(() {
-                    _cartItems.removeWhere((item) => item['selected'] == true);
-                  });
-                } else {
-                  // 去结算
-                  Get.toNamed(AppRoutes.orderConfirm);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isEdit ? Colors.red : themeColor.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 120,
+                height: 40,
+                child: ElevatedButton(
+                  onPressed: selectedCount > 0 ? (isEdit ? onDeleteSelected : onCheckout) : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeColor.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                  child: Text(isEdit ? '删除' : '结算($selectedCount)'),
+                ),
               ),
-              child: Text(_isEdit ? '删除($_selectedCount)' : '去结算($_selectedCount)'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

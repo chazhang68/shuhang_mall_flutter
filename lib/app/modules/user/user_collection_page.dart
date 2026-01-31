@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/store_provider.dart';
@@ -128,13 +129,13 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      Get.snackbar('提示', '请选择商品', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '请选择商品');
       return;
     }
 
     final response = await _storeProvider.batchUncollect(_selectedIds.toList());
     if (response.isSuccess) {
-      Get.snackbar('提示', '取消收藏成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '取消收藏成功');
       setState(() {
         _collectionList.removeWhere((item) => _selectedIds.contains(item['pid']));
         _count = _collectionList.length;
@@ -147,7 +148,7 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
   void _goToDetail(Map<String, dynamic> item) {
     bool isShow = item['is_show'] == 1 || item['is_show'] == true;
     if (!isShow) {
-      Get.snackbar('提示', '该商品已下架', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '该商品已下架');
       return;
     }
     int pid = item['pid'] ?? 0;
@@ -352,3 +353,5 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
     );
   }
 }
+
+

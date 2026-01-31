@@ -10,47 +10,28 @@ class UserProvider {
 
   /// 获取用户信息
   Future<ApiResponse<UserModel>> getUserInfo() async {
-    return await _api.get<UserModel>(
-      'user',
-      fromJsonT: (data) => UserModel.fromJson(data),
-    );
+    return await _api.get<UserModel>('user', fromJsonT: (data) => UserModel.fromJson(data));
   }
 
   /// 获取新版用户信息
   Future<ApiResponse<UserModel>> newUserInfo() async {
-    return await _api.get<UserModel>(
-      'userinfo',
-      fromJsonT: (data) => UserModel.fromJson(data),
-    );
+    return await _api.get<UserModel>('userinfo', fromJsonT: (data) => UserModel.fromJson(data));
   }
 
   /// 获取用户详细信息
   Future<ApiResponse<UserModel>> userInfos() async {
-    return await _api.get<UserModel>(
-      'user/info',
-      fromJsonT: (data) => UserModel.fromJson(data),
-    );
+    return await _api.get<UserModel>('user/info', fromJsonT: (data) => UserModel.fromJson(data));
   }
 
   // ==================== 登录注册 ====================
 
   /// H5 用户登录（账号密码）
-  Future<ApiResponse> loginH5({
-    required String account,
-    required String password,
-  }) async {
-    return await _api.post(
-      'login',
-      data: {'account': account, 'password': password},
-      noAuth: true,
-    );
+  Future<ApiResponse> loginH5({required String account, required String password}) async {
+    return await _api.post('login', data: {'account': account, 'password': password}, noAuth: true);
   }
 
   /// 手机号登录
-  Future<ApiResponse> loginMobile({
-    required String phone,
-    required String captcha,
-  }) async {
+  Future<ApiResponse> loginMobile({required String phone, required String captcha}) async {
     return await _api.post(
       'login/mobile',
       data: {'phone': phone, 'captcha': captcha},
@@ -64,10 +45,7 @@ class UserProvider {
   }
 
   /// 发送验证码
-  Future<ApiResponse> registerVerify({
-    required String phone,
-    String type = 'register',
-  }) async {
+  Future<ApiResponse> registerVerify({required String phone, String type = 'register'}) async {
     return await _api.post(
       'register/easy_verify',
       data: {'phone': phone, 'type': type},
@@ -76,14 +54,8 @@ class UserProvider {
   }
 
   /// 发送验证码
-  Future<ApiResponse> sendCode({
-    required String phone,
-    String type = 'login',
-  }) async {
-    return await _api.post(
-      'register/easy_verify',
-      data: {'phone': phone, 'type': type},
-    );
+  Future<ApiResponse> sendCode({required String phone, String type = 'login'}) async {
+    return await _api.post('register/easy_verify', data: {'phone': phone, 'type': type});
   }
 
   /// 用户注册
@@ -100,8 +72,8 @@ class UserProvider {
         'account': account,
         'captcha': captcha,
         'password': password,
-        if (payPwd != null) 'pay_pwd': payPwd,
-        if (spread != null) 'spread': spread,
+        'pay_pwd': ?payPwd,
+        'spread': ?spread,
       },
       noAuth: true,
     );
@@ -527,7 +499,6 @@ class UserProvider {
     return await _api.post('image_base64', data: data);
   }
 
-
   /// 获取小程序码
   Future<ApiResponse> routineCode(Map<String, dynamic>? params) async {
     return await _api.get('user/routine_code', queryParameters: params);
@@ -567,21 +538,12 @@ class UserProvider {
     required String captcha,
     int step = 0,
   }) async {
-    return await _api.post(
-      'binding',
-      data: {'phone': phone, 'captcha': captcha, 'step': step},
-    );
+    return await _api.post('binding', data: {'phone': phone, 'captcha': captcha, 'step': step});
   }
 
   /// 修改手机号
   /// 对应 api/api.js: updatePhone
-  Future<ApiResponse> updatePhone({
-    required String phone,
-    required String captcha,
-  }) async {
-    return await _api.post(
-      'update/binding',
-      data: {'phone': phone, 'captcha': captcha},
-    );
+  Future<ApiResponse> updatePhone({required String phone, required String captcha}) async {
+    return await _api.post('update/binding', data: {'phone': phone, 'captcha': captcha});
   }
 }

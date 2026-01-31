@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../data/providers/user_provider.dart';
@@ -46,13 +47,13 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
         setState(() {
           isLoading = false;
         });
-        Get.snackbar('提示', '获取海报失败');
+        FlutterToastPro.showMessage( '获取海报失败');
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      Get.snackbar('提示', '生成失败');
+      FlutterToastPro.showMessage( '生成失败');
     }
   }
 
@@ -63,7 +64,7 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
     final poster = posterList[index];
     final url = poster['wap_poster'] ?? '';
     if (url.isEmpty) {
-      Get.snackbar('提示', '海报地址无效');
+      FlutterToastPro.showMessage( '海报地址无效');
       return;
     }
 
@@ -87,7 +88,7 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
         // 再次请求权限
         final newStatus = await Permission.photos.request();
         if (!newStatus.isGranted) {
-          Get.snackbar('提示', '请在设置中开启相册权限');
+          FlutterToastPro.showMessage( '请在设置中开启相册权限');
           return;
         }
       }
@@ -95,7 +96,7 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
 
     // TODO: 实现实际的图片保存逻辑
     // 这里需要下载图片并保存到相册
-    Get.snackbar('提示', '保存功能开发中');
+    FlutterToastPro.showMessage( '保存功能开发中');
   }
 
   @override
@@ -174,3 +175,5 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
     );
   }
 }
+
+

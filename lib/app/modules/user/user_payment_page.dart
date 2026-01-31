@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 
@@ -90,7 +90,7 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
     String amount = isPackageSelected ? _selectedAmount : _customAmountController.text;
 
     if (amount.isEmpty || double.tryParse(amount) == null || double.parse(amount) <= 0) {
-      Get.snackbar('提示', '请选择或输入充值金额', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage('请选择或输入充值金额');
       return;
     }
 
@@ -99,7 +99,7 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
     });
 
     // TODO: 调用充值接口并处理支付
-    Get.snackbar('提示', '充值功能开发中，请联系客服', snackPosition: SnackPosition.BOTTOM);
+    FlutterToastPro.showMessage('充值功能开发中，请联系客服');
 
     setState(() {
       _isLoading = false;

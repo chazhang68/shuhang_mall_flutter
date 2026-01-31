@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
@@ -72,7 +73,7 @@ class SettingPage extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: Color(0xFF999999)),
                   ),
                   onTap: () {
-                    Get.snackbar('成功', '缓存已清除');
+                    FlutterToastPro.showMessage( '缓存已清除');
                   },
                 ),
               ]),
@@ -225,3 +226,5 @@ class SettingPage extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:gal/gal.dart';
@@ -49,7 +50,7 @@ class _UserSpreadCodePageState extends State<UserSpreadCodePage> {
       setState(() {
         _isLoading = false;
       });
-      Get.snackbar('提示', '生成失败');
+      FlutterToastPro.showMessage( '生成失败');
     }
   }
 
@@ -137,7 +138,7 @@ class _UserSpreadCodePageState extends State<UserSpreadCodePage> {
 
     final String posterUrl = _posterList[index]['wap_poster'] ?? '';
     if (posterUrl.isEmpty) {
-      Get.snackbar('提示', '海报地址为空');
+      FlutterToastPro.showMessage( '海报地址为空');
       return;
     }
 
@@ -164,7 +165,7 @@ class _UserSpreadCodePageState extends State<UserSpreadCodePage> {
 
       Get.back(); // 关闭 loading
       // 对应 uni-app: uni.showToast({title: '保存成功', icon: 'success'})
-      Get.snackbar('提示', '保存成功');
+      FlutterToastPro.showMessage( '保存成功');
 
       // 删除临时文件
       await file.delete();
@@ -172,7 +173,9 @@ class _UserSpreadCodePageState extends State<UserSpreadCodePage> {
       Get.back(); // 关闭 loading
       debugPrint('保存海报失败: $e');
       // 对应 uni-app: uni.showToast({title: '保存失败', icon: 'error'})
-      Get.snackbar('提示', '保存失败');
+      FlutterToastPro.showMessage( '保存失败');
     }
   }
 }
+
+

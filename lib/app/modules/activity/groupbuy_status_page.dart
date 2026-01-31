@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/activity_provider.dart';
@@ -109,10 +110,10 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
     if (confirm == true) {
       final response = await _activityProvider.cancelCombination(_pinkId);
       if (response.isSuccess) {
-        Get.snackbar('提示', '取消成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '取消成功');
         _getCombinationPink();
       } else {
-        Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( response.msg);
       }
     }
   }
@@ -524,7 +525,7 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
                       onTap: () {
                         // 分享到微信好友
                         _closePosters();
-                        Get.snackbar('提示', '分享功能开发中', snackPosition: SnackPosition.BOTTOM);
+                        FlutterToastPro.showMessage( '分享功能开发中');
                       },
                       child: Column(
                         children: [
@@ -546,7 +547,7 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
                       onTap: () {
                         // 生成海报
                         _closePosters();
-                        Get.snackbar('提示', '海报生成中...', snackPosition: SnackPosition.BOTTOM);
+                        FlutterToastPro.showMessage( '海报生成中...');
                       },
                       child: Column(
                         children: [
@@ -596,3 +597,5 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
     );
   }
 }
+
+

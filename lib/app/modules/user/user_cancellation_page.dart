@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/user_provider.dart';
@@ -149,9 +150,9 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
       // 跳转到首页
       Get.offAllNamed(AppRoutes.main);
       
-      Get.snackbar('提示', '账号已注销');
+      FlutterToastPro.showMessage( '账号已注销');
     } catch (e) {
-      Get.snackbar('错误', '注销失败: $e');
+      FlutterToastPro.showMessage( '注销失败: $e');
     }
   }
 
@@ -266,3 +267,5 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
     );
   }
 }
+
+

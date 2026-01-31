@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -59,7 +60,7 @@ class _SpreadMoneyPageState extends State<SpreadMoneyPage> {
       _getRecordList();
       _getRecordListCount();
     } else {
-      Get.snackbar('错误', '参数错误');
+      FlutterToastPro.showMessage( '参数错误');
       Future.delayed(const Duration(seconds: 1), () {
         Get.back();
       });
@@ -326,3 +327,5 @@ class _SpreadMoneyPageState extends State<SpreadMoneyPage> {
     );
   }
 }
+
+

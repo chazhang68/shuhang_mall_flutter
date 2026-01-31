@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 
 class UserSignController extends GetxController {
@@ -98,7 +99,7 @@ class UserSignController extends GetxController {
   // 用户签到
   Future<void> sign() async {
     if (_isSignedToday.value) {
-      Get.snackbar('提示', '您今日已签到!');
+      FlutterToastPro.showMessage( '您今日已签到!');
       return;
     }
 
@@ -127,7 +128,7 @@ class UserSignController extends GetxController {
         await getSignList();
       }
     } catch (e) {
-      Get.snackbar('签到失败', e.toString());
+      FlutterToastPro.showMessage( e.toString());
     }
   }
 
@@ -159,3 +160,5 @@ class UserSignController extends GetxController {
     return s;
   }
 }
+
+

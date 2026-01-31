@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/user_set_controller.dart';
 
@@ -12,11 +13,7 @@ class UserSetView extends GetView<UserSetController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('设置'),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('设置'), centerTitle: true, elevation: 0),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -41,10 +38,7 @@ class UserSetView extends GetView<UserSetController> {
   Widget _buildUserInfoCard() {
     return Container(
       height: 75, // 150rpx
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: () => controller.goToUserInfo(),
         borderRadius: BorderRadius.circular(8),
@@ -54,8 +48,8 @@ class UserSetView extends GetView<UserSetController> {
             children: [
               Obx(
                 () => ClipOval(
-                  child: controller.userInfo?.avatar != null &&
-                          controller.userInfo!.avatar.isNotEmpty
+                  child:
+                      controller.userInfo?.avatar != null && controller.userInfo!.avatar.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: controller.userInfo!.avatar,
                           width: 60,
@@ -85,11 +79,7 @@ class UserSetView extends GetView<UserSetController> {
               const Spacer(),
               const Text(
                 '个人信息',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black),
               ),
               const SizedBox(width: 8),
               const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
@@ -103,51 +93,30 @@ class UserSetView extends GetView<UserSetController> {
   /// 设置选项列表
   Widget _buildSettingsList() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
           // 账户与安全
-          _buildSettingItem(
-            title: '账户与安全',
-            onTap: () => controller.goToAccountSafe(),
-          ),
+          _buildSettingItem(title: '账户与安全', onTap: () => controller.goToAccountSafe()),
           _buildDivider(),
           // 清除缓存
-          _buildSettingItem(
-            title: '清除缓存',
-            onTap: () => _showClearCacheDialog(),
-          ),
+          _buildSettingItem(title: '清除缓存', onTap: () => _showClearCacheDialog()),
           _buildDivider(),
           // 检查版本
-          _buildSettingItem(
-            title: '检查版本',
-            onTap: () => controller.checkVersionUpdate(),
-          ),
+          _buildSettingItem(title: '检查版本', onTap: () => controller.checkVersionUpdate()),
           _buildDivider(),
           // 关于
-          _buildSettingItem(
-            title: '关于',
-            onTap: () => controller.goToAboutUs(),
-          ),
+          _buildSettingItem(title: '关于', onTap: () => controller.goToAboutUs()),
           _buildDivider(),
           // 注销账号
-          _buildSettingItem(
-            title: '注销账号',
-            onTap: () => controller.goToUserCancellation(),
-          ),
+          _buildSettingItem(title: '注销账号', onTap: () => controller.goToUserCancellation()),
         ],
       ),
     );
   }
 
   /// 设置项
-  Widget _buildSettingItem({
-    required String title,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildSettingItem({required String title, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -186,18 +155,11 @@ class UserSetView extends GetView<UserSetController> {
       child: Container(
         width: double.infinity,
         height: 49, // 98rpx
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         alignment: Alignment.center,
         child: const Text(
           '退出登陆',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
         ),
       ),
     );
@@ -224,12 +186,7 @@ class UserSetView extends GetView<UserSetController> {
             onPressed: () {
               Get.back();
               // 显示取消提示
-              Get.snackbar(
-                '',
-                '取消',
-                snackPosition: SnackPosition.BOTTOM,
-                duration: const Duration(seconds: 1),
-              );
+              FlutterToastPro.showMessage('取消');
             },
             child: const Text('取消'),
           ),

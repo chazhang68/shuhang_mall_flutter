@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
@@ -139,7 +140,7 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
   Future<void> _showAd() async {
     // 检查实名认证
     if (_userInfo['is_sign'] != true) {
-      Get.snackbar('提示', '请先实名认证哦');
+      FlutterToastPro.showMessage( '请先实名认证哦');
       await Future.delayed(const Duration(seconds: 1));
       Get.toNamed('/pages/sign/sign');
       return;
@@ -160,14 +161,14 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
       },
       onError: (error) {
         Get.back(); // 关闭loading
-        Get.snackbar('提示', '广告加载失败: $error');
+        FlutterToastPro.showMessage( '广告加载失败: $error');
       },
     );
 
     Get.back(); // 关闭loading
 
     if (!success) {
-      Get.snackbar('提示', '暂无可用广告，请稍后重试');
+      FlutterToastPro.showMessage( '暂无可用广告，请稍后重试');
     }
   }
 
@@ -182,7 +183,7 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
         }
       }
     } catch (e) {
-      Get.snackbar('提示', '领取奖励失败');
+      FlutterToastPro.showMessage( '领取奖励失败');
     }
   }
 
@@ -195,21 +196,21 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
       Get.back();
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '今日任务已完成，请查看您的奖励！');
+        FlutterToastPro.showMessage( '今日任务已完成，请查看您的奖励！');
         await _loadData();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '领取奖励失败');
+      FlutterToastPro.showMessage( '领取奖励失败');
     }
   }
 
   // 购买种子
   Future<void> _buySeed() async {
     if (_pwd.isEmpty) {
-      Get.snackbar('提示', '请输入交易密码');
+      FlutterToastPro.showMessage( '请输入交易密码');
       return;
     }
 
@@ -219,7 +220,7 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
     final userFudou = double.tryParse(_userInfo['fudou']?.toString() ?? '0') ?? 0;
 
     if (userFudou < dhNum * _buyNum) {
-      Get.snackbar('提示', '积分不够哦');
+      FlutterToastPro.showMessage( '积分不够哦');
       return;
     }
 
@@ -235,7 +236,7 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
       Get.back();
 
       if (response.isSuccess) {
-        Get.snackbar('提示', '兑换成功');
+        FlutterToastPro.showMessage( '兑换成功');
         setState(() {
           _showShopPopup = false;
           _pwd = '';
@@ -244,11 +245,11 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
         });
         await _loadData();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       Get.back();
-      Get.snackbar('提示', '兑换失败');
+      FlutterToastPro.showMessage( '兑换失败');
     }
   }
 
@@ -669,3 +670,5 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
     );
   }
 }
+
+

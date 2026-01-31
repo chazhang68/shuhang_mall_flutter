@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/order_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -30,7 +31,7 @@ class _LogisticsPageState extends State<LogisticsPage> {
     super.initState();
     _orderId = Get.arguments?['orderId']?.toString() ?? '';
     if (_orderId.isEmpty) {
-      Get.snackbar('提示', '缺少订单号');
+      FlutterToastPro.showMessage( '缺少订单号');
       return;
     }
     _loadExpress();
@@ -61,13 +62,13 @@ class _LogisticsPageState extends State<LogisticsPage> {
         setState(() {
           _isLoading = false;
         });
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      Get.snackbar('提示', '获取物流信息失败');
+      FlutterToastPro.showMessage( '获取物流信息失败');
     }
   }
 
@@ -75,7 +76,7 @@ class _LogisticsPageState extends State<LogisticsPage> {
     final deliveryId = _orderInfo['delivery_id']?.toString() ?? '';
     if (deliveryId.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: deliveryId));
-      Get.snackbar('提示', '复制成功');
+      FlutterToastPro.showMessage( '复制成功');
     }
   }
 
@@ -317,3 +318,5 @@ class _LogisticsPageState extends State<LogisticsPage> {
     );
   }
 }
+
+

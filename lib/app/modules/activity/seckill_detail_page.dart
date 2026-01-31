@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/activity_provider.dart';
@@ -41,7 +42,7 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
     super.initState();
     _id = int.tryParse(Get.arguments?['id']?.toString() ?? '0') ?? 0;
     if (_id == 0) {
-      Get.snackbar('提示', '缺少商品ID');
+      FlutterToastPro.showMessage( '缺少商品ID');
       return;
     }
     _loadDetail();
@@ -69,11 +70,11 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
         });
       } else {
         setState(() => _isLoading = false);
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      Get.snackbar('提示', '获取详情失败');
+      FlutterToastPro.showMessage( '获取详情失败');
     }
   }
 
@@ -90,22 +91,22 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
       setState(() {
         _isCollected = !_isCollected;
       });
-      Get.snackbar('提示', _isCollected ? '收藏成功' : '取消收藏');
+      FlutterToastPro.showMessage( _isCollected ? '收藏成功' : '取消收藏');
     } catch (e) {
-      Get.snackbar('提示', '操作失败');
+      FlutterToastPro.showMessage( '操作失败');
     }
   }
 
   void _goBuy() {
     if (_status != 1) {
-      Get.snackbar('提示', _status == 0 ? '活动已结束' : '活动未开始');
+      FlutterToastPro.showMessage( _status == 0 ? '活动已结束' : '活动未开始');
       return;
     }
 
     final quota = _storeInfo['quota'] ?? 0;
     final stock = _storeInfo['stock'] ?? 0;
     if (quota <= 0 || stock <= 0) {
-      Get.snackbar('提示', '已售罄');
+      FlutterToastPro.showMessage( '已售罄');
       return;
     }
 
@@ -495,3 +496,5 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
     );
   }
 }
+
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
@@ -68,19 +69,6 @@ class _UserPageState extends State<UserPage>
     } finally {
       _isLoading = false;
     }
-  }
-
-  /// 下拉刷新
-  /// 对应 uni-app: onPullDownRefresh -> onLoadFun
-  Future<void> _onRefresh() async {
-    final controller = Get.find<AppController>();
-    if (!controller.isLogin) {
-      // 未登录跳转登录页
-      Get.toNamed(AppRoutes.login);
-      return;
-    }
-    await _loadUserInfo();
-    _setVisit();
   }
 
   /// 记录访问
@@ -175,12 +163,7 @@ class _UserPageState extends State<UserPage>
   // 复制邀请码
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    Get.snackbar(
-      '提示',
-      '邀请码已复制',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 2),
-    );
+    FlutterToastPro.showMessage('邀请码已复制');
   }
 
   // 跳转到菜单页面
@@ -193,7 +176,7 @@ class _UserPageState extends State<UserPage>
 
     if (route == 'shuhangshangdao') {
       // 打开外部APP - 兑换宝
-      Get.snackbar('提示', '功能开发中', snackPosition: SnackPosition.TOP);
+      FlutterToastPro.showMessage('功能开发中');
       return;
     }
 

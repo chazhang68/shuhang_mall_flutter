@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -163,7 +164,7 @@ class _MessagePageState extends State<MessagePage> with SingleTickerProviderStat
         _loadData();
       }
     } catch (e) {
-      Get.snackbar('错误', '操作失败');
+      FlutterToastPro.showMessage( '操作失败');
     }
   }
 
@@ -178,7 +179,7 @@ class _MessagePageState extends State<MessagePage> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-      Get.snackbar('错误', '删除失败');
+      FlutterToastPro.showMessage( '删除失败');
     }
   }
 
@@ -193,7 +194,7 @@ class _MessagePageState extends State<MessagePage> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-      Get.snackbar('错误', '操作失败');
+      FlutterToastPro.showMessage( '操作失败');
     }
   }
 
@@ -549,3 +550,5 @@ class _MessagePageState extends State<MessagePage> with SingleTickerProviderStat
     );
   }
 }
+
+

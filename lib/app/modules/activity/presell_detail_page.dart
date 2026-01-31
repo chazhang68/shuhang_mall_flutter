@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -94,7 +95,7 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         setState(() {
           _userCollect = false;
         });
-        Get.snackbar('提示', '取消收藏成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '取消收藏成功');
       }
     } else {
       final response = await _storeProvider.collectProduct(_storeInfo['product_id'] ?? 0);
@@ -102,18 +103,18 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         setState(() {
           _userCollect = true;
         });
-        Get.snackbar('提示', '收藏成功', snackPosition: SnackPosition.BOTTOM);
+        FlutterToastPro.showMessage( '收藏成功');
       }
     }
   }
 
   void _goBuy() {
     if (_payStatus == 1) {
-      Get.snackbar('提示', '活动未开始', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '活动未开始');
       return;
     }
     if (_payStatus == 3) {
-      Get.snackbar('提示', '活动已结束', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '活动已结束');
       return;
     }
     // TODO: 跳转到订单确认页面
@@ -570,3 +571,5 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
     );
   }
 }
+
+

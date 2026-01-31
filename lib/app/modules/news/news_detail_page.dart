@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_html/flutter_html.dart';
 import '../../data/providers/public_provider.dart';
@@ -218,7 +219,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     // TODO: 实现分享功能
-                    Get.snackbar('提示', '分享功能开发中', snackPosition: SnackPosition.BOTTOM);
+                    FlutterToastPro.showMessage( '分享功能开发中');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeColors.red.primary,
@@ -240,3 +241,5 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     );
   }
 }
+
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 
 /// 用户签到页
@@ -79,7 +80,7 @@ class _SigninPageState extends State<SigninPage> {
 
   void _doSign() {
     if (isDaySigned) {
-      Get.snackbar('提示', '您今日已签到!');
+      FlutterToastPro.showMessage( '您今日已签到!');
       return;
     }
 
@@ -461,3 +462,5 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 }
+
+

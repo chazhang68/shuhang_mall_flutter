@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../../data/providers/user_provider.dart';
 
 class UserAddressListController extends GetxController {
@@ -71,7 +72,7 @@ class UserAddressListController extends GetxController {
       }
     } catch (e) {
       debugPrint('获取地址列表失败: $e');
-      Get.snackbar('错误', '获取地址列表失败: $e');
+      FlutterToastPro.showMessage( '获取地址列表失败: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -89,13 +90,13 @@ class UserAddressListController extends GetxController {
           _addressList[i]['is_default'] = (i == index) ? 1 : 0;
         }
 
-        Get.snackbar('成功', '设置成功');
+        FlutterToastPro.showMessage( '设置成功');
       } else {
-        Get.snackbar('错误', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       debugPrint('设置默认地址失败: $e');
-      Get.snackbar('错误', '设置失败: $e');
+      FlutterToastPro.showMessage( '设置失败: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -110,13 +111,13 @@ class UserAddressListController extends GetxController {
       if (response.isSuccess) {
         // 从本地列表中移除
         _addressList.removeAt(index);
-        Get.snackbar('成功', '删除成功');
+        FlutterToastPro.showMessage( '删除成功');
       } else {
-        Get.snackbar('错误', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
       debugPrint('删除地址失败: $e');
-      Get.snackbar('错误', '删除失败: $e');
+      FlutterToastPro.showMessage( '删除失败: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -147,3 +148,5 @@ class UserAddressListController extends GetxController {
     }
   }
 }
+
+

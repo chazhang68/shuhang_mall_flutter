@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -69,7 +70,7 @@ class _UserSignPageState extends State<UserSignPage> {
 
   Future<void> _goSign() async {
     if (_userInfo['is_day_sgin'] == true) {
-      Get.snackbar('提示', '今日已签到', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '今日已签到');
       return;
     }
 
@@ -80,7 +81,7 @@ class _UserSignPageState extends State<UserSignPage> {
         _active = true;
       });
     } else {
-      Get.snackbar('提示', response.msg, snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( response.msg);
     }
   }
 
@@ -402,3 +403,5 @@ class _UserSignPageState extends State<UserSignPage> {
     );
   }
 }
+
+

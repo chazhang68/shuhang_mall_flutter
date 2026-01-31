@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -118,7 +119,7 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
       setState(() {
         _addressList.removeAt(index);
       });
-      Get.snackbar('提示', '删除成功', snackPosition: SnackPosition.BOTTOM);
+      FlutterToastPro.showMessage( '删除成功');
     }
   }
 
@@ -312,3 +313,5 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
     );
   }
 }
+
+

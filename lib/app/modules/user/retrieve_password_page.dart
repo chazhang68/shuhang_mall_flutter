@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 
@@ -39,11 +40,11 @@ class _RetrievePasswordPageState extends State<RetrievePasswordPage> {
   Future<void> _sendCode() async {
     String phone = _phoneController.text.trim();
     if (phone.isEmpty) {
-      Get.snackbar('提示', '请填写手机号码');
+      FlutterToastPro.showMessage( '请填写手机号码');
       return;
     }
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      Get.snackbar('提示', '请输入正确的手机号码');
+      FlutterToastPro.showMessage( '请输入正确的手机号码');
       return;
     }
 
@@ -53,13 +54,13 @@ class _RetrievePasswordPageState extends State<RetrievePasswordPage> {
         type: 'reset',
       );
       if (response.isSuccess) {
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '验证码已发送');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '验证码已发送');
         _startCountdown();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
-      Get.snackbar('提示', '发送失败');
+      FlutterToastPro.showMessage( '发送失败');
     }
   }
 
@@ -86,23 +87,23 @@ class _RetrievePasswordPageState extends State<RetrievePasswordPage> {
     String password = _passwordController.text.trim();
 
     if (phone.isEmpty) {
-      Get.snackbar('提示', '请填写手机号码');
+      FlutterToastPro.showMessage( '请填写手机号码');
       return;
     }
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      Get.snackbar('提示', '请输入正确的手机号码');
+      FlutterToastPro.showMessage( '请输入正确的手机号码');
       return;
     }
     if (code.isEmpty) {
-      Get.snackbar('提示', '请填写验证码');
+      FlutterToastPro.showMessage( '请填写验证码');
       return;
     }
     if (password.isEmpty) {
-      Get.snackbar('提示', '请填写新密码');
+      FlutterToastPro.showMessage( '请填写新密码');
       return;
     }
     if (password.length < 6) {
-      Get.snackbar('提示', '密码长度不能少于6位');
+      FlutterToastPro.showMessage( '密码长度不能少于6位');
       return;
     }
 
@@ -117,14 +118,14 @@ class _RetrievePasswordPageState extends State<RetrievePasswordPage> {
         password: password,
       );
       if (response.isSuccess) {
-        Get.snackbar('提示', response.msg.isNotEmpty ? response.msg : '密码重置成功');
+        FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '密码重置成功');
         await Future.delayed(const Duration(seconds: 1));
         Get.back();
       } else {
-        Get.snackbar('提示', response.msg);
+        FlutterToastPro.showMessage( response.msg);
       }
     } catch (e) {
-      Get.snackbar('提示', '重置失败');
+      FlutterToastPro.showMessage( '重置失败');
     } finally {
       setState(() {
         _isLoading = false;
@@ -265,3 +266,5 @@ class _RetrievePasswordPageState extends State<RetrievePasswordPage> {
     );
   }
 }
+
+

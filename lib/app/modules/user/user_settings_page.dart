@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
@@ -241,13 +242,13 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     if (confirm == true) {
       // 清除图片缓存
       await CachedNetworkImage.evictFromCache('');
-      Get.snackbar('提示', '缓存清理完成');
+      FlutterToastPro.showMessage( '缓存清理完成');
     }
   }
 
   /// 检查更新
   void _checkUpdate() {
-    Get.snackbar('提示', '当前为最新版本');
+    FlutterToastPro.showMessage( '当前为最新版本');
   }
 
   /// 退出登录
@@ -278,3 +279,5 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     }
   }
 }
+
+
