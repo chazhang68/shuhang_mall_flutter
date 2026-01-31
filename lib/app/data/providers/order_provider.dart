@@ -1,4 +1,7 @@
 import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/order_detail_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/order_list_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/order_status_summary_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 
 /// 订单 API 服务
@@ -61,18 +64,34 @@ class OrderProvider {
   // ==================== 订单列表 ====================
 
   /// 获取订单列表
-  Future<ApiResponse> getOrderList(Map<String, dynamic>? params) async {
-    return await _api.get('order/list', queryParameters: params);
+  Future<ApiResponse<List<OrderListItem>>> getOrderList(Map<String, dynamic>? params) async {
+    return await _api.get<List<OrderListItem>>(
+      'order/list',
+      queryParameters: params,
+      fromJsonT: (json) {
+        if (json is! List) return <OrderListItem>[];
+        return json
+            .whereType<Map>()
+            .map((item) => OrderListItem.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      },
+    );
   }
 
   /// 获取订单详情
-  Future<ApiResponse> getOrderDetail(String orderId) async {
-    return await _api.get('order/detail/$orderId');
+  Future<ApiResponse<OrderDetailModel>> getOrderDetail(String orderId) async {
+    return await _api.get<OrderDetailModel>(
+      'order/detail/$orderId',
+      fromJsonT: (json) => OrderDetailModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   /// 获取订单状态数量
-  Future<ApiResponse> getOrderStatusNum() async {
-    return await _api.get('order/data');
+  Future<ApiResponse<OrderStatusSummary>> getOrderStatusNum() async {
+    return await _api.get<OrderStatusSummary>(
+      'order/data',
+      fromJsonT: (json) => OrderStatusSummary.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   // ==================== 订单操作 ====================
@@ -84,17 +103,17 @@ class OrderProvider {
 
   /// 删除订单
   Future<ApiResponse> deleteOrder(String orderId) async {
-    return await _api.post('order/del', data: {'id': orderId});
+    return await _api.post('order/del', data: {'uni': orderId});
   }
 
   /// 确认收货
   Future<ApiResponse> takeOrder(String orderId) async {
-    return await _api.post('order/take', data: {'id': orderId});
+    return await _api.post('order/take', data: {'uni': orderId});
   }
 
   /// 再次购买
   Future<ApiResponse> againOrder(String orderId) async {
-    return await _api.post('order/again', data: {'id': orderId});
+    return await _api.post('order/again', data: {'uni': orderId});
   }
 
   // ==================== 支付 ====================

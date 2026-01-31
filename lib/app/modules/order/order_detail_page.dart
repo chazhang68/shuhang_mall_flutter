@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/order_detail_model.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/order_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 
@@ -16,11 +19,12 @@ class OrderDetailPage extends StatefulWidget {
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
   final AppController appController = Get.find<AppController>();
+  final OrderProvider _orderProvider = OrderProvider();
 
   String orderId = '';
   bool isLoading = true;
-  Map<String, dynamic> orderInfo = {};
-  List<Map<String, dynamic>> cartInfo = [];
+  OrderDetailModel? orderInfo;
+  List<CartItem> cartInfo = [];
   int statusType = 0;
   bool isGoodsReturn = false;
 
@@ -33,47 +37,37 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Future<void> _loadOrderDetail() async {
     setState(() => isLoading = true);
+    try {
+      final response = await _orderProvider.getOrderDetail(orderId);
+      if (!response.isSuccess) {
+        FlutterToastPro.showMessage(response.msg);
+        setState(() => isLoading = false);
+        return;
+      }
 
-    // TODO: 调用API获取订单详情
-    await Future.delayed(const Duration(milliseconds: 500));
+      final detail = response.data;
+      if (detail == null) {
+        FlutterToastPro.showMessage('订单详情为空');
+        setState(() => isLoading = false);
+        return;
+      }
 
-    // 模拟订单数据
-    setState(() {
-      orderInfo = {
-        'order_id': orderId,
-        'paid': 1,
-        'status': 1,
-        'pay_price': '299.00',
-        'total_price': '319.00',
-        'coupon_price': '20.00',
-        'pay_postage': '0.00',
-        'add_time_y': '2024-01-15',
-        'add_time_h': '14:30:00',
-        'real_name': '张三',
-        'user_phone': '13800138000',
-        'user_address': '广东省深圳市南山区科技园',
-        '_status': {'_title': '待发货', '_msg': '商家正在处理您的订单', '_payType': '微信支付', '_type': 1},
-      };
-
-      cartInfo = [
-        {
-          'productInfo': {
-            'image': 'https://via.placeholder.com/200',
-            'store_name': '测试商品',
-            'price': '99.00',
-          },
-          'cart_num': 3,
-        },
-      ];
-
-      statusType = orderInfo['_status']?['_type'] ?? 0;
-      isLoading = false;
-    });
+      setState(() {
+        orderInfo = detail;
+        cartInfo = detail.cartInfo;
+        statusType = detail.statusInfo.type == 0 ? detail.status : detail.statusInfo.type;
+        isGoodsReturn = detail.refundStatus != 0;
+        isLoading = false;
+      });
+    } catch (e) {
+      FlutterToastPro.showMessage('订单详情加载失败');
+      setState(() => isLoading = false);
+    }
   }
 
   void _copyOrderId() {
     Clipboard.setData(ClipboardData(text: orderId));
-    FlutterToastPro.showMessage( '订单号已复制');
+    FlutterToastPro.showMessage('订单号已复制');
   }
 
   void _goPayment() {
@@ -90,15 +84,25 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           TextButton(
             onPressed: () {
               Get.back();
-              // TODO: 调用取消订单API
-              FlutterToastPro.showMessage( '订单已取消');
-              Get.back();
+              _submitCancel();
             },
             child: const Text('确定'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _submitCancel() async {
+    try {
+      final response = await _orderProvider.cancelOrder(orderId);
+      FlutterToastPro.showMessage(response.msg);
+      if (response.isSuccess) {
+        _loadOrderDetail();
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('取消失败');
+    }
   }
 
   void _confirmReceipt() {
@@ -111,15 +115,25 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           TextButton(
             onPressed: () {
               Get.back();
-              // TODO: 调用确认收货API
-              FlutterToastPro.showMessage( '已确认收货');
-              _loadOrderDetail();
+              _submitTakeOrder();
             },
             child: const Text('确定'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _submitTakeOrder() async {
+    try {
+      final response = await _orderProvider.takeOrder(orderId);
+      FlutterToastPro.showMessage(response.msg);
+      if (response.isSuccess) {
+        _loadOrderDetail();
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('确认收货失败');
+    }
   }
 
   @override
@@ -195,7 +209,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildStatusCard(ThemeData theme) {
-    final status = orderInfo['_status'] ?? {};
+    final status = orderInfo?.statusInfo;
 
     return Container(
       color: theme.primaryColor,
@@ -204,11 +218,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            status['_title'] ?? '',
+            status?.title ?? '',
             style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          Text(status['_msg'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(status?.message ?? '', style: const TextStyle(color: Colors.white70, fontSize: 14)),
         ],
       ),
     );
@@ -230,19 +244,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 Row(
                   children: [
                     Text(
-                      orderInfo['real_name'] ?? '',
+                      orderInfo?.realName ?? '',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      orderInfo['user_phone'] ?? '',
+                      orderInfo?.userPhone ?? '',
                       style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  orderInfo['user_address'] ?? '',
+                  orderInfo?.userAddress ?? '',
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
@@ -260,7 +274,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: cartInfo.map((item) {
-          final product = item['productInfo'] ?? {};
+          final product = item.productInfo;
+          final attrInfo = product?.attrInfo;
+          final imageUrl = product?.image ?? '';
+          final price =
+              attrInfo?.price ?? (item.truePrice > 0 ? item.truePrice : product?.price ?? 0);
+          final sku = attrInfo?.suk ?? '';
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
@@ -268,7 +287,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    product['image'] ?? '',
+                    imageUrl,
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
@@ -286,23 +305,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product['store_name'] ?? '',
+                        product?.storeName ?? '',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 14),
                       ),
+                      if (sku.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(sku, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '¥${product['price']}',
+                            '¥${_formatMoney(price)}',
                             style: TextStyle(
                               color: theme.primaryColor,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text('x${item['cart_num']}', style: const TextStyle(color: Colors.grey)),
+                          Text('x${item.cartNum}', style: const TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ],
@@ -317,25 +340,26 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildPriceCard(ThemeData theme) {
+    final totalPrice = _formatMoney(orderInfo?.totalPrice ?? 0);
+    final couponPrice = _formatMoney(orderInfo?.couponPrice ?? 0);
+    final payPostage = _formatMoney(orderInfo?.payPostage ?? 0);
+    final payPrice = _formatMoney(orderInfo?.payPrice ?? 0);
     return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
-          _buildPriceRow('商品总价', '¥${orderInfo['total_price']}'),
-          _buildPriceRow('优惠券', '-¥${orderInfo['coupon_price']}'),
-          _buildPriceRow(
-            '运费',
-            orderInfo['pay_postage'] == '0.00' ? '免运费' : '¥${orderInfo['pay_postage']}',
-          ),
+          _buildPriceRow('商品总价', '¥$totalPrice'),
+          _buildPriceRow('优惠券', '-¥$couponPrice'),
+          _buildPriceRow('运费', payPostage == '0.00' ? '免运费' : '¥$payPostage'),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('实付款', style: TextStyle(fontWeight: FontWeight.w600)),
               Text(
-                '¥${orderInfo['pay_price']}',
+                '¥$payPrice',
                 style: TextStyle(
                   color: theme.primaryColor,
                   fontSize: 18,
@@ -363,6 +387,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildOrderInfoCard(ThemeData theme) {
+    final payType = orderInfo?.statusInfo.payType ?? '';
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.all(16),
@@ -372,11 +397,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: [
           const Text('订单信息', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
-          _buildInfoRow('订单号', orderInfo['order_id'] ?? '', showCopy: true),
-          _buildInfoRow('下单时间', '${orderInfo['add_time_y']} ${orderInfo['add_time_h']}'),
-          _buildInfoRow('支付状态', orderInfo['paid'] == 1 ? '已支付' : '未支付'),
-          if (orderInfo['paid'] == 1)
-            _buildInfoRow('支付方式', orderInfo['_status']?['_payType'] ?? ''),
+          _buildInfoRow('订单号', orderInfo?.orderId ?? '', showCopy: true),
+          _buildInfoRow('下单时间', _buildOrderTime()),
+          _buildInfoRow('支付状态', orderInfo?.paid == 1 ? '已支付' : '未支付'),
+          if (orderInfo?.paid == 1) _buildInfoRow('支付方式', payType),
         ],
       ),
     );
@@ -452,19 +476,42 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ],
 
             // 已完成状态
-            if (statusType == 4)
-              ElevatedButton(
+            if (statusType == 4) ...[
+              OutlinedButton(
                 onPressed: () {
-                  // 再次购买
+                  // TODO: 删除订单逻辑
+                  FlutterToastPro.showMessage('删除订单待实现');
                 },
+                child: const Text('删除订单'),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: _submitAgainOrder,
                 style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor),
                 child: const Text('再次购买', style: TextStyle(color: Colors.white)),
               ),
+            ],
           ],
         ),
       ),
     );
   }
+
+  Future<void> _submitAgainOrder() async {
+    try {
+      final response = await _orderProvider.againOrder(orderId);
+      FlutterToastPro.showMessage(response.msg);
+    } catch (e) {
+      FlutterToastPro.showMessage('再次购买失败');
+    }
+  }
+
+  String _formatMoney(double value) => value.toStringAsFixed(2);
+
+  String _buildOrderTime() {
+    final date = orderInfo?.addTimeY ?? '';
+    final time = orderInfo?.addTimeH ?? '';
+    final combined = '$date $time'.trim();
+    return combined.isEmpty ? '-' : combined;
+  }
 }
-
-
