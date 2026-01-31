@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../data/providers/public_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
@@ -193,17 +193,28 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
             // 内容
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Html(
-                data: _content,
-                style: {
-                  "body": Style(
-                    fontSize: FontSize(14),
-                    color: const Color(0xFF8A8B8C),
-                    lineHeight: const LineHeight(1.7),
-                  ),
-                  "img": Style(width: Width(100, Unit.percent), display: Display.block),
-                  "table": Style(width: Width(100, Unit.percent)),
-                  "video": Style(width: Width(100, Unit.percent)),
+              child: HtmlWidget(
+                _content,
+                customStylesBuilder: (element) {
+                  if (element.localName == 'body') {
+                    return {
+                      'font-size': '14px',
+                      'color': '#8A8B8C',
+                      'line-height': '1.7',
+                      'margin': '0',
+                      'padding': '0',
+                    };
+                  }
+                  if (element.localName == 'img') {
+                    return {'width': '100%', 'display': 'block'};
+                  }
+                  if (element.localName == 'table') {
+                    return {'width': '100%'};
+                  }
+                  if (element.localName == 'video') {
+                    return {'width': '100%'};
+                  }
+                  return null;
                 },
               ),
             ),
@@ -219,7 +230,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     // TODO: 实现分享功能
-                    FlutterToastPro.showMessage( '分享功能开发中');
+                    FlutterToastPro.showMessage('分享功能开发中');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeColors.red.primary,
@@ -241,5 +252,3 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     );
   }
 }
-
-

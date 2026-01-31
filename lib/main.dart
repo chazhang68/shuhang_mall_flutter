@@ -11,11 +11,13 @@ import 'package:shuhang_mall_flutter/app/theme/app_theme.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:media_kit/media_kit.dart';
 
 /// 应用入口
 /// 对应原 main.js
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
 
   // 初始化缓存
   await Cache.init();

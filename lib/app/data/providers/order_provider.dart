@@ -1,3 +1,5 @@
+import 'package:shuhang_mall_flutter/app/data/models/cart_add_response_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/cart_count_model.dart';
 import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
 import 'package:shuhang_mall_flutter/app/data/models/order_detail_model.dart';
 import 'package:shuhang_mall_flutter/app/data/models/order_list_model.dart';
@@ -25,8 +27,12 @@ class OrderProvider {
   }
 
   /// 添加购物车
-  Future<ApiResponse> addCart(Map<String, dynamic> data) async {
-    return await _api.post('cart/add', data: data);
+  Future<ApiResponse<CartAddResponseModel>> addCart(Map<String, dynamic> data) async {
+    return await _api.post<CartAddResponseModel>(
+      'cart/add',
+      data: data,
+      fromJsonT: (json) => CartAddResponseModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   /// 删除购物车
@@ -40,8 +46,11 @@ class OrderProvider {
   }
 
   /// 获取购物车数量
-  Future<ApiResponse> getCartCount() async {
-    return await _api.get('cart/count');
+  Future<ApiResponse<CartCountModel>> getCartCount() async {
+    return await _api.get<CartCountModel>(
+      'cart/count',
+      fromJsonT: (json) => CartCountModel.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   // ==================== 订单确认 ====================

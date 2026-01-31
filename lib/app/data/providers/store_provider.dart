@@ -1,3 +1,4 @@
+import 'package:shuhang_mall_flutter/app/data/models/product_detail_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 
 /// 商品 API 服务
@@ -22,6 +23,15 @@ class StoreProvider {
     return await _api.get('product/detail/$id', noAuth: true);
   }
 
+  /// 获取商品详情(对象)
+  Future<ApiResponse<ProductDetailModel>> getProductDetailModel(int id) async {
+    return await _api.get<ProductDetailModel>(
+      'product/detail/$id',
+      noAuth: true,
+      fromJsonT: (json) => ProductDetailModel.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
   /// 获取商品 SKU
   Future<ApiResponse> getProductSku(int id) async {
     return await _api.get('product/sku/$id', noAuth: true);
@@ -43,12 +53,18 @@ class StoreProvider {
 
   /// 收藏商品
   Future<ApiResponse> collectProduct(int id) async {
-    return await _api.post('collect/add', data: {'id': id, 'type': 'product'});
+    return await _api.post('collect/add', data: {'id': id, 'product': 'product'});
   }
 
   /// 取消收藏
   Future<ApiResponse> uncollectProduct(int id) async {
-    return await _api.post('collect/del', data: {'id': id, 'type': 'product'});
+    return await _api.post(
+      'collect/del',
+      data: {
+        'id': [id],
+        'category': 'product',
+      },
+    );
   }
 
   /// 收藏列表

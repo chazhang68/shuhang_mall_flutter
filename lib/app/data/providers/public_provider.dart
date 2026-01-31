@@ -1,3 +1,4 @@
+import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 
 /// 公共 API 服务
@@ -65,10 +66,40 @@ class PublicProvider {
     return await _api.get('get_index/$type', noAuth: true);
   }
 
+  /// 获取首页数据 - 消费券商城（对象）
+  /// type: 1=消费券商城
+  Future<ApiResponse<HomeIndexData>> getHomeIndexDataByType(int type) async {
+    return await _api.get<HomeIndexData>(
+      'get_index/$type',
+      noAuth: true,
+      fromJsonT: (json) => HomeIndexData.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
   /// 获取商品列表
   /// type: 1=消费券商城
   Future<ApiResponse> getProducts(int type, Map<String, dynamic>? params) async {
     return await _api.get('get_products/$type', queryParameters: params, noAuth: true);
+  }
+
+  /// 获取首页商品列表（对象）
+  /// type: 1=消费券商城
+  Future<ApiResponse<List<HomeHotProduct>>> getHomeProductsByType(
+    int type,
+    Map<String, dynamic>? params,
+  ) async {
+    return await _api.get<List<HomeHotProduct>>(
+      'get_products/$type',
+      queryParameters: params,
+      noAuth: true,
+      fromJsonT: (json) {
+        if (json is! List) return <HomeHotProduct>[];
+        return json
+            .whereType<Map>()
+            .map((item) => HomeHotProduct.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      },
+    );
   }
 
   /// 获取首页配置

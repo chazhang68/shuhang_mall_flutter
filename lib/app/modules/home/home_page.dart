@@ -4,6 +4,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
@@ -23,10 +24,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   final PublicProvider _publicProvider = PublicProvider();
 
   // 数据
-  List<Map<String, dynamic>> _banners = [];
+  List<HomeBannerItem> _banners = [];
   String _notes = '';
-  String _notesId = '';
-  List<Map<String, dynamic>> _hotList = [];
+  int _notesId = 0;
+  List<HomeHotProduct> _hotList = [];
 
   bool _isLoading = true;
   int _page = 1;
@@ -59,26 +60,16 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   Future<void> _loadIndexData() async {
     try {
-      final response = await _publicProvider.getIndexDataByType(1);
+      final response = await _publicProvider.getHomeIndexDataByType(1);
 
       if (response.isSuccess && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
+        final data = response.data!;
 
         setState(() {
-          // 解析banner
-          if (data['banner'] != null) {
-            _banners = List<Map<String, dynamic>>.from(data['banner'] ?? []);
-          }
-
-          // 解析公告
-          _notes = data['notes']?.toString() ?? '';
-          _notesId = data['id']?.toString() ?? '';
-
-          // 解析热门商品列表
-          if (data['hot_list'] != null) {
-            _hotList = List<Map<String, dynamic>>.from(data['hot_list'] ?? []);
-          }
-
+          _banners = data.banners;
+          _notes = data.notes;
+          _notesId = data.notesId;
+          _hotList = data.hotList;
           _isLoading = false;
         });
       } else {
@@ -103,16 +94,19 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     });
 
     try {
-      final response = await _publicProvider.getProducts(1, {'page': _page, 'limit': _limit});
+      final response = await _publicProvider.getHomeProductsByType(1, {
+        'page': _page,
+        'limit': _limit,
+      });
 
       if (response.isSuccess && response.data != null) {
-        final list = response.data as List<dynamic>? ?? [];
+        final list = response.data ?? <HomeHotProduct>[];
 
         setState(() {
           if (list.length < _limit) {
             _loadEnd = true;
           }
-          _hotList.addAll(List<Map<String, dynamic>>.from(list));
+          _hotList.addAll(list);
           _page++;
           _loadingMore = false;
         });
@@ -146,8 +140,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   }
 
   void _goNotice() {
-    if (_notesId.isNotEmpty) {
-      Get.toNamed(AppRoutes.newsDetail, arguments: {'id': int.tryParse(_notesId) ?? 0});
+    if (_notesId > 0) {
+      Get.toNamed(AppRoutes.newsDetail, arguments: {'id': _notesId});
     }
   }
 
@@ -305,8 +299,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           autoPlayInterval: const Duration(seconds: 3),
         ),
         items: _banners.map((banner) {
-          final imgUrl = banner['img_url']?.toString() ?? banner['pic']?.toString() ?? '';
-          final url = banner['url']?.toString() ?? '';
+          final imgUrl = banner.imgUrl;
+          final url = banner.url;
 
           return GestureDetector(
             onTap: () {
@@ -423,15 +417,15 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   }
 
   /// 商品卡片
-  Widget _buildGoodsItem(Map<String, dynamic> item) {
-    final id = item['id'] ?? 0;
-    final image = item['image']?.toString() ?? '';
-    final storeName = item['store_name']?.toString() ?? '';
-    final keyword = item['keyword']?.toString() ?? '';
-    final price = item['price']?.toString() ?? '0';
+  Widget _buildGoodsItem(HomeHotProduct item) {
+    final id = item.id;
+    final image = item.image;
+    final storeName = item.storeName;
+    final keyword = item.keyword;
+    final price = item.price.toStringAsFixed(2);
 
     return GestureDetector(
-      onTap: () => _goGoodsDetail(id is int ? id : int.tryParse(id.toString()) ?? 0),
+      onTap: () => _goGoodsDetail(id),
       child: Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         child: Column(

@@ -47,13 +47,13 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
         setState(() {
           isLoading = false;
         });
-        FlutterToastPro.showMessage( '获取海报失败');
+        FlutterToastPro.showMessage('获取海报失败');
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      FlutterToastPro.showMessage( '生成失败');
+      FlutterToastPro.showMessage('生成失败');
     }
   }
 
@@ -64,7 +64,7 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
     final poster = posterList[index];
     final url = poster['wap_poster'] ?? '';
     if (url.isEmpty) {
-      FlutterToastPro.showMessage( '海报地址无效');
+      FlutterToastPro.showMessage('海报地址无效');
       return;
     }
 
@@ -88,7 +88,7 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
         // 再次请求权限
         final newStatus = await Permission.photos.request();
         if (!newStatus.isGranted) {
-          FlutterToastPro.showMessage( '请在设置中开启相册权限');
+          FlutterToastPro.showMessage('请在设置中开启相册权限');
           return;
         }
       }
@@ -96,19 +96,14 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
 
     // TODO: 实现实际的图片保存逻辑
     // 这里需要下载图片并保存到相册
-    FlutterToastPro.showMessage( '保存功能开发中');
+    FlutterToastPro.showMessage('保存功能开发中');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('推广名片'),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : posterList.isEmpty
@@ -141,13 +136,12 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
   /// 海报项
   Widget _buildPosterItem(Map<String, dynamic> poster) {
     final url = poster['wap_poster'] ?? '';
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
-      padding: const EdgeInsets.all(16),
       child: Image.network(
         url,
-        fit: BoxFit.contain,
+        fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Center(
@@ -175,5 +169,3 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
     );
   }
 }
-
-

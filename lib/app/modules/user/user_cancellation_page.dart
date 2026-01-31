@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/user_provider.dart';
 import '../../controllers/app_controller.dart';
@@ -87,10 +87,7 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
                   const SizedBox(height: 10),
                   const Text(
                     '注销后无法恢复，请谨慎操作',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -105,9 +102,7 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
                             backgroundColor: const Color(0xFFF5F5F5),
                             foregroundColor: const Color(0xFF333333),
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(21),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21)),
                             elevation: 0,
                           ),
                           child: const Text('注销'),
@@ -121,9 +116,7 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
                             backgroundColor: const Color(0xFFE93323),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(21),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21)),
                             elevation: 0,
                           ),
                           child: const Text('取消'),
@@ -146,13 +139,13 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
       // 清除登录状态
       final appController = Get.find<AppController>();
       await appController.logout();
-      
+
       // 跳转到首页
       Get.offAllNamed(AppRoutes.main);
-      
-      FlutterToastPro.showMessage( '账号已注销');
+
+      FlutterToastPro.showMessage('账号已注销');
     } catch (e) {
-      FlutterToastPro.showMessage( '注销失败: $e');
+      FlutterToastPro.showMessage('注销失败: $e');
     }
   }
 
@@ -195,47 +188,54 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
                         const SizedBox(width: 10),
                         Text(
                           _agreementData['name'] ?? '',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                   ),
                 ],
-                
+
                 // 协议内容区域
                 Expanded(
                   child: Container(
                     color: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: SingleChildScrollView(
-                      child: Html(
-                        data: _agreementData['content'] ?? '<p>暂无内容</p>',
+                      child: HtmlWidget(
+                        _agreementData['content'] ?? '<p>暂无内容</p>',
+                        customStylesBuilder: (element) {
+                          if (element.localName == 'body') {
+                            return {'margin': '0', 'padding': '0'};
+                          }
+                          if (element.localName == 'img') {
+                            return {'width': '100%', 'display': 'block'};
+                          }
+                          if (element.localName == 'table') {
+                            return {'width': '100%'};
+                          }
+                          if (element.localName == 'video') {
+                            return {'width': '100%'};
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ),
                 ),
-                
+
                 // 底部按钮区域
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAFAFA),
-                    border: Border(
-                      top: BorderSide(color: Colors.grey[200]!),
-                    ),
+                    border: Border(top: BorderSide(color: Colors.grey[200]!)),
                   ),
                   child: SafeArea(
                     child: Column(
                       children: [
                         const Text(
                           '点击【立即注销】即代表您已经同意《用户注销协议》',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF999999),
-                          ),
+                          style: TextStyle(fontSize: 12, color: Color(0xFF999999)),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
@@ -252,10 +252,7 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
                               ),
                               elevation: 0,
                             ),
-                            child: const Text(
-                              '立即注销',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                            child: const Text('立即注销', style: TextStyle(fontSize: 16)),
                           ),
                         ),
                       ],
@@ -267,5 +264,3 @@ class _UserCancellationPageState extends State<UserCancellationPage> {
     );
   }
 }
-
-

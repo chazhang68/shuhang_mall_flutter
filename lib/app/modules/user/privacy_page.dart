@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 /// 隐私政策/用户协议页面
 /// 对应原 pages/users/privacy/index.vue
@@ -47,13 +47,13 @@ class _PrivacyPageState extends State<PrivacyPage> {
         setState(() {
           _isLoading = false;
         });
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      FlutterToastPro.showMessage( '加载失败');
+      FlutterToastPro.showMessage('加载失败');
     }
   }
 
@@ -84,22 +84,31 @@ class _PrivacyPageState extends State<PrivacyPage> {
                         child: Text('暂无内容', style: TextStyle(fontSize: 14, color: Colors.grey)),
                       ),
                     )
-                  : Html(
-                      data: _content,
-                      style: {
-                        "body": Style(
-                          fontSize: FontSize(14),
-                          lineHeight: LineHeight(2.0),
-                          color: const Color(0xFF333333),
-                        ),
-                        "img": Style(width: Width(100, Unit.percent), display: Display.block),
-                        "table": Style(width: Width(100, Unit.percent)),
-                        "video": Style(width: Width(100, Unit.percent)),
+                  : HtmlWidget(
+                      _content,
+                      customStylesBuilder: (element) {
+                        if (element.localName == 'body') {
+                          return {
+                            'font-size': '14px',
+                            'line-height': '2.0',
+                            'color': '#333333',
+                            'margin': '0',
+                            'padding': '0',
+                          };
+                        }
+                        if (element.localName == 'img') {
+                          return {'width': '100%', 'display': 'block'};
+                        }
+                        if (element.localName == 'table') {
+                          return {'width': '100%'};
+                        }
+                        if (element.localName == 'video') {
+                          return {'width': '100%'};
+                        }
+                        return null;
                       },
                     ),
             ),
     );
   }
 }
-
-

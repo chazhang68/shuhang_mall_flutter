@@ -841,7 +841,7 @@ class _ServiceSection extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final spacing = 10.w;
-              final itemWidth = (constraints.maxWidth - spacing * 4) / 5;
+              final itemWidth = (constraints.maxWidth - spacing * 3) / 4;
 
               return Wrap(
                 spacing: spacing,
