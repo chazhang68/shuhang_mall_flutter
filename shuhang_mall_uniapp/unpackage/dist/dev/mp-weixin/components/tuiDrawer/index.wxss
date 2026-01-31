@@ -1,0 +1,58 @@
+
+.tui-swipeout-wrap.data-v-268b4df1 {
+		position: relative;
+		overflow: hidden;
+		/* margin-bottom: 24rpx; */
+}
+.swipe-action-show.data-v-268b4df1 {
+		position: relative;
+		z-index: 998;
+}
+.tui-swipeout-item.data-v-268b4df1 {
+		width: 100%;
+		/* padding: 15px 20px; */
+		box-sizing: border-box;
+		transition: -webkit-transform 0.2s ease;
+		transition: transform 0.2s ease;
+		transition: transform 0.2s ease, -webkit-transform 0.2s ease;
+		font-size: 14px;
+		/* cursor: pointer; */
+}
+
+
+	/* .tui-swipeout-item :active {
+    background-color: #fff !important;
+  } */
+.tui-swipeout-content.data-v-268b4df1 {
+		white-space: nowrap;
+		overflow: hidden;
+}
+.tui-swipeout-button-right-group.data-v-268b4df1 {
+		position: absolute;
+		right: -100%;
+		top: 0;
+		height: 100%;
+		z-index: 1;
+		width: 100%;
+}
+.tui-swipeout-button-right-item.data-v-268b4df1 {
+		height: 100%;
+		float: left;
+		white-space: nowrap;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+}
+.swipe-action_mask.data-v-268b4df1 {
+		display: block;
+		opacity: 0;
+		position: fixed;
+		z-index: 997;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+}
+

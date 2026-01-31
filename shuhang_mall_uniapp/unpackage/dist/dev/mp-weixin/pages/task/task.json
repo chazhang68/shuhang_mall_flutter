@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "",
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "ad-rewarded-video": "/node-modules/@dcloudio/uni-cli-shared/components/ad-rewarded-video",
+    "page-foot": "/components/pageFooter/index"
+  }
+}

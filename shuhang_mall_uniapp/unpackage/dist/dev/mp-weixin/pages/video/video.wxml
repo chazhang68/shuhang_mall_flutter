@@ -1,0 +1,1 @@
+<view><video style="{{'width:100%;'+('height:'+(h)+';')}}" controls="{{false}}" src="https://xifu-1320565916.cos.ap-chengdu.myqcloud.com/gg.mp4" autoplay="true"></video></view>

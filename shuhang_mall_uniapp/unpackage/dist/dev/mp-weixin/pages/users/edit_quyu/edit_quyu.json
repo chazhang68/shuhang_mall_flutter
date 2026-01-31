@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "修改注册区域",
+  "usingComponents": {
+    "authorize": "/components/Authorize"
+  }
+}

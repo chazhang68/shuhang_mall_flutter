@@ -1,0 +1,257 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* crmeb颜色变量 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.pos-order-list.data-v-6ce8b926 {
+  padding-top: 96rpx;
+}
+.pos-order-list .search.data-v-6ce8b926 {
+  padding-left: 30rpx;
+  padding-top: 30rpx;
+  background-color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99;
+}
+.pos-order-list .search .input.data-v-6ce8b926 {
+  width: 598rpx;
+  background-color: #f7f7f7;
+  border-radius: 33rpx;
+  padding: 0 35rpx;
+  box-sizing: border-box;
+  height: 66rpx;
+}
+.pos-order-list .search .input input.data-v-6ce8b926 {
+  width: 472rpx;
+  font-size: 28rpx;
+}
+.pos-order-list .search .input .placeholder.data-v-6ce8b926 {
+  color: #999;
+}
+.pos-order-list .search .input .iconfont.data-v-6ce8b926 {
+  color: #555;
+  font-size: 35rpx;
+}
+.pos-order-list .search .bnt.data-v-6ce8b926 {
+  width: 120rpx;
+  text-align: center;
+  height: 66rpx;
+  line-height: 66rpx;
+  font-size: 30rpx;
+  color: #282828;
+}
+.pos-order-list .nav.data-v-6ce8b926 {
+  width: 100%;
+  height: 96rpx;
+  background-color: #fff;
+  font-size: 28rpx;
+  color: #282828;
+  position: fixed;
+  top: 96rpx;
+  left: 0;
+  z-index: 99;
+}
+.pos-order-list .nav .item.on.data-v-6ce8b926 {
+  color: #2291f8;
+}
+.pos-order-list .list.data-v-6ce8b926 {
+  margin-top: 120rpx;
+}
+.pos-order-list .nothing.data-v-6ce8b926 {
+  margin-top: 220rpx;
+  text-align: center;
+  color: #cfcfcf;
+}
+.pos-order-list .list .item.data-v-6ce8b926 {
+  background-color: #fff;
+  width: 100%;
+}
+.pos-order-list .list .item ~ .item.data-v-6ce8b926 {
+  margin-top: 24rpx;
+}
+.pos-order-list .list .item .order-num.data-v-6ce8b926 {
+  height: 124rpx;
+  border-bottom: 1px solid #eee;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #282828;
+  padding: 0 30rpx;
+}
+.pos-order-list .list .item .order-num .state.data-v-6ce8b926 {
+  color: #2291f8;
+  font-weight: normal;
+}
+.pos-order-list .list .item .order-num .state.on.data-v-6ce8b926 {
+  font-size: 24rpx;
+  width: 150rpx;
+  text-align: right;
+}
+.pos-order-list .list .item .order-num .time.data-v-6ce8b926 {
+  font-size: 26rpx;
+  font-weight: normal;
+  color: #999;
+}
+.pos-order-list .list .item .operation.data-v-6ce8b926 {
+  padding: 20rpx 30rpx;
+  margin-top: 3rpx;
+  display: flex;
+  justify-content: right;
+}
+.pos-order-list .list .item .operation .more.data-v-6ce8b926 {
+  position: relative;
+}
+.pos-order-list .list .item .operation .icon-gengduo.data-v-6ce8b926 {
+  font-size: 50rpx;
+  color: #aaa;
+}
+.pos-order-list .list .item .operation .order .arrow.data-v-6ce8b926 {
+  width: 0;
+  height: 0;
+  border-left: 11rpx solid transparent;
+  border-right: 11rpx solid transparent;
+  border-top: 20rpx solid #e5e5e5;
+  position: absolute;
+  left: 15rpx;
+  bottom: -18rpx;
+}
+.pos-order-list .list .item .operation .order .arrow.data-v-6ce8b926:before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 7rpx solid transparent;
+  border-right: 7rpx solid transparent;
+  border-top: 20rpx solid #fff;
+  position: absolute;
+  left: -7rpx;
+  bottom: 0;
+}
+.pos-order-list .list .item .operation .order.data-v-6ce8b926 {
+  width: 200rpx;
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 10rpx;
+  position: absolute;
+  top: -100rpx;
+  z-index: 9;
+}
+.pos-order-list .list .item .operation .order .items.data-v-6ce8b926 {
+  height: 77rpx;
+  line-height: 77rpx;
+  text-align: center;
+}
+.pos-order-list .list .item .operation .order .items ~ .items.data-v-6ce8b926 {
+  border-top: 1px solid #f5f5f5;
+}
+.pos-order-list .list .item .operation .bnt.data-v-6ce8b926 {
+  font-size: 28rpx;
+  color: #5c5c5c;
+  width: 170rpx;
+  height: 60rpx;
+  border-radius: 30rpx;
+  border: 1px solid #bbb;
+  text-align: center;
+  line-height: 60rpx;
+}
+.pos-order-list .list .item .operation .bnt ~ .bnt.data-v-6ce8b926 {
+  margin-left: 14rpx;
+}
+.pos-order-list .list .item .operation .wait.data-v-6ce8b926 {
+  margin-left: 30rpx;
+  color: orangered;
+}
+.pos-order-goods.data-v-6ce8b926 {
+  padding: 0 30rpx;
+  background-color: #fff;
+}
+.pos-order-goods .goods.data-v-6ce8b926 {
+  padding: 28rpx 0;
+}
+.pos-order-goods .goods ~ .goods.data-v-6ce8b926 {
+  border-top: 1px dashed #e5e5e5;
+}
+.pos-order-goods .goods .picTxt.data-v-6ce8b926 {
+  width: 515rpx;
+}
+.pos-order-goods .goods .picTxt .pictrue.data-v-6ce8b926 {
+  width: 130rpx;
+  height: 130rpx;
+}
+.pos-order-goods .goods .picTxt .pictrue image.data-v-6ce8b926 {
+  width: 100%;
+  height: 100%;
+  border-radius: 6rpx;
+}
+.pos-order-goods .goods .picTxt .text.data-v-6ce8b926 {
+  width: 365rpx;
+  height: 130rpx;
+}
+.pos-order-goods .goods .picTxt .text .info.data-v-6ce8b926 {
+  width: 100%;
+  font-size: 28rpx;
+  color: #282828;
+}
+.pos-order-goods .goods .picTxt .text .attr.data-v-6ce8b926 {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 24rpx;
+  color: #999;
+}
+.pos-order-goods .goods .money.data-v-6ce8b926 {
+  width: 164rpx;
+  text-align: right;
+  font-size: 28rpx;
+}
+.pos-order-goods .goods .money .info.data-v-6ce8b926 {
+  margin-top: 18rpx;
+  font-size: 24rpx;
+}
+.pos-order-goods .goods .money .x-money.data-v-6ce8b926 {
+  color: #282828;
+}
+.pos-order-goods .goods .money .num.data-v-6ce8b926 {
+  color: #ff9600;
+  margin: 5rpx 0;
+}
+.pos-order-goods .goods .money .y-money.data-v-6ce8b926 {
+  color: #999;
+  text-decoration: line-through;
+}
+.public-total.data-v-6ce8b926 {
+  font-size: 28rpx;
+  color: #282828;
+  border-top: 1px solid #eee;
+  height: 92rpx;
+  line-height: 92rpx;
+  text-align: right;
+  padding: 0 30rpx;
+  background-color: #fff;
+}
+.public-total .money.data-v-6ce8b926 {
+  color: #ff4c3c;
+}
+

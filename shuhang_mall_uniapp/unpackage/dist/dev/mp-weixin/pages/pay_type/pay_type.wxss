@@ -1,0 +1,26 @@
+
+.tips{
+		
+		border:1px solid #dd524d;
+		border-radius: 3px;
+		background-color: #fed6d6;
+}
+.item{
+		height: 95rpx;
+		border-bottom: 1px solid #e6e6e6;
+}
+.box{
+		background: #fff;padding: 10px;border-radius: 3px;
+}
+ .segmented-control__item--button--first{
+	border-top-left-radius:0px;
+	border-bottom-left-radius:0px
+}
+ .segmented-control__item--button--last{
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px
+}
+input{
+	font-size: 14px;
+}
+

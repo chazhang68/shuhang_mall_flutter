@@ -1,0 +1,35 @@
+
+.chushou{
+		width: 150rpx;
+		height: 65rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #fff;
+		border-radius: 3px;
+		background: #dd524d;
+}
+.box-item{
+		background: #fff;
+		border-radius: 5px;
+		padding: 10px;
+		margin-bottom: 20rpx;
+}
+.active{
+		color: #dd524d;
+		border-bottom: 2px solid #dd524d;
+}
+.child{
+		flex:1;
+		text-align: center;
+		padding: 10px 0px;
+}
+ .segmented-control__item--button--first{
+	border-top-left-radius:0px!important;
+	border-bottom-left-radius:0px!important
+}
+ .segmented-control__item--button--last{
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px
+}
+

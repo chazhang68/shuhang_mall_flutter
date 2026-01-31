@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "实名认证",
+  "usingComponents": {
+    "uni-popup": "/uni_modules/uni-popup/components/uni-popup/uni-popup",
+    "verify": "/pages/annex/components/verify/verify",
+    "jyf-parser": "/components/jyf-parser/jyf-parser",
+    "authorize": "/components/Authorize"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "我的绿色积分",
+  "usingComponents": {
+    "uni-segmented-control": "/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control",
+    "authorize": "/components/Authorize",
+    "empty-page": "/components/emptyPage",
+    "home": "/components/home/index"
+  }
+}
