@@ -533,13 +533,16 @@ class _LoginPageState extends State<LoginPage> {
     // 清除返回URL缓存
     Cache.remove(CacheKey.backUrl);
 
-    // 获取用户信息
+    // 先保存 token，确保后续请求携带鉴权
+    await appController.login(token: token, uid: 0, expiresTime: expiresTime);
+
+    // 获取用户信息（登录态依赖 token + userInfo）
     try {
       final userResponse = await _userProvider.getUserInfo();
       if (userResponse.isSuccess && userResponse.data != null) {
         final uid = userResponse.data?.uid ?? 0;
 
-        // 保存登录信息到 AppController
+        // 保存完整用户信息到 AppController
         await appController.login(
           token: token,
           uid: uid,
@@ -547,18 +550,15 @@ class _LoginPageState extends State<LoginPage> {
           expiresTime: expiresTime,
         );
 
-        // 跳转逻辑：如果有返回URL则返回，否则跳转首页
         _navigateAfterLogin(backUrl);
       } else {
-        // 即使获取用户信息失败，也保存 token 并跳转
-        await appController.login(token: token, uid: 0, expiresTime: expiresTime);
-        _navigateAfterLogin(backUrl);
+        await appController.logout();
+        Get.snackbar('提示', '获取用户信息失败');
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
-      // 保存 token 并跳转
-      await appController.login(token: token, uid: 0, expiresTime: expiresTime);
-      _navigateAfterLogin(backUrl);
+      await appController.logout();
+      Get.snackbar('提示', '获取用户信息失败');
     }
   }
 

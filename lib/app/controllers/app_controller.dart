@@ -6,10 +6,10 @@ import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 /// 全局应用控制器
 /// 对应原 store/modules/app.js
 class AppController extends GetxController {
-  static AppController get to => Get.find();
+  static AppController get to => Get.find<AppController>();
 
   // ==================== 用户状态 ====================
-  
+
   /// 用户 Token
   final _token = ''.obs;
   String get token => _token.value;
@@ -26,7 +26,7 @@ class AppController extends GetxController {
   set userInfo(UserModel? value) => _userInfo.value = value;
 
   /// 是否已登录
-  bool get isLogin => token.isNotEmpty;
+  bool get isLogin => userInfo != null && token.isNotEmpty;
 
   /// 购物车数量
   final _cartNum = 0.obs;
@@ -120,6 +120,8 @@ class AppController extends GetxController {
     if (cachedCartNum != null) {
       _cartNum.value = cachedCartNum;
     }
+
+    update();
   }
 
   /// 登录
@@ -142,6 +144,8 @@ class AppController extends GetxController {
     if (expiresTime != null) {
       await Cache.setInt(CacheKey.expires, expiresTime);
     }
+
+    update();
   }
 
   /// 退出登录
@@ -157,12 +161,15 @@ class AppController extends GetxController {
     await Cache.remove(CacheKey.userInfo);
     await Cache.remove(CacheKey.expires);
     await Cache.remove(CacheKey.cartNum);
+
+    update();
   }
 
   /// 更新用户信息
   Future<void> updateUserInfo(UserModel info) async {
     _userInfo.value = info;
     await Cache.setJson(CacheKey.userInfo, info.toJson());
+    update();
   }
 
   /// 更新购物车数量

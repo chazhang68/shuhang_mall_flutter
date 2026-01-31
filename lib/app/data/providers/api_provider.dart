@@ -32,9 +32,12 @@ class ApiResponse<T> {
   bool get isSuccess => status == 200;
 
   factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(dynamic)? fromJsonT) {
+    final statusRaw = json['status'];
+    final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+
     return ApiResponse(
-      status: json['status'] ?? 0,
-      msg: json['msg'] ?? '',
+      status: status,
+      msg: json['msg']?.toString() ?? '',
       data: fromJsonT != null && json['data'] != null
           ? fromJsonT(json['data'])
           : json['data'] as T?,
@@ -231,8 +234,9 @@ class ApiProvider {
         return ApiResponse<T>(status: 200, msg: 'success', data: responseData as T?);
       }
 
-      final status = responseData['status'] as int? ?? 0;
-      final msg = responseData['msg'] as String? ?? '';
+      final statusRaw = responseData['status'];
+      final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+      final msg = responseData['msg']?.toString() ?? '';
 
       // 需要登录
       if (_loginRequiredCodes.contains(status)) {

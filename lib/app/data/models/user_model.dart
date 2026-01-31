@@ -1,45 +1,73 @@
+import 'package:json_annotation/json_annotation.dart';
+import 'package:shuhang_mall_flutter/constant/app_constant.dart';
+
+part 'user_model.g.dart';
+
 /// 用户模型
 /// 对应后台返回的用户信息
+@JsonSerializable(fieldRename: FieldRename.snake)
 class UserModel {
   final int uid;
   final String nickname;
   final String avatar;
   final String phone;
   final String? realName;
-  final String? sex;        // 性别
+  final String? sex; // 性别
   final int? level;
   final String? levelName;
-  final bool isPromoter;  // 是否是推广员
-  final int spreadUid;    // 推广人ID
+  @JsonKey(fromJson: _intToBool, toJson: _boolToInt)
+  final bool isPromoter; // 是否是推广员
+  final int spreadUid; // 推广人ID
   final String? spreadNickname;
-  final double balance;   // 余额 (now_money / SWP)
-  final double integral;  // 积分（消费券）
+  @JsonKey(fromJson: stringToDouble)
+  final double balance; // 余额 (now_money / SWP)
+  @JsonKey(fromJson: stringToDouble)
+  final double integral; // 积分（消费券）
+  @JsonKey(fromJson: stringToDouble)
   final double brokeragePrice; // 佣金
-  final double fudou;     // 仓库积分
-  final double fdKy;      // 可用积分
-  final double fubao;     // 福宝
-  final double gxz;       // 贡献值（燃料值）
-  final double ryz;       // 荣誉值
-  final int couponCount;  // 优惠券数量
+  @JsonKey(fromJson: stringToDouble)
+  final double fudou; // 仓库积分
+  @JsonKey(fromJson: stringToDouble)
+  final double fdKy; // 可用积分
+  @JsonKey(fromJson: stringToDouble)
+  final double fubao; // 福宝
+  @JsonKey(fromJson: stringToDouble)
+  final double gxz; // 贡献值（燃料值）
+  @JsonKey(fromJson: stringToDouble)
+  final double ryz; // 荣誉值
+  @JsonKey(fromJson: stringToInt, readValue: _readCouponCount)
+  final int couponCount; // 优惠券数量
+  @JsonKey(fromJson: stringToInt, readValue: _readCollectCount)
   final int collectCount; // 收藏数量
-  final int visitCount;   // 浏览记录数量
-  final int orderCount;   // 订单数量
+  @JsonKey(fromJson: stringToInt, readValue: _readVisitCount)
+  final int visitCount; // 浏览记录数量
+  @JsonKey(fromJson: stringToInt, readValue: _readOrderCount)
+  final int orderCount; // 订单数量
+  @JsonKey(fromJson: _intToBool)
   final bool? isBindPhone;
-  final bool? isRealName;  // 是否实名
-  final bool isSign;       // 是否实名认证
-  final int task;          // 任务完成数量
-  final int? vipStatus;    // 会员状态
+  @JsonKey(fromJson: _intToBool)
+  final bool? isRealName; // 是否实名
+  @JsonKey(fromJson: _intToBool)
+  final bool isSign; // 是否实名认证
+  final int task; // 任务完成数量
+  final int? vipStatus; // 会员状态
   final String? vipEndTime;
-  final String? addTime;
-  final String? lastLoginTime;
+  @JsonKey(fromJson: stringToInt)
+  final int? addTime;
+  @JsonKey(fromJson: stringToInt)
+  final int? lastLoginTime;
   final Map<String, dynamic>? extra;
-  
+
   // 新增字段 - 对应 uni-app 中的字段
-  final String? code;        // 邀请码
-  final int agentLevel;      // 代理等级
-  final bool isVip;          // 是否是VIP
-  final bool h5Open;         // 是否开启H5
-  final OrderStatusNum? orderStatusNum;  // 订单状态数量
+  final String? code; // 邀请码
+  @JsonKey(fromJson: stringToInt)
+  final int agentLevel; // 代理等级
+  @JsonKey(fromJson: _intToBool, toJson: _boolToInt)
+  final bool isVip; // 是否是VIP
+  @JsonKey(fromJson: _intToBool, toJson: _boolToInt)
+  final bool h5Open; // 是否开启H5
+  @JsonKey(readValue: _readOrderStatusNum)
+  final OrderStatusNum? orderStatusNum; // 订单状态数量
 
   UserModel({
     required this.uid,
@@ -81,99 +109,9 @@ class UserModel {
     this.orderStatusNum,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      uid: json['uid'] ?? 0,
-      nickname: json['nickname'] ?? '',
-      avatar: json['avatar'] ?? '',
-      phone: json['phone'] ?? '',
-      realName: json['real_name'],
-      sex: json['sex'],
-      level: json['level'],
-      levelName: json['level_name'],
-      isPromoter: json['is_promoter'] == 1 || json['is_promoter'] == true,
-      spreadUid: json['spread_uid'] ?? 0,
-      spreadNickname: json['spread_nickname'],
-      balance: _parseDouble(json['now_money']),
-      integral: _parseDouble(json['integral']),
-      brokeragePrice: _parseDouble(json['brokerage_price']),
-      fudou: _parseDouble(json['fudou']),
-      fdKy: _parseDouble(json['fd_ky']),
-      fubao: _parseDouble(json['fubao']),
-      gxz: _parseDouble(json['gxz']),
-      ryz: _parseDouble(json['ryz']),
-      couponCount: json['coupon_count'] ?? 0,
-      collectCount: json['collect_count'] ?? 0,
-      visitCount: json['visit_count'] ?? 0,
-      orderCount: json['order_count'] ?? 0,
-      isBindPhone: json['is_bind_phone'],
-      isRealName: json['is_real_name'] == 1 || json['is_real_name'] == true,
-      isSign: json['is_sign'] == 1 || json['is_sign'] == true,
-      task: json['task'] ?? 0,
-      vipStatus: json['vip_status'],
-      vipEndTime: json['vip_end_time'],
-      addTime: json['add_time'],
-      lastLoginTime: json['last_login_time'],
-      extra: json['extra'],
-      code: json['code'],
-      agentLevel: json['agent_level'] ?? 0,
-      isVip: json['is_vip'] == 1 || json['is_vip'] == true,
-      h5Open: json['h5_open'] == 1 || json['h5_open'] == true,
-      orderStatusNum: json['orderStatusNum'] != null
-          ? OrderStatusNum.fromJson(json['orderStatusNum'])
-          : null,
-    );
-  }
+  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'uid': uid,
-      'nickname': nickname,
-      'avatar': avatar,
-      'phone': phone,
-      'real_name': realName,
-      'sex': sex,
-      'level': level,
-      'level_name': levelName,
-      'is_promoter': isPromoter ? 1 : 0,
-      'spread_uid': spreadUid,
-      'spread_nickname': spreadNickname,
-      'now_money': balance,
-      'integral': integral,
-      'brokerage_price': brokeragePrice,
-      'fudou': fudou,
-      'fd_ky': fdKy,
-      'fubao': fubao,
-      'gxz': gxz,
-      'ryz': ryz,
-      'coupon_count': couponCount,
-      'collect_count': collectCount,
-      'visit_count': visitCount,
-      'order_count': orderCount,
-      'is_bind_phone': isBindPhone,
-      'is_real_name': isRealName,
-      'is_sign': isSign,
-      'task': task,
-      'vip_status': vipStatus,
-      'vip_end_time': vipEndTime,
-      'add_time': addTime,
-      'last_login_time': lastLoginTime,
-      'extra': extra,
-      'code': code,
-      'agent_level': agentLevel,
-      'is_vip': isVip ? 1 : 0,
-      'h5_open': h5Open ? 1 : 0,
-      'orderStatusNum': orderStatusNum?.toJson(),
-    };
-  }
-
-  static double _parseDouble(dynamic value) {
-    if (value == null) return 0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0;
-    return 0;
-  }
+  Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
   UserModel copyWith({
     int? uid,
@@ -205,8 +143,8 @@ class UserModel {
     int? task,
     int? vipStatus,
     String? vipEndTime,
-    String? addTime,
-    String? lastLoginTime,
+    int? addTime,
+    int? lastLoginTime,
     Map<String, dynamic>? extra,
     String? code,
     int? agentLevel,
@@ -257,14 +195,20 @@ class UserModel {
 }
 
 /// 订单状态数量模型
+@JsonSerializable(fieldRename: FieldRename.snake)
 class OrderStatusNum {
-  final int unpaidCount;      // 待付款
-  final int unshippedCount;   // 待发货
-  final int receivedCount;    // 待收货
-  final int evaluatedCount;   // 待评价
-  final int refundingCount;   // 售后/退款
+  @JsonKey(fromJson: stringToInt)
+  final int unpaidCount; // 待付款
+  @JsonKey(fromJson: stringToInt)
+  final int unshippedCount; // 待发货
+  @JsonKey(fromJson: stringToInt)
+  final int receivedCount; // 待收货
+  @JsonKey(fromJson: stringToInt)
+  final int evaluatedCount; // 待评价
+  @JsonKey(fromJson: stringToInt)
+  final int refundingCount; // 售后/退款
 
-  OrderStatusNum({
+  const OrderStatusNum({
     this.unpaidCount = 0,
     this.unshippedCount = 0,
     this.receivedCount = 0,
@@ -272,23 +216,26 @@ class OrderStatusNum {
     this.refundingCount = 0,
   });
 
-  factory OrderStatusNum.fromJson(Map<String, dynamic> json) {
-    return OrderStatusNum(
-      unpaidCount: json['unpaid_count'] ?? 0,
-      unshippedCount: json['unshipped_count'] ?? 0,
-      receivedCount: json['received_count'] ?? 0,
-      evaluatedCount: json['evaluated_count'] ?? 0,
-      refundingCount: json['refunding_count'] ?? 0,
-    );
-  }
+  factory OrderStatusNum.fromJson(Map<String, dynamic> json) => _$OrderStatusNumFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'unpaid_count': unpaidCount,
-      'unshipped_count': unshippedCount,
-      'received_count': receivedCount,
-      'evaluated_count': evaluatedCount,
-      'refunding_count': refundingCount,
-    };
-  }
+  Map<String, dynamic> toJson() => _$OrderStatusNumToJson(this);
 }
+
+bool _intToBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is int) return value == 1;
+  if (value is String) return value == '1' || value.toLowerCase() == 'true';
+  return false;
+}
+
+int _boolToInt(bool value) => value ? 1 : 0;
+
+Object? _readCouponCount(Map json, String key) => json[key] ?? json['couponCount'];
+
+Object? _readCollectCount(Map json, String key) => json[key] ?? json['collectCount'];
+
+Object? _readVisitCount(Map json, String key) => json[key] ?? json['visitCount'];
+
+Object? _readOrderCount(Map json, String key) => json[key] ?? json['orderCount'];
+
+Object? _readOrderStatusNum(Map json, String key) => json[key] ?? json['orderStatusNum'];

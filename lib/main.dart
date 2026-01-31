@@ -10,6 +10,7 @@ import 'package:shuhang_mall_flutter/app/bindings/app_binding.dart';
 import 'package:shuhang_mall_flutter/app/theme/app_theme.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// 应用入口
 /// 对应原 main.js
@@ -44,47 +45,51 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterToastProWrapper(
-      child: GetMaterialApp(
-        title: '数航商道',
-        debugShowCheckedModeBanner: false,
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      child: FlutterToastProWrapper(
+        child: GetMaterialApp(
+          title: '数航商道',
+          debugShowCheckedModeBanner: false,
 
-        // 初始路由
-        initialRoute: AppRoutes.main,
+          // 初始路由
+          initialRoute: AppRoutes.main,
 
-        // 路由配置
-        getPages: AppPages.pages,
+          // 路由配置
+          getPages: AppPages.pages,
 
-        // 全局依赖注入
-        initialBinding: AppBinding(),
+          // 全局依赖注入
+          initialBinding: AppBinding(),
 
-        // 主题配置
-        theme: AppTheme.defaultTheme,
+          // 主题配置
+          theme: AppTheme.defaultTheme,
 
-        // 动态主题（响应式）
-        builder: (context, child) {
-          return GetBuilder<AppController>(
-            init: AppController(),
-            builder: (controller) {
-              return Theme(
-                data: AppTheme.getTheme(controller.themeColor),
-                child: FlutterEasyLoading(child: child),
-              );
-            },
-          );
-        },
+          // 动态主题（响应式）
+          builder: (context, child) {
+            return GetBuilder<AppController>(
+              builder: (controller) {
+                return Theme(
+                  data: AppTheme.getTheme(controller.themeColor),
+                  child: FlutterEasyLoading(child: child),
+                );
+              },
+            );
+          },
 
-        // 默认过渡动画
-        defaultTransition: Transition.cupertino,
+          // 默认过渡动画
+          defaultTransition: Transition.cupertino,
 
-        // 语言设置
-        locale: const Locale('zh', 'CN'),
-        fallbackLocale: const Locale('zh', 'CN'),
+          // 语言设置
+          locale: const Locale('zh', 'CN'),
+          fallbackLocale: const Locale('zh', 'CN'),
 
-        // 未知路由处理
-        unknownRoute: GetPage(
-          name: '/notfound',
-          page: () => const Scaffold(body: Center(child: Text('页面未找到'))),
+          // 未知路由处理
+          unknownRoute: GetPage(
+            name: '/notfound',
+            page: () => const Scaffold(body: Center(child: Text('页面未找到'))),
+          ),
         ),
       ),
     );

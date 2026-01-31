@@ -7,6 +7,7 @@ import 'package:shuhang_mall_flutter/app/modules/home/shop_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/cart/cart_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/user_page.dart';
+import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 
 /// 主页面（包含底部导航栏）
 /// 对应原 tabBar 配置
@@ -21,13 +22,7 @@ class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    ShopPage(),
-    TaskPage(),
-    CartPage(),
-    UserPage(),
-  ];
+  final List<Widget> _pages = const [HomePage(), ShopPage(), TaskPage(), CartPage(), UserPage()];
 
   @override
   void dispose() {
@@ -41,7 +36,18 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _onItemTapped(int index) {
+  Future<void> _onItemTapped(int index) async {
+    final controller = Get.find<AppController>();
+    final requiresLogin = index == 3 || index == 4;
+
+    if (requiresLogin && !controller.isLogin) {
+      await Get.toNamed(AppRoutes.login);
+      if (!controller.isLogin) {
+        await Get.toNamed(AppRoutes.login);
+      }
+      return;
+    }
+
     _pageController.jumpToPage(index);
   }
 
@@ -50,7 +56,7 @@ class _MainPageState extends State<MainPage> {
     return GetBuilder<AppController>(
       builder: (controller) {
         final themeColor = controller.themeColor;
-        
+
         return Scaffold(
           body: PageView(
             controller: _pageController,
@@ -85,15 +91,9 @@ class _MainPageState extends State<MainPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      border: Border.fromBorderSide(
-                        BorderSide(color: Color(0xFFE93323), width: 2),
-                      ),
+                      border: Border.fromBorderSide(BorderSide(color: Color(0xFFE93323), width: 2)),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
+                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
                       ],
                     ),
                     child: Icon(Icons.check, color: Color(0xFFE93323), size: 24),
@@ -106,15 +106,9 @@ class _MainPageState extends State<MainPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      border: Border.fromBorderSide(
-                        BorderSide(color: Color(0xFFE93323), width: 2),
-                      ),
+                      border: Border.fromBorderSide(BorderSide(color: Color(0xFFE93323), width: 2)),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
+                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
                       ],
                     ),
                     child: Icon(Icons.check, color: Color(0xFFE93323), size: 24),
@@ -129,10 +123,7 @@ class _MainPageState extends State<MainPage> {
                     return badges.Badge(
                       badgeContent: Text(
                         cartNum > 99 ? '99+' : cartNum.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                       child: const Icon(Icons.shopping_cart_outlined),
                     );
@@ -145,10 +136,7 @@ class _MainPageState extends State<MainPage> {
                     return badges.Badge(
                       badgeContent: Text(
                         cartNum > 99 ? '99+' : cartNum.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                       child: const Icon(Icons.shopping_cart),
                     );

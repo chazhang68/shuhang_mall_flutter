@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
@@ -15,7 +16,8 @@ class UserPage extends StatefulWidget {
   State<UserPage> createState() => _UserPageState();
 }
 
-class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+class _UserPageState extends State<UserPage>
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final UserProvider _userProvider = UserProvider();
   bool _isLoading = false;
 
@@ -89,86 +91,82 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
       debugPrint('记录访问失败: $e');
     }
   }
+
   // 订单菜单数据
-  final List<Map<String, dynamic>> _orderMenu = [
-    {
-      'icon': 'assets/images/all@2x.png',
-      'title': '全部',
-      'route': AppRoutes.orderList,
-      'status': null,
-    },
-    {
-      'icon': 'assets/images/daifukuan@2x.png',
-      'title': '待付款',
-      'route': '${AppRoutes.orderList}?status=0',
-      'status': 'unpaid',
-    },
-    {
-      'icon': 'assets/images/daifahuo@2x.png',
-      'title': '待发货',
-      'route': '${AppRoutes.orderList}?status=1',
-      'status': 'unshipped',
-    },
-    {
-      'icon': 'assets/images/daishouho-2@2x.png',
-      'title': '待收货',
-      'route': '${AppRoutes.orderList}?status=2',
-      'status': 'received',
-    },
-    {
-      'icon': 'assets/images/yiwancheng-2@2x.png',
-      'title': '已完成',
-      'route': '${AppRoutes.orderList}?status=3',
-      'status': 'completed',
-    },
+  final List<_OrderMenuItem> _orderMenu = const [
+    _OrderMenuItem(icon: 'assets/images/all@2x.png', title: '全部', route: AppRoutes.orderList),
+    _OrderMenuItem(
+      icon: 'assets/images/daifukuan@2x.png',
+      title: '待付款',
+      route: '${AppRoutes.orderList}?status=0',
+      status: 'unpaid',
+    ),
+    _OrderMenuItem(
+      icon: 'assets/images/daifahuo@2x.png',
+      title: '待发货',
+      route: '${AppRoutes.orderList}?status=1',
+      status: 'unshipped',
+    ),
+    _OrderMenuItem(
+      icon: 'assets/images/daishouho-2@2x.png',
+      title: '待收货',
+      route: '${AppRoutes.orderList}?status=2',
+      status: 'received',
+    ),
+    _OrderMenuItem(
+      icon: 'assets/images/yiwancheng-2@2x.png',
+      title: '已完成',
+      route: '${AppRoutes.orderList}?status=3',
+      status: 'completed',
+    ),
   ];
 
   // 我的服务菜单数据
-  List<Map<String, dynamic>> _getServiceMenu(bool h5Open) {
+  List<_ServiceMenuItem> _getServiceMenu(bool h5Open) {
     return [
-      {
-        'icon': 'assets/images/shimingrenzheng.png',
-        'title': '实名认证',
-        'route': AppRoutes.userSign,
-        'show': true,
-      },
-      {
-        'icon': 'assets/images/tuandui3@2x.png',
-        'title': '邀请好友',
-        'route': AppRoutes.spreadCode,
-        'show': true,
-      },
-      {
-        'icon': 'assets/images/shanggong.png',
-        'title': '兑换宝',
-        'route': 'shuhangshangdao',
-        'show': h5Open,  // 根据 h5_open 控制显示
-      },
-      {
-        'icon': 'assets/images/ditu3@2x.png',
-        'title': '地址管理',
-        'route': AppRoutes.addressList,
-        'show': true,
-      },
-      {
-        'icon': 'assets/images/tuandui3@2x.png',
-        'title': '我的好友',
-        'route': AppRoutes.teams,
-        'show': true,
-      },
-      {
-        'icon': 'assets/images/yijianfankui-2@2x.png',
-        'title': '意见反馈',
-        'route': AppRoutes.feedback,
-        'show': true,
-      },
-      {
-        'icon': 'assets/images/my-card.png',
-        'title': '我的信息',
-        'route': AppRoutes.userInfo,
-        'show': true,
-      },
-    ].where((item) => item['show'] == true).toList();
+      const _ServiceMenuItem(
+        icon: 'assets/images/shimingrenzheng.png',
+        title: '实名认证',
+        route: AppRoutes.userSign,
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/tuandui3@2x.png',
+        title: '邀请好友',
+        route: AppRoutes.spreadCode,
+        show: true,
+      ),
+      _ServiceMenuItem(
+        icon: 'assets/images/shanggong.png',
+        title: '兑换宝',
+        route: 'shuhangshangdao',
+        show: h5Open,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/ditu3@2x.png',
+        title: '地址管理',
+        route: AppRoutes.addressList,
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/tuandui3@2x.png',
+        title: '我的好友',
+        route: AppRoutes.teams,
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/yijianfankui-2@2x.png',
+        title: '意见反馈',
+        route: AppRoutes.feedback,
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/my-card.png',
+        title: '我的信息',
+        route: AppRoutes.userInfo,
+        show: true,
+      ),
+    ].where((item) => item.show).toList();
   }
 
   @override
@@ -205,109 +203,120 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final size = MediaQuery.sizeOf(context);
 
     return GetBuilder<AppController>(
       builder: (controller) {
-        final themeColor = controller.themeColor;
         final isLogin = controller.isLogin;
         final userInfo = controller.userInfo;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
-          body: RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: CustomScrollView(
-              slivers: [
-                // 顶部用户信息区域
-                SliverToBoxAdapter(
-                  child: _buildUserHeader(controller, themeColor, isLogin, userInfo),
+          body: Stack(
+            children: [
+              SizedBox(
+                width: size.width,
+                height: size.height,
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/bg_mine@2x.png',
+                      width: size.width,
+                      height: size.height * 0.4,
+                      fit: BoxFit.cover,
+                    ),
+                    Expanded(child: SizedBox()),
+                  ],
                 ),
-
-                // 我的订单区域
-                SliverToBoxAdapter(
-                  child: _buildOrderSection(controller, themeColor, isLogin, userInfo),
-                ),
-
-                // 我的服务区域
-                SliverToBoxAdapter(
-                  child: _buildServiceSection(controller, themeColor, userInfo),
-                ),
-
-                // 底部留白
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
-            ),
+              ),
+              CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _UserHeader(isLogin: isLogin, userInfo: userInfo, onCopyCode: _copyCode),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _OrderSection(
+                      isLogin: isLogin,
+                      userInfo: userInfo,
+                      orderMenu: _orderMenu,
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+                  SliverToBoxAdapter(
+                    child: _ServiceSection(
+                      serviceMenu: _getServiceMenu(userInfo?.h5Open ?? false),
+                      onTap: _goMenuPage,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
     );
   }
+}
 
-  /// 构建用户头部区域
-  Widget _buildUserHeader(AppController controller, themeColor, bool isLogin, userInfo) {
+class _UserHeader extends StatelessWidget {
+  const _UserHeader({required this.isLogin, required this.userInfo, required this.onCopyCode});
+
+  final bool isLogin;
+  final dynamic userInfo;
+  final ValueChanged<String> onCopyCode;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/bg_mine@2x.png'),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-        ),
+      padding: EdgeInsets.only(
+        left: 16.w,
+        right: 16.w,
+        top: MediaQuery.paddingOf(context).top,
+        bottom: 16.h,
       ),
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // 顶部设置按钮
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (isLogin)
-                    GestureDetector(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _UserAvatar(isLogin: isLogin, userInfo: userInfo),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: _UserInfo(isLogin: isLogin, userInfo: userInfo, onCopyCode: onCopyCode),
+                ),
+                if (isLogin)
+                  Padding(
+                    padding: EdgeInsets.only(top: 6.h),
+                    child: GestureDetector(
                       onTap: () => Get.toNamed(AppRoutes.userSetting),
                       child: Image.asset(
                         'assets/images/icon_set@2x.png',
-                        width: 36,
-                        height: 36,
+                        width: 36.w,
+                        height: 36.w,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.settings, color: Colors.black54, size: 28),
+                            Icon(Icons.settings, color: Colors.black54, size: 44.sp),
                       ),
                     ),
-                ],
-              ),
-            ),
-
-            // 用户信息行
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Row(
-                children: [
-                  // 头像
-                  _buildAvatar(isLogin, userInfo),
-                  const SizedBox(width: 16),
-                  // 用户信息
-                  Expanded(
-                    child: _buildUserInfo(isLogin, userInfo),
                   ),
-                ],
-              ),
+              ],
             ),
-
-            const SizedBox(height: 20),
-
-            // 账户信息卡片
-            _buildAccountCard(isLogin, userInfo),
-
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
+}
 
-  /// 构建头像
-  Widget _buildAvatar(bool isLogin, userInfo) {
+class _UserAvatar extends StatelessWidget {
+  const _UserAvatar({required this.isLogin, required this.userInfo});
+
+  final bool isLogin;
+  final dynamic userInfo;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (isLogin) {
@@ -319,26 +328,24 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
       child: Stack(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 60.w,
+            height: 60.w,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(60.w),
               border: Border.all(
-                color: userInfo?.isVip == true
-                    ? const Color(0xFFFFAC65)
-                    : Colors.transparent,
+                color: userInfo?.isVip == true ? const Color(0xFFFFAC65) : Colors.transparent,
                 width: 2,
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(56.r),
               child: isLogin && userInfo?.avatar != null && userInfo!.avatar.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: userInfo.avatar,
                       fit: BoxFit.cover,
                       placeholder: (context, url) =>
-                          const Icon(Icons.person, color: Colors.grey, size: 32),
+                          Icon(Icons.person, color: Colors.grey, size: 64.sp),
                       errorWidget: (context, url, error) =>
                           Image.asset('assets/images/f.png', fit: BoxFit.cover),
                     )
@@ -346,23 +353,22 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
                       'assets/images/f.png',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.person, color: Colors.grey, size: 32),
+                          Icon(Icons.person, color: Colors.grey, size: 64.sp),
                     ),
             ),
           ),
-          // 实名认证状态
           if (isLogin && userInfo != null)
             Positioned(
-              right: 5,
+              right: 10.w,
               bottom: 0,
               child: userInfo.isSign
                   ? Image.asset(
                       'assets/images/duihao@2x.png',
-                      width: 18,
-                      height: 18,
+                      width: 28.w,
+                      height: 28.w,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        width: 18,
-                        height: 18,
+                        width: 28.w,
+                        height: 28.w,
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             colors: [Color(0xFF54DC54), Color(0xFF00D900)],
@@ -371,18 +377,20 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
                           ),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check, color: Colors.white, size: 12),
+                        child: Icon(Icons.check, color: Colors.white, size: 20.sp),
                       ),
                     )
                   : Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      width: 38.w,
+                      height: 16.w,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCDCDC),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
-                      child: const Text(
+                      child: Text(
                         '未实名',
-                        style: TextStyle(fontSize: 9, color: Colors.black),
+                        style: TextStyle(fontSize: 10.sp, color: Colors.black),
                       ),
                     ),
             ),
@@ -390,233 +398,250 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
       ),
     );
   }
+}
 
-  /// 构建用户信息
-  Widget _buildUserInfo(bool isLogin, userInfo) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 昵称和VIP标识
-        if (!isLogin)
-          GestureDetector(
-            onTap: () => Get.toNamed(AppRoutes.login),
-            child: const Text(
-              '请点击登录',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
-              ),
-            ),
-          )
-        else
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  userInfo?.nickname ?? '用户',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // 代理等级图标
-              if (userInfo?.agentLevel != null && userInfo!.agentLevel > 0)
-                Image.asset(
-                  'assets/images/${userInfo.agentLevel}.png',
-                  width: 19,
-                  height: 23,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                ),
-              // VIP标识
-              if (userInfo?.isVip == true)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Image.asset(
-                    'assets/images/svip.png',
-                    width: 50,
-                    height: 18,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'SVIP',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+class _UserInfo extends StatelessWidget {
+  const _UserInfo({required this.isLogin, required this.userInfo, required this.onCopyCode});
 
-        // 邀请码 - uni-app: v-if="userInfo.phone" 只有绑定手机号后才显示
-        if (isLogin && userInfo?.phone != null && userInfo!.phone.isNotEmpty && userInfo.code != null && userInfo.code!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.13),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '邀请码：',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    userInfo.code!,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: () => _copyCode(userInfo.code!),
-                    child: Image.asset(
-                      'assets/images/fuzhi-3@2x.png',
-                      width: 12,
-                      height: 12,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.copy, size: 12, color: Colors.black54),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+  final bool isLogin;
+  final dynamic userInfo;
+  final ValueChanged<String> onCopyCode;
 
-        // 绑定手机号提示
-        if (isLogin && (userInfo?.phone == null || userInfo!.phone.isEmpty))
-          GestureDetector(
-            onTap: () => Get.toNamed(AppRoutes.bindPhone),
-            child: Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFCCCCCC),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: const Text(
-                '绑定手机号',
-                style: TextStyle(fontSize: 14, color: Colors.white),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  /// 构建账户信息卡片
-  Widget _buildAccountCard(bool isLogin, userInfo) {
-    const accountBgColor = Color(0xFF363028);
-    const accountTextColor = Color(0xFFF3E1C9);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 60.w,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 我的账户标题栏
-          GestureDetector(
-            onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
-            child: Container(
-              height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              decoration: const BoxDecoration(
-                color: accountBgColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  topRight: Radius.circular(10),
-                ),
+          if (!isLogin)
+            GestureDetector(
+              onTap: () => Get.toNamed(AppRoutes.login),
+              child: Text(
+                '请点击登录',
+                style: TextStyle(fontSize: 18.sp, color: const Color(0xFF333333)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/zhanghuguanli@2x.png',
-                        width: 15,
-                        height: 15,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.account_balance_wallet,
-                                size: 15, color: accountTextColor),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        '我的账户',
-                        style: TextStyle(fontSize: 12, color: accountTextColor),
-                      ),
-                    ],
-                  ),
-                  Image.asset(
-                    'assets/images/xia-3@2x.png',
-                    width: 7,
-                    height: 11,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.chevron_right, size: 14, color: accountTextColor),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 账户数值区域
-          Container(
-            height: 65,
-            decoration: const BoxDecoration(
-              color: Color(0xFF2C2722),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(10),
-                bottomRight: Radius.circular(10),
-              ),
-            ),
-            child: Row(
+            )
+          else
+            Row(
               children: [
-                _buildAccountItem(
-                  '仓库积分',
-                  isLogin ? (userInfo?.fudou ?? 0).toStringAsFixed(2) : '0.00',
-                  () => Get.toNamed('${AppRoutes.ryz}?index=0'),
+                Flexible(
+                  child: Text(
+                    userInfo?.nickname ?? '用户',
+                    style: TextStyle(fontSize: 18.sp, color: const Color(0xFF333333)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                _buildAccountItem(
-                  '可用积分',
-                  isLogin ? (userInfo?.fdKy ?? 0).toStringAsFixed(2) : '0.00',
-                  () => Get.toNamed('${AppRoutes.ryz}?index=1'),
-                ),
-                _buildAccountItem(
-                  'SWP',
-                  isLogin ? (userInfo?.balance ?? 0).toStringAsFixed(2) : '0.00',
-                  () => Get.toNamed('${AppRoutes.ryz}?index=2'),
-                ),
+                SizedBox(width: 8.w),
+                if (userInfo?.agentLevel != null && userInfo!.agentLevel > 0)
+                  Image.asset(
+                    'assets/images/${userInfo.agentLevel}.png',
+                    width: 18.w,
+                    height: 22.w,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                  ),
+                if (userInfo?.isVip == true)
+                  Padding(
+                    padding: EdgeInsets.only(left: 5.w),
+                    child: Image.asset(
+                      'assets/images/svip.png',
+                      width: 46.w,
+                      height: 17.w,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                          ),
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
+                        child: Text(
+                          'SVIP',
+                          style: TextStyle(color: Colors.white, fontSize: 10.sp),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
+          if (isLogin &&
+              userInfo?.phone != null &&
+              userInfo!.phone.isNotEmpty &&
+              userInfo.code != null &&
+              userInfo.code!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: 3.h),
+              child: Container(
+                height: 20.h,
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                decoration: BoxDecoration(
+                  color: const Color(0x22333333),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '邀请码：',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      userInfo.code!,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(width: 5.w),
+                    GestureDetector(
+                      onTap: () => onCopyCode(userInfo.code!),
+                      child: Image.asset(
+                        'assets/images/fuzhi-3@2x.png',
+                        width: 10.w,
+                        height: 10.w,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.copy, size: 11.sp, color: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (isLogin && (userInfo?.phone == null || userInfo!.phone.isEmpty))
+            GestureDetector(
+              onTap: () => Get.toNamed(AppRoutes.bindPhone),
+              child: Container(
+                margin: EdgeInsets.only(top: 5.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCCCCC),
+                  borderRadius: BorderRadius.circular(15.r),
+                ),
+                child: Text(
+                  '绑定手机号',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.white),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
+}
 
-  /// 构建账户数值项
-  Widget _buildAccountItem(String label, String value, VoidCallback onTap) {
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({required this.isLogin, required this.userInfo});
+
+  final bool isLogin;
+  final dynamic userInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    const accountBgColor = Color(0xFF3B332B);
+    const accountTextColor = Color(0xFFEAD9C4);
+
+    final cardWidth = 335.w;
+
+    return Align(
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: cardWidth,
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
+              child: Container(
+                height: 40.h,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                margin: .symmetric(horizontal: 8.w),
+                decoration: BoxDecoration(
+                  color: accountBgColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10.r),
+                    topRight: Radius.circular(10.r),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/zhanghuguanli@2x.png',
+                          width: 14.w,
+                          height: 14.w,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Icons.account_balance_wallet,
+                            size: 14.sp,
+                            color: accountTextColor,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '我的账户',
+                          style: TextStyle(fontSize: 12.sp, color: accountTextColor),
+                        ),
+                      ],
+                    ),
+                    Image.asset(
+                      'assets/images/xia-3@2x.png',
+                      width: 6.w,
+                      height: 10.w,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.chevron_right, size: 10.sp, color: accountTextColor),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              height: 70.h,
+              margin: EdgeInsets.symmetric(horizontal: 8.w),
+              decoration: BoxDecoration(color: const Color(0xFF2E2721)),
+              child: Row(
+                children: [
+                  _AccountItem(
+                    label: '仓库积分',
+                    value: isLogin ? (userInfo?.fudou ?? 0).toStringAsFixed(2) : '0.00',
+                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
+                  ),
+                  _AccountItem(
+                    label: '可用积分',
+                    value: isLogin ? (userInfo?.fdKy ?? 0).toStringAsFixed(2) : '0.00',
+                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=1'),
+                  ),
+                  _AccountItem(
+                    label: 'SWP',
+                    value: isLogin ? (userInfo?.balance ?? 0).toStringAsFixed(2) : '0.00',
+                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=2'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountItem extends StatelessWidget {
+  const _AccountItem({required this.label, required this.value, required this.onTap});
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     const accountTextColor = Color(0xFFF3E1C9);
 
     return Expanded(
@@ -628,233 +653,287 @@ class _UserPageState extends State<UserPage> with AutomaticKeepAliveClientMixin,
           children: [
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                fontSize: 17.sp,
+                fontWeight: FontWeight.w600,
                 color: accountTextColor,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 5.h),
             Text(
               label,
-              style: const TextStyle(fontSize: 13, color: accountTextColor),
+              style: TextStyle(fontSize: 13.sp, color: accountTextColor),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  /// 构建订单区域
-  Widget _buildOrderSection(AppController controller, themeColor, bool isLogin, userInfo) {
-    return Transform.translate(
-      offset: const Offset(0, -30),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          children: [
-            // 标题栏
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
+class _OrderSection extends StatelessWidget {
+  const _OrderSection({required this.isLogin, required this.userInfo, required this.orderMenu});
+
+  final bool isLogin;
+  final dynamic userInfo;
+  final List<_OrderMenuItem> orderMenu;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _AccountCard(isLogin: isLogin, userInfo: userInfo),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 15.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10.r)),
+          child: Column(
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     '我的订单',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 17.sp,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E1D26),
+                      color: const Color(0xFF1E1D26),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Get.toNamed(AppRoutes.orderList),
                     child: Row(
-                      children: const [
+                      children: [
                         Text(
                           '查看全部',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF1E1D26)),
+                          style: TextStyle(fontSize: 12.sp, color: const Color(0xFF1E1D26)),
                         ),
-                        SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 14, color: Color(0xFF1E1D26)),
+                        SizedBox(width: 2.w),
+                        Icon(Icons.chevron_right, size: 12.sp, color: const Color(0xFF1E1D26)),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
+              SizedBox(height: 12.h),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final itemWidth = (constraints.maxWidth - 40.w) / 5;
 
-            // 订单状态
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _orderMenu.map((item) {
-                int? count;
-                if (isLogin && userInfo?.orderStatusNum != null) {
-                  switch (item['status']) {
-                    case 'unpaid':
-                      count = userInfo.orderStatusNum!.unpaidCount;
-                      break;
-                    case 'unshipped':
-                      count = userInfo.orderStatusNum!.unshippedCount;
-                      break;
-                    case 'received':
-                      count = userInfo.orderStatusNum!.receivedCount;
-                      break;
-                  }
-                }
+                  return Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 10.w,
+                    runSpacing: 0,
+                    children: orderMenu.map((item) {
+                      int? count;
+                      if (isLogin && userInfo?.orderStatusNum != null) {
+                        switch (item.status) {
+                          case 'unpaid':
+                            count = userInfo.orderStatusNum!.unpaidCount;
+                            break;
+                          case 'unshipped':
+                            count = userInfo.orderStatusNum!.unshippedCount;
+                            break;
+                          case 'received':
+                            count = userInfo.orderStatusNum!.receivedCount;
+                            break;
+                        }
+                      }
 
-                return _buildOrderItem(
-                  item['icon'] as String,
-                  item['title'] as String,
-                  count,
-                  () {
-                    if (!isLogin) {
-                      Get.toNamed(AppRoutes.login);
-                      return;
-                    }
-                    Get.toNamed(item['route'] as String);
-                  },
-                );
-              }).toList(),
-            ),
-          ],
+                      return _OrderItem(
+                        icon: item.icon,
+                        label: item.title,
+                        count: count,
+                        itemWidth: itemWidth,
+                        onTap: () {
+                          if (!isLogin) {
+                            Get.toNamed(AppRoutes.login);
+                            return;
+                          }
+                          Get.toNamed(item.route);
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
+}
 
-  /// 构建订单项
-  Widget _buildOrderItem(String icon, String label, int? count, VoidCallback onTap) {
+class _OrderItem extends StatelessWidget {
+  const _OrderItem({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.itemWidth,
+    required this.onTap,
+  });
+
+  final String icon;
+  final String label;
+  final int? count;
+  final double itemWidth;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 60,
+        width: itemWidth,
         child: Column(
+          mainAxisSize: .min,
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Image.asset(
                   icon,
-                  width: 27,
-                  height: 27,
+                  width: 25.w,
+                  height: 25.w,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.receipt_long, size: 27, color: Color(0xFF666666)),
+                      Icon(Icons.receipt_long, size: 25.sp, color: const Color(0xFF666666)),
                 ),
-                if (count != null && count > 0)
+                if (count != null && count! > 0)
                   Positioned(
-                    top: -8,
-                    right: -8,
+                    top: -7.h,
+                    right: -6.w,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: EdgeInsets.symmetric(horizontal: 4.w),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(15.r),
                         border: Border.all(color: const Color(0xFFFF5A5A), width: 1),
                       ),
                       child: Text(
                         count.toString(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFFFF5A5A),
-                        ),
+                        style: TextStyle(fontSize: 10.sp, color: const Color(0xFFFF5A5A)),
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 3.h),
             Text(
               label,
-              style: const TextStyle(fontSize: 15, color: Color(0xFF333333)),
+              style: TextStyle(fontSize: 14.sp, color: const Color(0xFF333333)),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  /// 构建服务区域
-  Widget _buildServiceSection(AppController controller, themeColor, userInfo) {
-    // 根据 h5_open 获取服务菜单
-    final h5Open = userInfo?.h5Open ?? false;
-    final serviceMenu = _getServiceMenu(h5Open);
-    
-    return Transform.translate(
-      offset: const Offset(0, -20),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: Text(
-                '我的服务',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E1D26),
-                ),
-              ),
-            ),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio: 1,
-                mainAxisSpacing: 15,
-              ),
-              itemCount: serviceMenu.length,
-              itemBuilder: (context, index) {
-                final item = serviceMenu[index];
-                return _buildServiceItem(
-                  item['icon'] as String,
-                  item['title'] as String,
-                  () => _goMenuPage(item['route'] as String, item['title'] as String),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _ServiceSection extends StatelessWidget {
+  const _ServiceSection({required this.serviceMenu, required this.onTap});
 
-  /// 构建服务项
-  Widget _buildServiceItem(String icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+  final List<_ServiceMenuItem> serviceMenu;
+  final void Function(String route, String? title) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10.r)),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(
-            icon,
-            width: 26,
-            height: 26,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.apps, size: 26, color: Color(0xFF666666)),
-          ),
-          const SizedBox(height: 9),
           Text(
-            label,
-            style: const TextStyle(fontSize: 15, color: Color(0xFF333333)),
+            '我的服务',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E1D26),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final spacing = 10.w;
+              final itemWidth = (constraints.maxWidth - spacing * 4) / 5;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: serviceMenu.map((item) {
+                  return SizedBox(
+                    width: itemWidth,
+                    child: _ServiceItem(
+                      icon: item.icon,
+                      label: item.title,
+                      onTap: () => onTap(item.route, item.title),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
     );
   }
+}
+
+class _ServiceItem extends StatelessWidget {
+  const _ServiceItem({required this.icon, required this.label, required this.onTap});
+
+  final String icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        spacing: 4.h,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            icon,
+            width: 24.w,
+            height: 24.w,
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(Icons.apps, size: 24.sp, color: const Color(0xFF666666)),
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 13.sp, color: const Color(0xFF333333)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderMenuItem {
+  const _OrderMenuItem({required this.icon, required this.title, required this.route, this.status});
+
+  final String icon;
+  final String title;
+  final String route;
+  final String? status;
+}
+
+class _ServiceMenuItem {
+  const _ServiceMenuItem({
+    required this.icon,
+    required this.title,
+    required this.route,
+    required this.show,
+  });
+
+  final String icon;
+  final String title;
+  final String route;
+  final bool show;
 }
