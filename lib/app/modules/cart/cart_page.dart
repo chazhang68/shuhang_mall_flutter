@@ -164,20 +164,20 @@ class _CartItemTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
           Checkbox(value: selected, onChanged: onSelectedChanged, activeColor: themeColor.primary),
           Container(
-            width: 80,
-            height: 80,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: imageUrl.isEmpty
-                ? Center(child: Icon(Icons.shopping_bag, size: 40, color: Colors.grey[400]))
+                ? Center(child: Icon(Icons.shopping_bag, size: 24, color: Colors.grey[400]))
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: CachedNetworkImage(
@@ -186,7 +186,7 @@ class _CartItemTile extends StatelessWidget {
                       placeholder: (context, url) =>
                           const Center(child: CircularProgressIndicator()),
                       errorWidget: (context, url, error) =>
-                          Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                          Icon(Icons.image, size: 24, color: Colors.grey[400]),
                     ),
                   ),
           ),
@@ -202,14 +202,11 @@ class _CartItemTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 if ((item.productInfo?.attrInfo?.suk ?? '').isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      item.productInfo?.attrInfo?.suk ?? '',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
-                    ),
+                  Text(
+                    item.productInfo?.attrInfo?.suk ?? '',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
                   ),
-                const SizedBox(height: 8),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -264,7 +261,7 @@ class _QuantitySelector extends StatelessWidget {
               width: 28,
               height: 28,
               alignment: Alignment.center,
-              child: const Icon(Icons.remove, size: 16),
+              child: const Icon(Icons.remove, size: 12),
             ),
           ),
           Container(
