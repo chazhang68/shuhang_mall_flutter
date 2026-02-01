@@ -15,7 +15,7 @@ class MyBankPage extends StatefulWidget {
 
 class _MyBankPageState extends State<MyBankPage> {
   final UserProvider _userProvider = Get.find<UserProvider>();
-  
+
   Map<String, dynamic> _userInfo = {};
   bool _isLoading = true;
 
@@ -43,11 +43,7 @@ class _MyBankPageState extends State<MyBankPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F4),
-      appBar: AppBar(
-        title: const Text('我的银行卡'),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('我的银行卡'), centerTitle: true, elevation: 0),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -58,10 +54,7 @@ class _MyBankPageState extends State<MyBankPage> {
                   // 提示文字
                   Text(
                     '您所使用的收款账户的姓名需与平台认证姓名一致，否则由此造成的损失自行承担',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 20),
                   // 银行卡信息
@@ -75,7 +68,7 @@ class _MyBankPageState extends State<MyBankPage> {
   /// 银行卡信息
   Widget _buildBankCard() {
     String bankCard = _userInfo['qy_bank'] ?? '';
-    
+
     if (bankCard.isNotEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -90,11 +83,8 @@ class _MyBankPageState extends State<MyBankPage> {
               AppImages.bank,
               width: 30,
               height: 30,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.account_balance,
-                color: Colors.white,
-                size: 30,
-              ),
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.account_balance, color: Colors.white, size: 30),
             ),
             const SizedBox(height: 12),
             Row(
@@ -103,10 +93,7 @@ class _MyBankPageState extends State<MyBankPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '银行卡号：',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                    ),
+                    const Text('银行卡号：', style: TextStyle(color: Colors.white, fontSize: 13)),
                     const SizedBox(height: 4),
                     Text(
                       bankCard,
@@ -130,10 +117,7 @@ class _MyBankPageState extends State<MyBankPage> {
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
-                      '解绑',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                    ),
+                    child: const Text('解绑', style: TextStyle(color: Colors.white, fontSize: 13)),
                   ),
                 ),
               ],
@@ -178,10 +162,7 @@ class _MyBankPageState extends State<MyBankPage> {
         title: const Text('提示'),
         content: const Text('解绑后将不能进行快捷支付哦'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('取消')),
           TextButton(
             onPressed: _unbindBank,
             child: const Text('确认', style: TextStyle(color: Colors.red)),
@@ -194,18 +175,15 @@ class _MyBankPageState extends State<MyBankPage> {
   /// 解绑银行卡
   Future<void> _unbindBank() async {
     Get.back();
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
-    // TODO: 调用解绑API
-    await Future.delayed(const Duration(seconds: 1));
-    
+    final response = await _userProvider.unbindBank();
     Get.back();
-    FlutterToastPro.showMessage( '解绑成功');
-    _loadUserInfo();
+    if (response.isSuccess) {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '解绑成功');
+      _loadUserInfo();
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '解绑失败');
+    }
   }
 }
-
-

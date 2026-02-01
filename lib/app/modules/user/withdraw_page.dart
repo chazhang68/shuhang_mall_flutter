@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../data/providers/user_provider.dart';
+import '../../data/providers/public_provider.dart';
 import '../../theme/theme_colors.dart';
 
 /// 提现页面 - 对应 pages/users/user_cash/index.vue
@@ -14,6 +16,8 @@ class WithdrawPage extends StatefulWidget {
 
 class _WithdrawPageState extends State<WithdrawPage> {
   final UserProvider _userProvider = UserProvider();
+  final PublicProvider _publicProvider = PublicProvider();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // 表单控制器
   final TextEditingController _nameController = TextEditingController();
@@ -146,15 +150,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
     switch (currentTab) {
       case 0: // 银行卡
         if (_nameController.text.trim().isEmpty) {
-          FlutterToastPro.showMessage( '请填写持卡人姓名');
+          FlutterToastPro.showMessage('请填写持卡人姓名');
           return;
         }
         if (_cardNumController.text.trim().isEmpty) {
-          FlutterToastPro.showMessage( '请填写卡号');
+          FlutterToastPro.showMessage('请填写卡号');
           return;
         }
         if (selectedBankIndex == 0) {
-          FlutterToastPro.showMessage( '请选择银行');
+          FlutterToastPro.showMessage('请选择银行');
           return;
         }
         data = {
@@ -167,7 +171,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
         break;
       case 1: // 微信
         if (brokerageType == 0 && _nameController.text.trim().isEmpty) {
-          FlutterToastPro.showMessage( '请填写微信号');
+          FlutterToastPro.showMessage('请填写微信号');
           return;
         }
         data = {
@@ -180,7 +184,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
         break;
       case 2: // 支付宝
         if (_nameController.text.trim().isEmpty) {
-          FlutterToastPro.showMessage( '请填写支付宝账号');
+          FlutterToastPro.showMessage('请填写支付宝账号');
           return;
         }
         data = {
@@ -195,12 +199,12 @@ class _WithdrawPageState extends State<WithdrawPage> {
 
     // 验证金额
     if (_moneyController.text.trim().isEmpty) {
-      FlutterToastPro.showMessage( '请填写提现金额');
+      FlutterToastPro.showMessage('请填写提现金额');
       return;
     }
     final money = double.tryParse(_moneyController.text.trim()) ?? 0;
     if (money < minPrice) {
-      FlutterToastPro.showMessage( '提现金额不能低于$minPrice');
+      FlutterToastPro.showMessage('提现金额不能低于$minPrice');
       return;
     }
 
@@ -211,14 +215,14 @@ class _WithdrawPageState extends State<WithdrawPage> {
     try {
       final response = await _userProvider.extractCash(data);
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
         await _getUserInfo();
         Get.offNamed('/spread/user');
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
-      FlutterToastPro.showMessage( '提现失败');
+      FlutterToastPro.showMessage('提现失败');
     } finally {
       setState(() {
         isSubmitting = false;
@@ -496,6 +500,31 @@ class _WithdrawPageState extends State<WithdrawPage> {
   }
 
   /// 收款码上传
+  Future<void> _uploadQrCode(bool isWechat) async {
+    final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    final response = await _publicProvider.uploadFile(filePath: image.path);
+    if (response.isSuccess && response.data != null) {
+      final data = response.data as Map;
+      final url = data['url']?.toString() ?? '';
+      if (url.isEmpty) {
+        FlutterToastPro.showMessage('图片上传失败');
+        return;
+      }
+      setState(() {
+        if (isWechat) {
+          qrcodeUrlW = url;
+        } else {
+          qrcodeUrlZ = url;
+        }
+      });
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '图片上传失败');
+    }
+  }
+
+  /// 收款码上传
   Widget _buildQrCodeUpload({required bool isWechat}) {
     final qrcodeUrl = isWechat ? qrcodeUrlW : qrcodeUrlZ;
     return Container(
@@ -535,8 +564,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
           else
             GestureDetector(
               onTap: () {
-                // TODO: 实现图片上传
-                FlutterToastPro.showMessage( '图片上传功能开发中');
+                _uploadQrCode(isWechat);
               },
               child: Container(
                 width: 70,
@@ -617,5 +645,3 @@ class _WithdrawPageState extends State<WithdrawPage> {
     );
   }
 }
-
-

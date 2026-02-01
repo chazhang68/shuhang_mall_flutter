@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../data/providers/lottery_provider.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
 
@@ -52,6 +55,77 @@ class _PointsMallPageState extends State<PointsMallPage> {
     Get.toNamed(url);
   }
 
+  Future<void> _jumpLink(String link) async {
+    if (link.isEmpty) return;
+
+    if (link.contains('@APPID=')) {
+      FlutterToastPro.showMessage('暂不支持打开外部小程序');
+      return;
+    }
+
+    if (link.startsWith('http')) {
+      final uri = Uri.parse(link);
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        FlutterToastPro.showMessage('无法打开链接');
+      }
+      return;
+    }
+
+    final uri = Uri.parse(link);
+    final path = uri.path;
+    final params = uri.queryParameters;
+
+    if (path.contains('/pages/index/index')) {
+      Get.offAllNamed(AppRoutes.main);
+      return;
+    }
+    if (path.contains('/pages/goods_cate/goods_cate')) {
+      Get.offAllNamed(AppRoutes.category);
+      return;
+    }
+    if (path.contains('/pages/order_addcart/order_addcart')) {
+      Get.offAllNamed(AppRoutes.cart);
+      return;
+    }
+    if (path.contains('/pages/user/index')) {
+      Get.offAllNamed(AppRoutes.user);
+      return;
+    }
+    if (path.contains('/pages/goods_details/index') || path.contains('/pages/goods_detail/index')) {
+      final id = params['id'] ?? '0';
+      Get.toNamed(AppRoutes.goodsDetail, parameters: {'id': id});
+      return;
+    }
+    if (path.contains('/pages/extension/news_details/index')) {
+      final id = params['id'] ?? '0';
+      Get.toNamed(AppRoutes.newsDetail, parameters: {'id': id});
+      return;
+    }
+    if (path.contains('/pages/activity/goods_bargain_details/index')) {
+      final id = params['id'] ?? '0';
+      final bargain = params['bargain'] ?? '0';
+      Get.toNamed(AppRoutes.bargainDetail, parameters: {'id': id, 'bargain': bargain});
+      return;
+    }
+    if (path.contains('/pages/activity/presell_details/index')) {
+      final id = params['id'] ?? '0';
+      Get.toNamed(AppRoutes.presellDetail, parameters: {'id': id});
+      return;
+    }
+    if (path.contains('/pages/points_mall/integral_goods_details')) {
+      final id = params['id'] ?? '0';
+      Get.toNamed(AppRoutes.pointsGoodsDetail, parameters: {'id': id});
+      return;
+    }
+    if (path.contains('/pages/points_mall/index')) {
+      Get.toNamed(AppRoutes.pointsMall);
+      return;
+    }
+
+    Get.toNamed(link);
+  }
+
   Widget _buildSwiper() {
     if (_imgUrls.isEmpty) {
       return Container(
@@ -71,7 +145,7 @@ class _PointsMallPageState extends State<PointsMallPage> {
               onTap: () {
                 String link = item['link'] ?? '';
                 if (link.isNotEmpty) {
-                  // TODO: 跳转链接
+                  _jumpLink(link);
                 }
               },
               child: CachedNetworkImage(

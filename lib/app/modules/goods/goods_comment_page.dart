@@ -4,6 +4,7 @@ import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../data/providers/order_provider.dart';
+import '../../data/providers/public_provider.dart';
 import '../../theme/theme_colors.dart';
 
 class GoodsCommentPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class GoodsCommentPage extends StatefulWidget {
 
 class _GoodsCommentPageState extends State<GoodsCommentPage> {
   final OrderProvider _orderProvider = OrderProvider();
+  final PublicProvider _publicProvider = PublicProvider();
   final TextEditingController _commentController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -63,16 +65,26 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
 
   Future<void> _uploadPic() async {
     if (_pics.length >= 8) {
-      FlutterToastPro.showMessage( '最多上传8张图片');
+      FlutterToastPro.showMessage('最多上传8张图片');
       return;
     }
 
     final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      // TODO: 上传图片到服务器
-      setState(() {
-        _pics.add(image.path);
-      });
+      final response = await _publicProvider.uploadFile(filePath: image.path);
+      if (response.isSuccess && response.data != null) {
+        final data = response.data as Map;
+        final url = data['url']?.toString() ?? '';
+        if (url.isEmpty) {
+          FlutterToastPro.showMessage('图片上传失败');
+          return;
+        }
+        setState(() {
+          _pics.add(url);
+        });
+      } else {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '图片上传失败');
+      }
     }
   }
 
@@ -87,7 +99,7 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
 
     String comment = _commentController.text.trim();
     if (comment.isEmpty) {
-      FlutterToastPro.showMessage( '请填写你对宝贝的心得');
+      FlutterToastPro.showMessage('请填写你对宝贝的心得');
       return;
     }
 
@@ -95,7 +107,7 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
     int serviceScore = _scoreList[1]['index'] + 1;
 
     if (productScore <= 0 || serviceScore <= 0) {
-      FlutterToastPro.showMessage( '请为商品评分');
+      FlutterToastPro.showMessage('请为商品评分');
       return;
     }
 
@@ -113,12 +125,12 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
       });
 
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( '评价成功');
+        FlutterToastPro.showMessage('评价成功');
         Future.delayed(const Duration(seconds: 1), () {
           Get.back();
         });
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } finally {
       setState(() {
@@ -259,12 +271,14 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        entry.value,
+                      child: CachedNetworkImage(
+                        imageUrl: entry.value,
                         width: 72,
                         height: 72,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        placeholder: (context, url) =>
+                            Container(width: 72, height: 72, color: Colors.grey[200]),
+                        errorWidget: (context, url, error) {
                           return Container(
                             width: 72,
                             height: 72,
@@ -360,5 +374,3 @@ class _GoodsCommentPageState extends State<GoodsCommentPage> {
     );
   }
 }
-
-

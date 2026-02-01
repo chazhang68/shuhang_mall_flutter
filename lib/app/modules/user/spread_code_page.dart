@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:dio/dio.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../../data/providers/user_provider.dart';
 
@@ -94,9 +97,25 @@ class _SpreadCodePageState extends State<SpreadCodePage> {
       }
     }
 
-    // TODO: 实现实际的图片保存逻辑
-    // 这里需要下载图片并保存到相册
-    FlutterToastPro.showMessage('保存功能开发中');
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+
+      final response = await Dio().get(url, options: Options(responseType: ResponseType.bytes));
+
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'poster_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(response.data);
+
+      await Gal.putImage(file.path);
+      Get.back();
+      FlutterToastPro.showMessage('保存成功');
+
+      await file.delete();
+    } catch (e) {
+      Get.back();
+      FlutterToastPro.showMessage('保存失败');
+    }
   }
 
   @override

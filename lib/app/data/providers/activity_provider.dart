@@ -94,8 +94,11 @@ class ActivityProvider {
   }
 
   /// 帮砍一刀
-  Future<ApiResponse> helpBargain(int id) async {
-    return await _api.post('bargain/help', data: {'id': id});
+  Future<ApiResponse> helpBargain(int id, {int? bargainUserUid}) async {
+    final data = bargainUserUid != null && bargainUserUid > 0
+        ? {'bargainId': id, 'bargainUserUid': bargainUserUid}
+        : {'id': id};
+    return await _api.post('bargain/help', data: data);
   }
 
   /// 开始砍价

@@ -287,6 +287,11 @@ class UserProvider {
     return await _api.get('extract/bank');
   }
 
+  /// 解绑银行卡
+  Future<ApiResponse> unbindBank() async {
+    return await _api.get('jiebang');
+  }
+
   // ==================== 会员等级 ====================
 
   /// 会员等级列表

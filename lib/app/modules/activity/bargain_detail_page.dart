@@ -1,10 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:get/get.dart';
 import '../../data/providers/activity_provider.dart';
+import '../../data/providers/order_provider.dart';
+import '../../data/providers/user_provider.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
+import '../../utils/config.dart';
 import '../../../widgets/countdown_widget.dart';
 
 class BargainDetailPage extends StatefulWidget {
@@ -16,10 +21,12 @@ class BargainDetailPage extends StatefulWidget {
 
 class _BargainDetailPageState extends State<BargainDetailPage> {
   final ActivityProvider _activityProvider = ActivityProvider();
+  final OrderProvider _orderProvider = OrderProvider();
+  final UserProvider _userProvider = UserProvider();
 
   int _id = 0;
   int _bargainUid = 0;
-  final int _userUid = 0;
+  int _userUid = 0;
 
   Map<String, dynamic> _bargainInfo = {};
   Map<String, dynamic> _bargainUserInfo = {};
@@ -58,6 +65,10 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
         _description = _bargainInfo['description'] ?? '';
         _rule = _bargainInfo['rule'] ?? '';
         _datatime = _bargainInfo['datatime'] ?? 0;
+        _userUid = response.data['userInfo']?['uid'] ?? _userUid;
+        if (_bargainUid == 0 && _userUid > 0) {
+          _bargainUid = _userUid;
+        }
       });
     }
   }
@@ -75,18 +86,75 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
     }
   }
 
-  void _setBargainHelp() {
-    // TODO: 实现帮砍一刀逻辑
-    FlutterToastPro.showMessage('帮砍一刀功能待实现');
+  Future<void> _setBargainHelp() async {
+    final response = await _activityProvider.helpBargain(_id, bargainUserUid: _bargainUid);
+    if (response.isSuccess) {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '帮砍成功');
+      await _getBargainDetail();
+      await _getBargainUserHelp();
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '帮砍失败');
+    }
   }
 
   void _goBargainList() {
     Get.offNamed('/activity/bargain');
   }
 
-  void _goPay() {
-    // TODO: 跳转到支付页面
-    Get.toNamed('/order/confirm');
+  Future<void> _goPay() async {
+    final productId = _bargainInfo['product_id'] ?? 0;
+    if (productId == 0) {
+      FlutterToastPro.showMessage('商品信息异常');
+      return;
+    }
+
+    final response = await _orderProvider.addCart({
+      'productId': productId,
+      'bargainId': _id,
+      'cartNum': 1,
+      'uniqueId': '',
+      'combinationId': 0,
+      'secKillId': 0,
+      'new': 1,
+    });
+
+    if (response.isSuccess) {
+      final cartId = response.data?.cartId ?? 0;
+      Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartId, 'new': 1});
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '提交失败');
+    }
+  }
+
+  Future<void> _startBargain() async {
+    final response = await _activityProvider.startBargain(_id);
+    if (response.isSuccess) {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '参与成功');
+      await _getBargainDetail();
+      await _getBargainUserHelp();
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '参与失败');
+    }
+  }
+
+  Future<void> _participateMyself() async {
+    if (_userUid <= 0) {
+      FlutterToastPro.showMessage('用户信息获取失败');
+      return;
+    }
+    setState(() {
+      _bargainUid = _userUid;
+    });
+    await _startBargain();
+  }
+
+  Future<void> _share() async {
+    final title = _bargainInfo['title']?.toString() ?? '';
+    final url =
+        '${AppConfig.httpRequestUrl}/pages/activity/goods_bargain_details/index?id=$_id&bargain=$_bargainUid';
+    await Clipboard.setData(ClipboardData(text: '$title $url'.trim()));
+    await _userProvider.userShare();
+    FlutterToastPro.showMessage('链接已复制');
   }
 
   void _goProduct() {
@@ -290,7 +358,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
       case 1:
         return ElevatedButton(
           onPressed: () {
-            // TODO: 立即参与砍价
+            _startBargain();
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: ThemeColors.red.primary,
@@ -304,7 +372,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
           children: [
             ElevatedButton(
               onPressed: () {
-                // TODO: 邀请好友帮砍价
+                _share();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: ThemeColors.red.primary,
@@ -358,7 +426,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () {
-                // TODO: 我也要参与
+                _participateMyself();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: ThemeColors.red.primary,
@@ -397,7 +465,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () {
-                // TODO: 我也要参与
+                _participateMyself();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: ThemeColors.red.primary,

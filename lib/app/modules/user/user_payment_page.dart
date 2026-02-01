@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:get/get.dart';
 import '../../data/providers/user_provider.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
+import '../../../widgets/payment_dialog.dart';
 
 class UserPaymentPage extends StatefulWidget {
   const UserPaymentPage({super.key});
@@ -94,16 +97,53 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
       return;
     }
 
+    final totalPrice = double.tryParse(amount) ?? 0;
+    final methods = [PaymentMethod.weixin(), PaymentMethod.alipay()];
+
+    await PaymentDialog.show(
+      paymentMethods: methods,
+      totalPrice: totalPrice,
+      orderId: '',
+      isCall: true,
+      onPay: (payType) => _payRecharge(payType, totalPrice),
+    );
+  }
+
+  Future<void> _payRecharge(String payType, double amount) async {
+    if (_isLoading) return;
     setState(() {
       _isLoading = true;
     });
 
-    // TODO: 调用充值接口并处理支付
-    FlutterToastPro.showMessage('充值功能开发中，请联系客服');
+    try {
+      final response = await _userProvider.recharge({
+        'price': amount,
+        'from': payType,
+        'rechar_id': _recharId,
+        'type': 0,
+      });
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response.isSuccess) {
+        final data = response.data is Map ? response.data as Map : null;
+        final status = data?['status']?.toString() ?? '';
+        if (status == 'SUCCESS') {
+          FlutterToastPro.showMessage('支付成功');
+          _getUserInfo();
+          Get.toNamed(AppRoutes.userMoney);
+        } else {
+          FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '充值提交成功');
+          _getUserInfo();
+        }
+      } else {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '充值失败');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Widget _buildHeader() {

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../data/providers/activity_provider.dart';
 import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -42,7 +43,7 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
     super.initState();
     _id = int.tryParse(Get.arguments?['id']?.toString() ?? '0') ?? 0;
     if (_id == 0) {
-      FlutterToastPro.showMessage( '缺少商品ID');
+      FlutterToastPro.showMessage('缺少商品ID');
       return;
     }
     _loadDetail();
@@ -70,11 +71,11 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
         });
       } else {
         setState(() => _isLoading = false);
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      FlutterToastPro.showMessage( '获取详情失败');
+      FlutterToastPro.showMessage('获取详情失败');
     }
   }
 
@@ -91,22 +92,22 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
       setState(() {
         _isCollected = !_isCollected;
       });
-      FlutterToastPro.showMessage( _isCollected ? '收藏成功' : '取消收藏');
+      FlutterToastPro.showMessage(_isCollected ? '收藏成功' : '取消收藏');
     } catch (e) {
-      FlutterToastPro.showMessage( '操作失败');
+      FlutterToastPro.showMessage('操作失败');
     }
   }
 
   void _goBuy() {
     if (_status != 1) {
-      FlutterToastPro.showMessage( _status == 0 ? '活动已结束' : '活动未开始');
+      FlutterToastPro.showMessage(_status == 0 ? '活动已结束' : '活动未开始');
       return;
     }
 
     final quota = _storeInfo['quota'] ?? 0;
     final stock = _storeInfo['stock'] ?? 0;
     if (quota <= 0 || stock <= 0) {
-      FlutterToastPro.showMessage( '已售罄');
+      FlutterToastPro.showMessage('已售罄');
       return;
     }
 
@@ -369,10 +370,29 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF333333)),
           ),
           const SizedBox(height: 16),
-          // TODO: 富文本展示
-          Text(
+          HtmlWidget(
             _storeInfo['description'] ?? '暂无介绍',
-            style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
+            customStylesBuilder: (element) {
+              if (element.localName == 'body') {
+                return {
+                  'font-size': '14px',
+                  'color': '#666666',
+                  'line-height': '1.6',
+                  'margin': '0',
+                  'padding': '0',
+                };
+              }
+              if (element.localName == 'img') {
+                return {'width': '100%', 'display': 'block'};
+              }
+              if (element.localName == 'table') {
+                return {'width': '100%'};
+              }
+              if (element.localName == 'video') {
+                return {'width': '100%'};
+              }
+              return null;
+            },
           ),
         ],
       ),
@@ -496,5 +516,3 @@ class _SeckillDetailPageState extends State<SeckillDetailPage> {
     );
   }
 }
-
-

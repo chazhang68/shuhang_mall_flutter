@@ -77,6 +77,11 @@ class StoreProvider {
     return await _api.post('collect/del/batch', data: {'ids': ids});
   }
 
+  /// 批量收藏
+  Future<ApiResponse> collectAll(List<int> ids, {String category = 'product'}) async {
+    return await _api.post('collect/all', data: {'id': ids.join(','), 'category': category});
+  }
+
   // ==================== 浏览记录 ====================
 
   /// 添加浏览记录

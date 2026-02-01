@@ -7,6 +7,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/lottery_provider.dart';
 import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
+import '../../../widgets/product_spec_dialog.dart';
 
 class PointsGoodsDetailPage extends StatefulWidget {
   const PointsGoodsDetailPage({super.key});
@@ -26,6 +27,8 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
   String _description = '';
   bool _userCollect = false;
   double _opacity = 0;
+  List<Map<String, dynamic>> _productAttr = [];
+  Map<String, dynamic> _productValue = {};
 
   @override
   void initState() {
@@ -61,6 +64,13 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         _images = List<String>.from(_storeInfo['images'] ?? [_storeInfo['image'] ?? '']);
         _description = response.data['description'] ?? _storeInfo['description'] ?? '';
         _userCollect = _storeInfo['userCollect'] ?? false;
+        _productAttr =
+            (response.data['productAttr'] as List?)
+                ?.whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        _productValue = Map<String, dynamic>.from(response.data['productValue'] ?? {});
       });
     }
   }
@@ -93,11 +103,15 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
       return;
     }
 
-    // TODO: 显示规格选择弹窗并进行兑换
+    if (_productAttr.isNotEmpty && _productValue.isNotEmpty) {
+      _showSpecDialog();
+      return;
+    }
+
     _showExchangeDialog();
   }
 
-  void _showExchangeDialog() {
+  void _showExchangeDialog({String unique = '', int quantity = 1}) {
     int price = _storeInfo['price'] ?? 0;
 
     Get.dialog(
@@ -120,12 +134,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
           ElevatedButton(
             onPressed: () async {
               Get.back();
-              final response = await _pointsMallProvider.pointsExchange({'id': _id, 'num': 1});
-              if (response.isSuccess) {
-                FlutterToastPro.showMessage('兑换成功');
-              } else {
-                FlutterToastPro.showMessage(response.msg);
-              }
+              await _exchange(unique: unique, quantity: quantity);
             },
             style: ElevatedButton.styleFrom(backgroundColor: ThemeColors.red.primary),
             child: const Text('确认'),
@@ -133,6 +142,40 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _showSpecDialog() async {
+    final skuList = _productValue.entries.where((entry) => entry.value is Map).map((entry) {
+      final value = Map<String, dynamic>.from(entry.value as Map);
+      return {...value, 'suk': entry.key, 'unique': value['unique'] ?? entry.key};
+    }).toList();
+
+    final result = await ProductSpecDialog.show(
+      product: Map<String, dynamic>.from(_storeInfo),
+      attrs: _productAttr,
+      skus: skuList,
+      mode: ProductSpecMode.buyNow,
+    );
+
+    if (result != null) {
+      final sku = result['sku'] as Map<String, dynamic>?;
+      final quantity = result['quantity'] as int? ?? 1;
+      final unique = sku?['unique']?.toString() ?? '';
+      _showExchangeDialog(unique: unique, quantity: quantity);
+    }
+  }
+
+  Future<void> _exchange({required String unique, required int quantity}) async {
+    final data = <String, dynamic>{'id': _id, 'num': quantity};
+    if (unique.isNotEmpty) {
+      data['unique'] = unique;
+    }
+    final response = await _pointsMallProvider.pointsExchange(data);
+    if (response.isSuccess) {
+      FlutterToastPro.showMessage('兑换成功');
+    } else {
+      FlutterToastPro.showMessage(response.msg);
+    }
   }
 
   Widget _buildImageSwiper() {

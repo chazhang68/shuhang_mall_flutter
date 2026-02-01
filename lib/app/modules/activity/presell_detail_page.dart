@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/activity_provider.dart';
+import '../../data/providers/order_provider.dart';
 import '../../data/providers/store_provider.dart';
+import '../../data/providers/user_provider.dart';
+import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
+import '../../utils/config.dart';
+import '../../../widgets/coupon_dialog.dart';
+import '../../../widgets/product_spec_dialog.dart';
 
 class PresellDetailPage extends StatefulWidget {
   const PresellDetailPage({super.key});
@@ -17,7 +24,9 @@ class PresellDetailPage extends StatefulWidget {
 
 class _PresellDetailPageState extends State<PresellDetailPage> {
   final ActivityProvider _activityProvider = ActivityProvider();
+  final OrderProvider _orderProvider = OrderProvider();
   final StoreProvider _storeProvider = StoreProvider();
+  final UserProvider _userProvider = UserProvider();
   final ScrollController _scrollController = ScrollController();
 
   int _id = 0;
@@ -32,6 +41,10 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
   bool _userCollect = false;
 
   Map<String, dynamic> _attr = {'cartAttr': false, 'productAttr': [], 'productSelect': {}};
+  List<Map<String, dynamic>> _productAttr = [];
+  Map<String, dynamic> _productValue = {};
+  String _selectedUnique = '';
+  int _selectedQuantity = 1;
 
   double _opacity = 0;
   final int _navActive = 0;
@@ -76,11 +89,20 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         _reply = response.data['reply'] ?? {};
         _payStatus = response.data['pay_status'] ?? 1;
         _userCollect = _storeInfo['userCollect'] ?? false;
+        _productAttr =
+            (response.data['productAttr'] as List?)
+                ?.whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList() ??
+            [];
+        _productValue = Map<String, dynamic>.from(response.data['productValue'] ?? {});
         _attr = {
           'cartAttr': false,
-          'productAttr': response.data['productAttr'] ?? [],
+          'productAttr': _productAttr,
           'productSelect': response.data['productSelect'] ?? {},
         };
+        _selectedUnique = _attr['productSelect']?['unique']?.toString() ?? '';
+        _selectedQuantity = int.tryParse('${_attr['productSelect']?['cart_num'] ?? 1}') ?? 1;
       });
     }
   }
@@ -114,8 +136,83 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
       FlutterToastPro.showMessage('活动已结束');
       return;
     }
-    // TODO: 跳转到订单确认页面
-    Get.toNamed('/order/confirm', parameters: {'presellId': _id.toString()});
+    if (_productAttr.isNotEmpty && _selectedUnique.isEmpty) {
+      _showSpecDialog(mode: ProductSpecMode.buyNow);
+      return;
+    }
+    _addPresellToCart();
+  }
+
+  Future<void> _addPresellToCart() async {
+    final productId = _storeInfo['product_id'] ?? 0;
+    final uniqueId = _selectedUnique;
+    if (productId == 0) {
+      FlutterToastPro.showMessage('商品信息异常');
+      return;
+    }
+
+    final response = await _orderProvider.addCart({
+      'productId': productId,
+      'advanceId': _id,
+      'cartNum': _selectedQuantity,
+      'uniqueId': uniqueId,
+      'new': 1,
+    });
+
+    if (response.isSuccess) {
+      final cartId = response.data?.cartId ?? 0;
+      Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartId, 'new': 1});
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '提交失败');
+    }
+  }
+
+  Future<void> _share() async {
+    final title = _storeInfo['title']?.toString() ?? '';
+    final url = '${AppConfig.httpRequestUrl}/pages/activity/presell_details/index?id=$_id';
+    await Clipboard.setData(ClipboardData(text: '$title $url'.trim()));
+    await _userProvider.userShare();
+    FlutterToastPro.showMessage('链接已复制');
+  }
+
+  Future<void> _showCouponDialog() async {
+    if (_couponList.isEmpty) return;
+    final coupons = _couponList
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    await CouponDialog.show(couponList: coupons);
+  }
+
+  Future<void> _showSpecDialog({ProductSpecMode mode = ProductSpecMode.selectOnly}) async {
+    if (_productAttr.isEmpty || _productValue.isEmpty) return;
+
+    final skuList = _productValue.entries.where((entry) => entry.value is Map).map((entry) {
+      final value = Map<String, dynamic>.from(entry.value as Map);
+      return {...value, 'suk': entry.key, 'unique': value['unique'] ?? entry.key};
+    }).toList();
+
+    final result = await ProductSpecDialog.show(
+      product: Map<String, dynamic>.from(_storeInfo),
+      attrs: _productAttr,
+      skus: skuList,
+      mode: mode,
+    );
+
+    if (result != null) {
+      final sku = result['sku'] as Map<String, dynamic>?;
+      final quantity = result['quantity'] as int? ?? 1;
+      if (sku != null) {
+        setState(() {
+          _selectedUnique = sku['unique']?.toString() ?? '';
+          _selectedQuantity = quantity;
+          _attr['productSelect'] = sku;
+        });
+      }
+      if (mode == ProductSpecMode.buyNow && _selectedUnique.isNotEmpty) {
+        _addPresellToCart();
+      }
+    }
   }
 
   Widget _buildImageSwiper() {
@@ -197,7 +294,7 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
               ),
               IconButton(
                 onPressed: () {
-                  // TODO: 分享
+                  _share();
                 },
                 icon: const Icon(Icons.share),
               ),
@@ -272,7 +369,7 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
       color: Colors.white,
       child: InkWell(
         onTap: () {
-          // TODO: 显示优惠券弹窗
+          _showCouponDialog();
         },
         child: Row(
           children: [
@@ -312,7 +409,7 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
       color: Colors.white,
       child: InkWell(
         onTap: () {
-          // TODO: 显示规格选择弹窗
+          _showSpecDialog();
         },
         child: Row(
           children: [

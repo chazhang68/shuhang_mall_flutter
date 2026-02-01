@@ -479,8 +479,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             if (statusType == 4) ...[
               OutlinedButton(
                 onPressed: () {
-                  // TODO: 删除订单逻辑
-                  FlutterToastPro.showMessage('删除订单待实现');
+                  _deleteOrder();
                 },
                 child: const Text('删除订单'),
               ),
@@ -503,6 +502,29 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       FlutterToastPro.showMessage(response.msg);
     } catch (e) {
       FlutterToastPro.showMessage('再次购买失败');
+    }
+  }
+
+  Future<void> _deleteOrder() async {
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('提示'),
+        content: const Text('确认删除该订单吗？'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('取消')),
+          TextButton(onPressed: () => Get.back(result: true), child: const Text('确认')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final response = await _orderProvider.deleteOrder(orderId);
+    if (response.isSuccess) {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '删除成功');
+      Get.back(result: true);
+    } else {
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '删除失败');
     }
   }
 

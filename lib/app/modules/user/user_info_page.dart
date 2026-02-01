@@ -4,6 +4,7 @@ import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 
@@ -18,6 +19,7 @@ class UserInfoPage extends StatefulWidget {
 
 class _UserInfoPageState extends State<UserInfoPage> {
   final UserProvider _userProvider = Get.find<UserProvider>();
+  final PublicProvider _publicProvider = PublicProvider();
   final TextEditingController _nicknameController = TextEditingController();
 
   UserModel? _userInfo;
@@ -226,8 +228,21 @@ class _UserInfoPageState extends State<UserInfoPage> {
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      // TODO: 上传图片并更新头像
-      FlutterToastPro.showMessage( '头像上传功能待实现');
+      final response = await _publicProvider.uploadFile(filePath: image.path);
+      if (response.isSuccess && response.data != null) {
+        final data = response.data as Map;
+        final url = data['url']?.toString() ?? '';
+        if (url.isEmpty) {
+          FlutterToastPro.showMessage('头像上传失败');
+          return;
+        }
+        setState(() {
+          _userInfo = _userInfo?.copyWith(avatar: url);
+        });
+        FlutterToastPro.showMessage('头像上传成功');
+      } else {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '头像上传失败');
+      }
     }
   }
 
@@ -271,7 +286,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Future<void> _saveUserInfo() async {
     String nickname = _nicknameController.text.trim();
     if (nickname.isEmpty) {
-      FlutterToastPro.showMessage( '请输入昵称');
+      FlutterToastPro.showMessage('请输入昵称');
       return;
     }
 
@@ -282,12 +297,10 @@ class _UserInfoPageState extends State<UserInfoPage> {
     });
 
     if (response.isSuccess) {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
       Get.back();
     } else {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 }
-
-

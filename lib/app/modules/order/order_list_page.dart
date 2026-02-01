@@ -335,7 +335,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
         if (deliveryType == 'express') {
           actions.add(
             _buildActionButton('查看物流', () {
-              // TODO: 跳转物流页面
+              Get.toNamed(AppRoutes.orderLogistics, parameters: {'orderId': order.orderId});
             }),
           );
         }
@@ -348,8 +348,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       case 4: // 已完成
         actions.add(
           _buildActionButton('删除订单', () {
-            // TODO: 删除订单逻辑（按你的要求先标记）
-            FlutterToastPro.showMessage('删除订单待实现');
+            _deleteOrder(order);
           }, isOutline: true),
         );
         actions.add(
@@ -432,6 +431,39 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       }
     } catch (e) {
       FlutterToastPro.showMessage('取消失败');
+    }
+  }
+
+  Future<void> _deleteOrder(OrderListItem order) async {
+    final orderId = order.orderId;
+    if (orderId.isEmpty) {
+      FlutterToastPro.showMessage('订单号缺失');
+      return;
+    }
+
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('提示'),
+        content: const Text('确认删除该订单吗？'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('取消')),
+          TextButton(onPressed: () => Get.back(result: true), child: const Text('确认')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await _orderProvider.deleteOrder(orderId);
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '删除成功');
+      if (response.isSuccess) {
+        final index = _tabController.index;
+        _loadData(index, isRefresh: true);
+        _fetchOrderStatusData();
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('删除失败');
     }
   }
 

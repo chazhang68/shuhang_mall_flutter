@@ -173,8 +173,18 @@ class _VisitListPageState extends State<VisitListPage> {
       return;
     }
 
-    // TODO: 实现批量收藏
-    FlutterToastPro.showMessage('收藏成功');
+    try {
+      final response = await _storeProvider.collectAll(_selectedIds.toList());
+      if (response.isSuccess) {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '收藏成功');
+        _toggleManageMode();
+        _loadVisitList(isRefresh: true);
+      } else {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '收藏失败');
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('操作失败');
+    }
   }
 
   void _goDetail(VisitProduct product) {

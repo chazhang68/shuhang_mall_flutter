@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../data/providers/public_provider.dart';
+import '../../data/providers/user_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
+import '../../utils/config.dart';
 
 class NewsDetailPage extends StatefulWidget {
   const NewsDetailPage({super.key});
@@ -16,6 +19,7 @@ class NewsDetailPage extends StatefulWidget {
 
 class _NewsDetailPageState extends State<NewsDetailPage> {
   final PublicProvider _publicProvider = PublicProvider();
+  final UserProvider _userProvider = UserProvider();
 
   int _id = 0;
   Map<String, dynamic> _articleInfo = {};
@@ -53,6 +57,14 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
   void _goToGoodsDetail(int productId) {
     Get.toNamed(AppRoutes.goodsDetail, parameters: {'id': productId.toString()});
+  }
+
+  Future<void> _shareArticle() async {
+    final title = _articleInfo['title']?.toString() ?? '';
+    final url = '${AppConfig.httpRequestUrl}/pages/extension/news_details/index?id=$_id';
+    await Clipboard.setData(ClipboardData(text: '$title $url'.trim()));
+    await _userProvider.userShare();
+    FlutterToastPro.showMessage('链接已复制');
   }
 
   Widget _buildProductCard() {
@@ -229,8 +241,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: 实现分享功能
-                    FlutterToastPro.showMessage('分享功能开发中');
+                    _shareArticle();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeColors.red.primary,
