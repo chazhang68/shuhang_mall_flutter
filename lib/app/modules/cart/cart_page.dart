@@ -164,14 +164,23 @@ class _CartItemTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          Checkbox(value: selected, onChanged: onSelectedChanged, activeColor: themeColor.primary),
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: selected,
+              onChanged: onSelectedChanged,
+              activeColor: themeColor.primary,
+            ),
+          ),
+          SizedBox(width: 8),
           Container(
-            width: 48,
-            height: 48,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
@@ -311,49 +320,46 @@ class _CartBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: MediaQuery.sizeOf(context).width,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Checkbox(
-                value: selectAll,
-                onChanged: onSelectAllChanged,
-                activeColor: themeColor.primary,
-              ),
-              const Text('全选', style: TextStyle(fontSize: 14)),
-              const Spacer(),
-              Text('合计: ', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-              Text(
-                '¥${totalPrice.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: themeColor.price,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 120,
-                height: 40,
-                child: ElevatedButton(
-                  onPressed: selectedCount > 0 ? (isEdit ? onDeleteSelected : onCheckout) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: themeColor.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  child: Text(isEdit ? '删除' : '结算($selectedCount)'),
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.all(12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: selectAll,
+              onChanged: onSelectAllChanged,
+              activeColor: themeColor.primary,
+            ),
           ),
-        ),
+          const Text('全选', style: TextStyle(fontSize: 14)),
+          const Spacer(),
+          Text('合计: ', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+          Text(
+            '¥${totalPrice.toStringAsFixed(2)}',
+            style: TextStyle(fontSize: 16, color: themeColor.price, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 120,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: selectedCount > 0 ? (isEdit ? onDeleteSelected : onCheckout) : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeColor.primary,
+                padding: EdgeInsets.zero,
+              ),
+              child: Text(isEdit ? '删除' : '结算($selectedCount)'),
+            ),
+          ),
+        ],
       ),
     );
   }
