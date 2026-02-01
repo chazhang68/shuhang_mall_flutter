@@ -145,7 +145,7 @@ class UserAddressListController extends GetxController {
       AppRoutes.userAddress,
       parameters: {
         'id': addressId.toString(),
-        if (cartId != null) 'cartId': cartId!,
+        'cartId': ?cartId,
         'pinkId': pinkId.toString(),
         'couponId': couponId.toString(),
         'new': news,
@@ -162,7 +162,7 @@ class UserAddressListController extends GetxController {
     final result = await Get.toNamed(
       AppRoutes.userAddress,
       parameters: {
-        if (cartId != null) 'cartId': cartId!,
+        'cartId': ?cartId,
         'pinkId': pinkId.toString(),
         'couponId': couponId.toString(),
         'new': news,

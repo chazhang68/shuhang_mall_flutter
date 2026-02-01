@@ -100,6 +100,25 @@ class OrderProvider {
     );
   }
 
+  /// 获取订单支付信息（原始数据）
+  Future<ApiResponse<Map<String, dynamic>>> getOrderPayInfo(String orderId) async {
+    return await _api.get<Map<String, dynamic>>(
+      'order/detail/$orderId',
+      fromJsonT: (json) => Map<String, dynamic>.from(json as Map),
+    );
+  }
+
+  /// 订单赠送优惠券
+  Future<ApiResponse<List<Map<String, dynamic>>>> orderCoupon(String orderId) async {
+    return await _api.post<List<Map<String, dynamic>>>(
+      'v2/order/product_coupon/$orderId',
+      fromJsonT: (json) {
+        if (json is! List) return <Map<String, dynamic>>[];
+        return json.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+      },
+    );
+  }
+
   /// 获取订单状态数量
   Future<ApiResponse<OrderStatusSummary>> getOrderStatusNum() async {
     return await _api.get<OrderStatusSummary>(

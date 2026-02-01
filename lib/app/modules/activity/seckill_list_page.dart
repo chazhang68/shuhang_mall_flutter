@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/activity_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 
 /// 秒杀列表页
@@ -12,6 +13,7 @@ class SeckillListPage extends StatefulWidget {
 }
 
 class _SeckillListPageState extends State<SeckillListPage> {
+  final ActivityProvider _activityProvider = ActivityProvider();
   List<Map<String, dynamic>> timeList = [];
   List<Map<String, dynamic>> seckillList = [];
   int activeIndex = 0;
@@ -21,6 +23,7 @@ class _SeckillListPageState extends State<SeckillListPage> {
   int page = 1;
   final int limit = 8;
   bool loadEnd = false;
+  String topImage = '';
   final ScrollController _scrollController = ScrollController();
   final ScrollController _timeScrollController = ScrollController();
 
@@ -47,35 +50,30 @@ class _SeckillListPageState extends State<SeckillListPage> {
   Future<void> _loadSeckillConfig() async {
     setState(() => isLoading = true);
 
-    // TODO: 调用API获取秒杀时间段配置
-    await Future.delayed(const Duration(milliseconds: 300));
+    final response = await _activityProvider.getSeckillIndex();
+    if (response.isSuccess && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      final List<dynamic> timeData = data['seckillTime'] ?? [];
+      setState(() {
+        topImage = data['lovely'] ?? '';
+        timeList = timeData.cast<Map<String, dynamic>>();
+        activeIndex = (data['seckillTimeIndex'] ?? 0) as int;
+        if (activeIndex < 0 || activeIndex >= timeList.length) {
+          activeIndex = 0;
+        }
+        status = timeList.isNotEmpty ? (timeList[activeIndex]['status'] ?? 1) : 1;
+      });
 
-    setState(() {
-      timeList = [
-        {'id': 1, 'time': '00:00', 'state': '已结束', 'status': 3, 'slide': ''},
-        {'id': 2, 'time': '08:00', 'state': '已结束', 'status': 3, 'slide': ''},
-        {'id': 3, 'time': '10:00', 'state': '已结束', 'status': 3, 'slide': ''},
-        {'id': 4, 'time': '12:00', 'state': '抢购中', 'status': 1, 'slide': ''},
-        {'id': 5, 'time': '14:00', 'state': '未开始', 'status': 2, 'slide': ''},
-        {'id': 6, 'time': '16:00', 'state': '未开始', 'status': 2, 'slide': ''},
-        {'id': 7, 'time': '18:00', 'state': '未开始', 'status': 2, 'slide': ''},
-        {'id': 8, 'time': '20:00', 'state': '未开始', 'status': 2, 'slide': ''},
-      ];
+      if (timeList.isNotEmpty) {
+        await _loadSeckillList();
+      }
 
-      // 默认选中正在抢购中的时间段
-      activeIndex = timeList.indexWhere((item) => item['status'] == 1);
-      if (activeIndex < 0) activeIndex = 0;
-      status = timeList[activeIndex]['status'] ?? 1;
-    });
-
-    await _loadSeckillList();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveTime();
+      });
+    }
 
     setState(() => isLoading = false);
-
-    // 滚动到选中的时间段
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToActiveTime();
-    });
   }
 
   void _scrollToActiveTime() {
@@ -93,32 +91,24 @@ class _SeckillListPageState extends State<SeckillListPage> {
   Future<void> _loadSeckillList() async {
     if (loadEnd || isLoadingMore) return;
 
-    // TODO: 调用API获取秒杀商品列表
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final newList = List.generate(
-      page == 1 ? 5 : 3,
-      (index) => {
-        'id': (page - 1) * limit + index + 1,
-        'image': 'https://via.placeholder.com/200',
-        'title': '秒杀商品${(page - 1) * limit + index + 1}',
-        'price': '99.00',
-        'ot_price': '199.00',
-        'quota_show': 100,
-        'unit_name': '件',
-        'percent': 30 + (index * 10),
-      },
-    );
-
-    setState(() {
-      if (page == 1) {
-        seckillList = newList;
-      } else {
-        seckillList.addAll(newList);
-      }
-      loadEnd = newList.length < limit;
-      page++;
+    final timeId = timeList.isNotEmpty ? timeList[activeIndex]['id'] : 0;
+    final response = await _activityProvider.getSeckillList(int.tryParse('$timeId') ?? 0, {
+      'page': page,
+      'limit': limit,
     });
+
+    if (response.isSuccess && response.data != null) {
+      final List<dynamic> newList = response.data;
+      setState(() {
+        if (page == 1) {
+          seckillList = newList.cast<Map<String, dynamic>>();
+        } else {
+          seckillList.addAll(newList.cast<Map<String, dynamic>>());
+        }
+        loadEnd = newList.length < limit;
+        page++;
+      });
+    }
   }
 
   Future<void> _loadMoreSeckillList() async {
@@ -194,11 +184,17 @@ class _SeckillListPageState extends State<SeckillListPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://via.placeholder.com/400x150'),
-                        fit: BoxFit.cover,
-                      ),
                     ),
+                    child: topImage.isEmpty
+                        ? const SizedBox.shrink()
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              topImage,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                            ),
+                          ),
                   ),
 
                   const SizedBox(height: 8),
@@ -208,14 +204,20 @@ class _SeckillListPageState extends State<SeckillListPage> {
           ),
 
           // 时间段选择
-          _buildTimeList(theme),
+          _SeckillTimeList(
+            theme: theme,
+            timeList: timeList,
+            activeIndex: activeIndex,
+            controller: _timeScrollController,
+            onSelect: _selectTime,
+          ),
 
           // 商品列表
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : seckillList.isEmpty
-                ? _buildEmptyView()
+                : (seckillList.isEmpty && (page != 1 || activeIndex == 0))
+                ? const _SeckillEmptyView()
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
@@ -229,7 +231,12 @@ class _SeckillListPageState extends State<SeckillListPage> {
                           ),
                         );
                       }
-                      return _buildSeckillItem(theme, seckillList[index]);
+                      return _SeckillItem(
+                        theme: theme,
+                        item: seckillList[index],
+                        status: status,
+                        onTap: () => _goDetail(seckillList[index]),
+                      );
                     },
                   ),
           ),
@@ -237,27 +244,41 @@ class _SeckillListPageState extends State<SeckillListPage> {
       ),
     );
   }
+}
 
-  Widget _buildTimeList(ThemeData theme) {
+class _SeckillTimeList extends StatelessWidget {
+  final ThemeData theme;
+  final List<Map<String, dynamic>> timeList;
+  final int activeIndex;
+  final ScrollController controller;
+  final ValueChanged<int> onSelect;
+
+  const _SeckillTimeList({
+    required this.theme,
+    required this.timeList,
+    required this.activeIndex,
+    required this.controller,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          // 价格标签图标
           Container(
             width: 40,
             height: 40,
             margin: const EdgeInsets.only(left: 12),
             child: Icon(Icons.local_offer, color: theme.primaryColor),
           ),
-
-          // 时间段横向滚动列表
           Expanded(
             child: SizedBox(
               height: 60,
               child: ListView.builder(
-                controller: _timeScrollController,
+                controller: controller,
                 scrollDirection: Axis.horizontal,
                 itemCount: timeList.length,
                 itemBuilder: (context, index) {
@@ -265,7 +286,7 @@ class _SeckillListPageState extends State<SeckillListPage> {
                   final isActive = index == activeIndex;
 
                   return GestureDetector(
-                    onTap: () => _selectTime(index),
+                    onTap: () => onSelect(index),
                     child: Container(
                       width: 80,
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -307,19 +328,33 @@ class _SeckillListPageState extends State<SeckillListPage> {
       ),
     );
   }
+}
 
-  Widget _buildSeckillItem(ThemeData theme, Map<String, dynamic> item) {
+class _SeckillItem extends StatelessWidget {
+  final ThemeData theme;
+  final Map<String, dynamic> item;
+  final int status;
+  final VoidCallback onTap;
+
+  const _SeckillItem({
+    required this.theme,
+    required this.item,
+    required this.status,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final percent = item['percent'] ?? 0;
 
     return GestureDetector(
-      onTap: () => _goDetail(item),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            // 商品图片
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
@@ -335,10 +370,7 @@ class _SeckillListPageState extends State<SeckillListPage> {
                 ),
               ),
             ),
-
             const SizedBox(width: 12),
-
-            // 商品信息
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,8 +410,6 @@ class _SeckillListPageState extends State<SeckillListPage> {
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
-
-                  // 进度条
                   Stack(
                     children: [
                       Container(
@@ -418,8 +448,6 @@ class _SeckillListPageState extends State<SeckillListPage> {
                 ],
               ),
             ),
-
-            // 抢购按钮
             Container(
               width: 70,
               height: 32,
@@ -447,8 +475,13 @@ class _SeckillListPageState extends State<SeckillListPage> {
       ),
     );
   }
+}
 
-  Widget _buildEmptyView() {
+class _SeckillEmptyView extends StatelessWidget {
+  const _SeckillEmptyView();
+
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

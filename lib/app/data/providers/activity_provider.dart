@@ -35,8 +35,8 @@ class ActivityProvider {
   }
 
   /// 获取秒杀商品列表
-  Future<ApiResponse> getSeckillList(Map<String, dynamic>? params) async {
-    return await _api.get('seckill/list', queryParameters: params, noAuth: true);
+  Future<ApiResponse> getSeckillList(int time, Map<String, dynamic>? params) async {
+    return await _api.get('seckill/list/$time', queryParameters: params, noAuth: true);
   }
 
   /// 获取秒杀商品详情
@@ -59,6 +59,16 @@ class ActivityProvider {
   /// 获取拼团头像
   Future<ApiResponse> getCombinationPink(int id) async {
     return await _api.get('combination/pink/$id', noAuth: true);
+  }
+
+  /// 获取拼团轮播
+  Future<ApiResponse> getCombinationBannerList(Map<String, dynamic>? params) async {
+    return await _api.get('combination/banner_list', queryParameters: params, noAuth: true);
+  }
+
+  /// 获取拼团人数
+  Future<ApiResponse> getPink(Map<String, dynamic>? params) async {
+    return await _api.get('pink', queryParameters: params, noAuth: true);
   }
 
   /// 取消拼团
@@ -107,12 +117,12 @@ class ActivityProvider {
 
   /// 获取预售商品列表
   Future<ApiResponse> getPresellList(Map<String, dynamic>? params) async {
-    return await _api.get('presell/list', queryParameters: params, noAuth: true);
+    return await _api.get('advance/list', queryParameters: params, noAuth: true);
   }
 
   /// 获取预售商品详情
   Future<ApiResponse> getPresellDetail(int id) async {
-    return await _api.get('presell/detail/$id', noAuth: true);
+    return await _api.get('advance/detail/$id', noAuth: true);
   }
 
   // ==================== 活动通用 ====================

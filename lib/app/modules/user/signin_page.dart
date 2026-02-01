@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 
 /// 用户签到页
 /// 对应原 pages/users/user_sgin/index.vue
@@ -13,6 +14,7 @@ class SigninPage extends StatefulWidget {
 }
 
 class _SigninPageState extends State<SigninPage> {
+  final UserProvider _userProvider = UserProvider();
   Map<String, dynamic> userInfo = {};
   List<Map<String, dynamic>> signSystemList = [];
   List<Map<String, dynamic>> signList = [];
@@ -21,6 +23,7 @@ class _SigninPageState extends State<SigninPage> {
   bool isDaySigned = false;
   bool showSignSuccess = false;
   int signedDays = 0;
+  String dayText = '';
 
   @override
   void initState() {
@@ -33,74 +36,65 @@ class _SigninPageState extends State<SigninPage> {
   }
 
   Future<void> _loadUserInfo() async {
-    // TODO: 调用API获取用户签到信息
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {
-      userInfo = {
-        'avatar': 'https://via.placeholder.com/100',
-        'nickname': '测试用户',
-        'integral': 1580,
-        'is_day_sgin': false,
-        'sum_sgin_day': 15,
-        'sign_num': 3,
-      };
-      isDaySigned = userInfo['is_day_sgin'] ?? false;
-      signedDays = userInfo['sum_sgin_day'] ?? 0;
-      signIndex = userInfo['sign_num'] ?? 0;
-    });
+    final response = await _userProvider.postSignUser({'sign': 1});
+    if (response.isSuccess && response.data != null) {
+      final data = Map<String, dynamic>.from(response.data);
+      setState(() {
+        userInfo = data;
+        isDaySigned = data['is_day_sgin'] == true || data['is_day_sgin'] == 1;
+        signedDays = _readInt(data['sum_sgin_day']);
+        signIndex = _readInt(data['sign_num']);
+      });
+    }
   }
 
   Future<void> _loadSignConfig() async {
-    // TODO: 调用API获取签到配置
-    await Future.delayed(const Duration(milliseconds: 200));
-    setState(() {
-      signSystemList = [
-        {'day': '第一天', 'sign_num': 5},
-        {'day': '第二天', 'sign_num': 10},
-        {'day': '第三天', 'sign_num': 15},
-        {'day': '第四天', 'sign_num': 20},
-        {'day': '第五天', 'sign_num': 25},
-        {'day': '第六天', 'sign_num': 30},
-        {'day': '第七天', 'sign_num': 50},
-      ];
-    });
+    final response = await _userProvider.getSignConfig();
+    if (response.isSuccess && response.data != null) {
+      final list = List<Map<String, dynamic>>.from(response.data);
+      setState(() {
+        signSystemList = list;
+        dayText = _toChineseNumber(list.length);
+      });
+    }
   }
 
   Future<void> _loadSignList() async {
-    // TODO: 调用API获取签到记录
-    await Future.delayed(const Duration(milliseconds: 200));
-    setState(() {
-      signList = [
-        {'title': '签到奖励', 'number': 15, 'add_time': '2024-01-15'},
-        {'title': '签到奖励', 'number': 10, 'add_time': '2024-01-14'},
-        {'title': '签到奖励', 'number': 5, 'add_time': '2024-01-13'},
-      ];
-    });
+    final response = await _userProvider.getSignList({'page': 1, 'limit': 3});
+    if (response.isSuccess && response.data != null) {
+      setState(() {
+        signList = List<Map<String, dynamic>>.from(response.data);
+      });
+    }
   }
 
-  void _doSign() {
+  Future<void> _doSign() async {
     if (isDaySigned) {
-      FlutterToastPro.showMessage( '您今日已签到!');
+      FlutterToastPro.showMessage('您今日已签到!');
       return;
     }
 
-    // TODO: 调用签到API
-    int newIndex = signIndex + 1;
-    if (newIndex > signSystemList.length) {
-      newIndex = 1;
-    }
-    int earnedIntegral = signSystemList.isNotEmpty && signIndex < signSystemList.length
-        ? signSystemList[signIndex]['sign_num'] ?? 10
-        : 10;
+    final response = await _userProvider.setSignIntegral();
+    if (response.isSuccess && response.data != null) {
+      final data = Map<String, dynamic>.from(response.data);
+      final earnedIntegral = _readInt(data['integral']);
+      int newIndex = signIndex + 1;
+      if (newIndex > signSystemList.length) {
+        newIndex = 1;
+      }
 
-    setState(() {
-      isDaySigned = true;
-      signIndex = newIndex;
-      signedDays++;
-      integral = earnedIntegral;
-      showSignSuccess = true;
-      userInfo['integral'] = (userInfo['integral'] ?? 0) + earnedIntegral;
-    });
+      setState(() {
+        isDaySigned = true;
+        signIndex = newIndex;
+        signedDays += 1;
+        integral = earnedIntegral;
+        showSignSuccess = true;
+        userInfo['is_day_sgin'] = true;
+        userInfo['integral'] = _readInt(userInfo['integral']) + earnedIntegral;
+      });
+
+      await _loadSignList();
+    }
   }
 
   void _closeSuccessDialog() {
@@ -114,6 +108,18 @@ class _SigninPageState extends State<SigninPage> {
     return str;
   }
 
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse('$value') ?? 0;
+  }
+
+  String _toChineseNumber(int number) {
+    const mapping = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    final text = number.toString();
+    return text.split('').map((e) => mapping[int.tryParse(e) ?? 0]).join();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -124,17 +130,33 @@ class _SigninPageState extends State<SigninPage> {
           Column(
             children: [
               // Header
-              _buildHeader(theme),
+              _SignHeader(
+                theme: theme,
+                userInfo: userInfo,
+                onDetail: () => Get.toNamed(AppRoutes.userSignList),
+              ),
 
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
                       // 签到卡片
-                      _buildSignCard(theme),
+                      _SignCard(
+                        theme: theme,
+                        signSystemList: signSystemList,
+                        signIndex: signIndex,
+                        isDaySigned: isDaySigned,
+                        onSign: _doSign,
+                      ),
 
                       // 累计签到
-                      _buildAccumulatedCard(theme),
+                      _AccumulatedCard(
+                        theme: theme,
+                        daysText: _formatDays(signedDays),
+                        dayText: dayText,
+                        signList: signList,
+                        onMore: () => Get.toNamed(AppRoutes.userSignList),
+                      ),
                     ],
                   ),
                 ),
@@ -143,13 +165,23 @@ class _SigninPageState extends State<SigninPage> {
           ),
 
           // 签到成功弹窗
-          if (showSignSuccess) _buildSuccessDialog(theme),
+          if (showSignSuccess)
+            _SuccessDialog(theme: theme, integral: integral, onClose: _closeSuccessDialog),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHeader(ThemeData theme) {
+class _SignHeader extends StatelessWidget {
+  final ThemeData theme;
+  final Map<String, dynamic> userInfo;
+  final VoidCallback onDetail;
+
+  const _SignHeader({required this.theme, required this.userInfo, required this.onDetail});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       color: theme.primaryColor,
       child: SafeArea(
@@ -210,9 +242,7 @@ class _SigninPageState extends State<SigninPage> {
                 ],
               ),
               GestureDetector(
-                onTap: () {
-                  Get.toNamed(AppRoutes.userSignList);
-                },
+                onTap: onDetail,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -221,7 +251,7 @@ class _SigninPageState extends State<SigninPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.menu, color: Colors.orange, size: 20),
+                      const Icon(Icons.menu, color: Colors.orange, size: 20),
                       const SizedBox(width: 4),
                       Text('明细', style: TextStyle(color: Colors.orange, fontSize: 14)),
                     ],
@@ -234,8 +264,25 @@ class _SigninPageState extends State<SigninPage> {
       ),
     );
   }
+}
 
-  Widget _buildSignCard(ThemeData theme) {
+class _SignCard extends StatelessWidget {
+  final ThemeData theme;
+  final List<Map<String, dynamic>> signSystemList;
+  final int signIndex;
+  final bool isDaySigned;
+  final Future<void> Function() onSign;
+
+  const _SignCard({
+    required this.theme,
+    required this.signSystemList,
+    required this.signIndex,
+    required this.isDaySigned,
+    required this.onSign,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       transform: Matrix4.translationValues(0, -60, 0),
@@ -243,13 +290,12 @@ class _SigninPageState extends State<SigninPage> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
-          // 签到天数列表
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(signSystemList.length, (index) {
               final item = signSystemList[index];
               final isLast = index == signSystemList.length - 1;
-              final isSigned = signIndex > index;
+              final isSigned = signIndex >= index + 1;
 
               return Column(
                 children: [
@@ -280,15 +326,12 @@ class _SigninPageState extends State<SigninPage> {
               );
             }),
           ),
-
           const SizedBox(height: 24),
-
-          // 签到按钮
           SizedBox(
             width: 200,
             height: 44,
             child: ElevatedButton(
-              onPressed: isDaySigned ? null : _doSign,
+              onPressed: isDaySigned ? null : onSign,
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDaySigned ? Colors.grey : theme.primaryColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
@@ -303,10 +346,25 @@ class _SigninPageState extends State<SigninPage> {
       ),
     );
   }
+}
 
-  Widget _buildAccumulatedCard(ThemeData theme) {
-    final daysStr = _formatDays(signedDays);
+class _AccumulatedCard extends StatelessWidget {
+  final ThemeData theme;
+  final String daysText;
+  final String dayText;
+  final List<Map<String, dynamic>> signList;
+  final VoidCallback onMore;
 
+  const _AccumulatedCard({
+    required this.theme,
+    required this.daysText,
+    required this.dayText,
+    required this.signList,
+    required this.onMore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       transform: Matrix4.translationValues(0, -60, 0),
@@ -316,13 +374,11 @@ class _SigninPageState extends State<SigninPage> {
         children: [
           const Text('已累计签到', style: TextStyle(fontSize: 16, color: Colors.grey)),
           const SizedBox(height: 16),
-
-          // 天数显示
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              ...daysStr.split('').map((char) {
+              ...daysText.split('').map((char) {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: 40,
@@ -347,30 +403,23 @@ class _SigninPageState extends State<SigninPage> {
               const Text('天', style: TextStyle(fontSize: 16, color: Colors.black87)),
             ],
           ),
-
           const SizedBox(height: 16),
           Text(
-            '据说连续签到第七天可获得超额消费券，一定要坚持签到哦~~~',
+            '据说连续签到第$dayText天可获得超额消费券，一定要坚持签到哦~~~',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
-
           const SizedBox(height: 16),
           const Divider(height: 1),
-
-          // 签到记录列表
-          ...signList.map((item) => _buildSignListItem(item)),
-
+          ...signList.map((item) => _SignListItem(item: item)),
           if (signList.length >= 3)
             GestureDetector(
-              onTap: () {
-                Get.toNamed(AppRoutes.userSignList);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+              onTap: onMore,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text('点击加载更多', style: TextStyle(fontSize: 14, color: Colors.black87)),
                     Icon(Icons.chevron_right, size: 20),
                   ],
@@ -381,8 +430,15 @@ class _SigninPageState extends State<SigninPage> {
       ),
     );
   }
+}
 
-  Widget _buildSignListItem(Map<String, dynamic> item) {
+class _SignListItem extends StatelessWidget {
+  final Map<String, dynamic> item;
+
+  const _SignListItem({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -410,10 +466,19 @@ class _SigninPageState extends State<SigninPage> {
       ),
     );
   }
+}
 
-  Widget _buildSuccessDialog(ThemeData theme) {
+class _SuccessDialog extends StatelessWidget {
+  final ThemeData theme;
+  final int integral;
+  final VoidCallback onClose;
+
+  const _SuccessDialog({required this.theme, required this.integral, required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _closeSuccessDialog,
+      onTap: onClose,
       child: Container(
         color: Colors.black54,
         child: Center(
@@ -445,7 +510,7 @@ class _SigninPageState extends State<SigninPage> {
                     width: 120,
                     height: 40,
                     child: ElevatedButton(
-                      onPressed: _closeSuccessDialog,
+                      onPressed: onClose,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primaryColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -462,5 +527,3 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 }
-
-

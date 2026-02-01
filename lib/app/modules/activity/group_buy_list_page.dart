@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/activity_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/cached_image.dart';
 import 'package:shuhang_mall_flutter/widgets/loading_widget.dart';
 
@@ -13,6 +14,7 @@ class GroupBuyListPage extends StatefulWidget {
 }
 
 class _GroupBuyListPageState extends State<GroupBuyListPage> {
+  final ActivityProvider _activityProvider = ActivityProvider();
   final List<Map<String, dynamic>> _combinationList = [];
   final List<String> _pinkPeople = [];
   int _pinkCount = 0;
@@ -30,19 +32,16 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
 
   /// 获取正在拼团的人
   Future<void> _getPink() async {
-    // TODO: 调用API
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() {
-      _pinkPeople.addAll([
-        'https://via.placeholder.com/46',
-        'https://via.placeholder.com/46',
-        'https://via.placeholder.com/46',
-        'https://via.placeholder.com/46',
-        'https://via.placeholder.com/46',
-        'https://via.placeholder.com/46',
-      ]);
-      _pinkCount = 1234;
-    });
+    final response = await _activityProvider.getPink(null);
+    if (response.isSuccess && response.data != null) {
+      final data = response.data as Map<String, dynamic>;
+      setState(() {
+        _pinkPeople
+          ..clear()
+          ..addAll(List<String>.from(data['avatars'] ?? []));
+        _pinkCount = int.tryParse('${data['pink_count'] ?? 0}') ?? 0;
+      });
+    }
   }
 
   /// 获取拼团列表
@@ -53,30 +52,21 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
       _loading = true;
     });
 
-    // TODO: 调用API获取拼团列表
-    await Future.delayed(const Duration(seconds: 1));
+    final response = await _activityProvider.getCombinationList({'page': _page, 'limit': _limit});
 
-    // 模拟数据
-    final mockData = List.generate(
-      10,
-      (index) => {
-        'id': _page * 10 + index,
-        'image': 'https://via.placeholder.com/186',
-        'title': '拼团商品${_page * 10 + index}超值优惠限时抢购',
-        'people': 2 + index % 5,
-        'price': '${(index + 1) * 50}.00',
-        'product_price': '${(index + 1) * 100}.00',
-        'stock': index % 3 == 0 ? 0 : 100,
-        'quota': index % 3 == 0 ? 0 : 50,
-      },
-    );
-
-    setState(() {
-      _combinationList.addAll(mockData);
-      _page++;
-      _loadend = mockData.length < _limit;
-      _loading = false;
-    });
+    if (response.isSuccess && response.data != null) {
+      final List<dynamic> data = response.data;
+      setState(() {
+        _combinationList.addAll(data.cast<Map<String, dynamic>>());
+        _page++;
+        _loadend = data.length < _limit;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   /// 跳转到详情
@@ -105,20 +95,36 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
           child: Column(
             children: [
               // 自定义AppBar
-              _buildAppBar(theme),
+              _GroupBuyAppBar(theme: theme),
               // 参与人员展示
-              _buildGroupMembers(theme),
+              _GroupBuyMembers(theme: theme, pinkPeople: _pinkPeople, pinkCount: _pinkCount),
               // 列表
-              Expanded(child: _buildList(theme)),
+              Expanded(
+                child: _GroupBuyListView(
+                  theme: theme,
+                  combinationList: _combinationList,
+                  loading: _loading,
+                  loadEnd: _loadend,
+                  onRefresh: _onRefresh,
+                  onLoad: _getCombinationList,
+                  onItemTap: _goDetail,
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  /// 构建AppBar
-  Widget _buildAppBar(ThemeData theme) {
+class _GroupBuyAppBar extends StatelessWidget {
+  final ThemeData theme;
+
+  const _GroupBuyAppBar({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -141,15 +147,26 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
       ),
     );
   }
+}
 
-  /// 构建参与人员展示
-  Widget _buildGroupMembers(ThemeData theme) {
+class _GroupBuyMembers extends StatelessWidget {
+  final ThemeData theme;
+  final List<String> pinkPeople;
+  final int pinkCount;
+
+  const _GroupBuyMembers({
+    required this.theme,
+    required this.pinkPeople,
+    required this.pinkCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       height: 50,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 左侧线条
           Container(
             width: 50,
             height: 2,
@@ -160,12 +177,11 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
             ),
           ),
           const SizedBox(width: 15),
-          // 头像列表
           SizedBox(
             height: 30,
             child: Stack(
               children: [
-                for (int i = 0; i < _pinkPeople.length && i < 6; i++)
+                for (int i = 0; i < pinkPeople.length && i < 6; i++)
                   Positioned(
                     left: i * 20.0,
                     child: Container(
@@ -177,7 +193,7 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
                       ),
                       child: ClipOval(
                         child: CachedImage(
-                          imageUrl: _pinkPeople[i],
+                          imageUrl: pinkPeople[i],
                           width: 28,
                           height: 28,
                           fit: BoxFit.cover,
@@ -189,9 +205,8 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
             ),
           ),
           const SizedBox(width: 8),
-          Text('$_pinkCount人参与', style: const TextStyle(fontSize: 12, color: Colors.white)),
+          Text('$pinkCount人参与', style: const TextStyle(fontSize: 12, color: Colors.white)),
           const SizedBox(width: 15),
-          // 右侧线条
           Container(
             width: 50,
             height: 2,
@@ -205,10 +220,30 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
       ),
     );
   }
+}
 
-  /// 构建列表
-  Widget _buildList(ThemeData theme) {
-    if (_combinationList.isEmpty && !_loading) {
+class _GroupBuyListView extends StatelessWidget {
+  final ThemeData theme;
+  final List<Map<String, dynamic>> combinationList;
+  final bool loading;
+  final bool loadEnd;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function() onLoad;
+  final ValueChanged<Map<String, dynamic>> onItemTap;
+
+  const _GroupBuyListView({
+    required this.theme,
+    required this.combinationList,
+    required this.loading,
+    required this.loadEnd,
+    required this.onRefresh,
+    required this.onLoad,
+    required this.onItemTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (combinationList.isEmpty && !loading) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -222,52 +257,59 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _onRefresh,
+      onRefresh: onRefresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification) {
             if (notification.metrics.extentAfter < 100) {
-              _getCombinationList();
+              onLoad();
             }
           }
           return false;
         },
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          itemCount: _combinationList.length + (_loading ? 1 : 0),
+          itemCount: combinationList.length + (loading ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == _combinationList.length) {
+            if (index == combinationList.length) {
               return const Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(child: LoadingWidget()),
               );
             }
-            return _buildCombinationItem(_combinationList[index], theme);
+            final item = combinationList[index];
+            return _CombinationItem(item: item, theme: theme, onTap: () => onItemTap(item));
           },
         ),
       ),
     );
   }
+}
 
-  /// 构建拼团商品项
-  Widget _buildCombinationItem(Map<String, dynamic> item, ThemeData theme) {
+class _CombinationItem extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final ThemeData theme;
+  final VoidCallback onTap;
+
+  const _CombinationItem({required this.item, required this.theme, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     final bool soldOut = item['stock'] == 0 || item['quota'] == 0;
 
     return GestureDetector(
-      onTap: () => _goDetail(item),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            // 商品图片
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: CachedImage(imageUrl: item['image'], width: 93, height: 93, fit: BoxFit.cover),
             ),
             const SizedBox(width: 12),
-            // 商品信息
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +329,6 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // 价格信息
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -323,7 +364,6 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
                           ),
                         ],
                       ),
-                      // 拼团按钮
                       if (soldOut)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -346,7 +386,6 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // 人数
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 decoration: BoxDecoration(
@@ -368,7 +407,6 @@ class _GroupBuyListPageState extends State<GroupBuyListPage> {
                                   ),
                                 ),
                               ),
-                              // 去拼团
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 alignment: Alignment.center,

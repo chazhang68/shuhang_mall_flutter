@@ -133,6 +133,7 @@ abstract class AppRoutes {
   static const String otcOrder = '/otc/order';
   static const String otcSend = '/otc/send';
   static const String otcPay = '/otc/pay';
+  static const String otcPayType = '/otc/pay-type';
 
   // ==================== 特殊页面 ====================
   static const String farmer = '/farmer';

@@ -1,5 +1,6 @@
 /// 任务页面数据模型
 /// 对应原 pages/task/task.vue 中的数据结构
+library;
 
 /// 种子信息
 class SeedInfo {
@@ -86,11 +87,7 @@ class PlotInfo {
       left: json['left'] ?? 0,
       right: json['right'] ?? 0,
       fieldType: json['fieldType'] ?? 1,
-      plants:
-          (json['plants'] as List?)
-              ?.map((e) => PlantInfo.fromJson(e))
-              .toList() ??
-          [],
+      plants: (json['plants'] as List?)?.map((e) => PlantInfo.fromJson(e)).toList() ?? [],
     );
   }
 }

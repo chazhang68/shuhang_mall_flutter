@@ -34,11 +34,6 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
     _getCoupons();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void _setType(int type) {
     if (_currentType == type) return;
     setState(() {

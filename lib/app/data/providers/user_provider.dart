@@ -23,6 +23,11 @@ class UserProvider {
     return await _api.get<UserModel>('user/info', fromJsonT: (data) => UserModel.fromJson(data));
   }
 
+  /// 获取团队信息
+  Future<ApiResponse> getTeamInfo() async {
+    return await _api.get('user/info');
+  }
+
   // ==================== 登录注册 ====================
 
   /// H5 用户登录（账号密码）
@@ -196,6 +201,78 @@ class UserProvider {
   /// 获取佣金排名
   Future<ApiResponse> getBrokerageRank(Map<String, dynamic>? params) async {
     return await _api.get('brokerage_rank', queryParameters: params);
+  }
+
+  // ==================== OTC 交易 ====================
+
+  /// 获取 OTC 折价数据
+  Future<ApiResponse> getOtcInfo() async {
+    return await _api.get('get_otc_zdj');
+  }
+
+  /// 发布 OTC 需求
+  Future<ApiResponse> sendOtc(Map<String, dynamic> data) async {
+    return await _api.post('send_otc', data: data);
+  }
+
+  /// 获取 OTC 市场列表
+  Future<ApiResponse> getOtcList(Map<String, dynamic>? params) async {
+    return await _api.get('get_otc_list', queryParameters: params);
+  }
+
+  /// 获取结算方式
+  Future<ApiResponse> getPayType() async {
+    return await _api.get('user/pay_type');
+  }
+
+  /// 保存结算方式
+  Future<ApiResponse> savePayType(Map<String, dynamic> data) async {
+    return await _api.post('user/save_pay_type', data: data);
+  }
+
+  /// 获取我的 OTC 订单列表
+  Future<ApiResponse> getMyOtcList(Map<String, dynamic>? params) async {
+    return await _api.get('get_my_otc_list', queryParameters: params);
+  }
+
+  /// 获取 OTC 订单详情
+  Future<ApiResponse> otcOrderInfo(int id) async {
+    return await _api.get('otc_order_info/$id');
+  }
+
+  /// OTC 出售/互换
+  Future<ApiResponse> saleOtc(Map<String, dynamic> data) async {
+    return await _api.post('sale_otc', data: data);
+  }
+
+  /// OTC 支付
+  Future<ApiResponse> payOtc(int id) async {
+    return await _api.get('pay_otc/$id');
+  }
+
+  /// 保存收款信息
+  Future<ApiResponse> savePayInfo(Map<String, dynamic> data) async {
+    return await _api.post('save_pay_info', data: data);
+  }
+
+  /// 确认收款
+  Future<ApiResponse> okShouKuan(int id) async {
+    return await _api.get('ok_shou_kuan/$id');
+  }
+
+  /// 确认完成
+  Future<ApiResponse> okOver(int id) async {
+    return await _api.get('ok_over/$id');
+  }
+
+  /// 取消订单
+  Future<ApiResponse> cancelOtc(int id) async {
+    return await _api.get('cancel/$id');
+  }
+
+  /// 消费券支付
+  Future<ApiResponse> xfqPay(int id) async {
+    return await _api.get('xfq_pay/$id');
   }
 
   // ==================== 提现 ====================

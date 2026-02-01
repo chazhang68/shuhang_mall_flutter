@@ -133,7 +133,9 @@ class UserAddressListView extends GetView<UserAddressListController> {
                     children: [
                       Radio<int>(
                         value: index,
+                        // ignore: deprecated_member_use
                         groupValue: defaultIndex,
+                        // ignore: deprecated_member_use
                         onChanged: (_) => controller.setDefaultAddress(address.id, index),
                         activeColor: theme.primaryColor,
                         visualDensity: VisualDensity.compact,

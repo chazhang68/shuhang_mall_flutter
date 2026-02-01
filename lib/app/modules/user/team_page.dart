@@ -35,41 +35,22 @@ class _TeamPageState extends State<TeamPage> {
 
   /// 获取用户信息
   Future<void> _getUserInfo() async {
-    try {
-      final response = await _userProvider.getSpreadInfo();
-      if (response.isSuccess && response.data != null) {
-        setState(() {
-          userInfo = response.data as Map<String, dynamic>;
-        });
-      }
-    } catch (e) {
-      // ignore
+    final response = await _userProvider.getUserInfo();
+    if (response.isSuccess && response.data != null) {
+      setState(() {
+        userInfo = response.data!.toJson();
+      });
     }
   }
 
   /// 获取团队信息
   Future<void> _getTeamInfo() async {
-    // TODO: 调用实际的团队API
-    // 这里使用模拟数据
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() {
-      teamInfo = {
-        'level_name': 'VIP会员',
-        'next_name': '金牌会员',
-        'team_num': 128,
-        'bg_team': 85,
-        'min_team': 43,
-        'team_hy': 50,
-        'next_team': 100,
-        'team_bl': 50,
-        'min_hy': 20,
-        'next_min': 50,
-        'min_bl': 40,
-        'yxzt': 15,
-        'next_zt': 30,
-        'ztbl': 50,
-      };
-    });
+    final response = await _userProvider.getTeamInfo();
+    if (response.isSuccess && response.data != null) {
+      setState(() {
+        teamInfo = Map<String, dynamic>.from(response.data);
+      });
+    }
   }
 
   @override
@@ -79,18 +60,32 @@ class _TeamPageState extends State<TeamPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Column(children: [_buildHeader(), _buildTeamStats(), _buildProgressSection()]),
+              child: Column(
+                children: [
+                  _TeamHeader(primaryColor: _primaryColor, userInfo: userInfo, teamInfo: teamInfo),
+                  _TeamStats(primaryColor: _primaryColor, teamInfo: teamInfo),
+                  _ProgressSection(teamInfo: teamInfo),
+                ],
+              ),
             ),
     );
   }
+}
 
-  /// 头部区域
-  Widget _buildHeader() {
+class _TeamHeader extends StatelessWidget {
+  final Color primaryColor;
+  final Map<String, dynamic> userInfo;
+  final Map<String, dynamic> teamInfo;
+
+  const _TeamHeader({required this.primaryColor, required this.userInfo, required this.teamInfo});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: _primaryColor,
+        color: primaryColor,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(10),
           bottomRight: Radius.circular(10),
@@ -105,7 +100,6 @@ class _TeamPageState extends State<TeamPage> {
               child: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 10),
-            // 头像
             ClipOval(
               child: Image.network(
                 userInfo['avatar'] ?? '',
@@ -121,7 +115,6 @@ class _TeamPageState extends State<TeamPage> {
               ),
             ),
             const SizedBox(width: 12),
-            // 等级信息
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,16 +135,22 @@ class _TeamPageState extends State<TeamPage> {
                 ],
               ),
             ),
-            // 装饰图标
             const Icon(Icons.stars, color: Colors.amber, size: 50),
           ],
         ),
       ),
     );
   }
+}
 
-  /// 团队统计
-  Widget _buildTeamStats() {
+class _TeamStats extends StatelessWidget {
+  final Color primaryColor;
+  final Map<String, dynamic> teamInfo;
+
+  const _TeamStats({required this.primaryColor, required this.teamInfo});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
@@ -159,28 +158,24 @@ class _TeamPageState extends State<TeamPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildCircleProgress(
-            value: teamInfo['team_num'] ?? 0,
-            label: '团队总人数',
-            color: _primaryColor,
-          ),
-          _buildCircleProgress(
-            value: teamInfo['bg_team'] ?? 0,
-            label: '大区人数',
-            color: _primaryColor,
-          ),
-          _buildCircleProgress(
-            value: teamInfo['min_team'] ?? 0,
-            label: '小区人数',
-            color: _primaryColor,
-          ),
+          _CircleProgress(value: teamInfo['team_num'] ?? 0, label: '团队总人数', color: primaryColor),
+          _CircleProgress(value: teamInfo['bg_team'] ?? 0, label: '大区人数', color: primaryColor),
+          _CircleProgress(value: teamInfo['min_team'] ?? 0, label: '小区人数', color: primaryColor),
         ],
       ),
     );
   }
+}
 
-  /// 圆形进度
-  Widget _buildCircleProgress({required int value, required String label, required Color color}) {
+class _CircleProgress extends StatelessWidget {
+  final int value;
+  final String label;
+  final Color color;
+
+  const _CircleProgress({required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         SizedBox(
@@ -211,16 +206,22 @@ class _TeamPageState extends State<TeamPage> {
       ],
     );
   }
+}
 
-  /// 进度条区域
-  Widget _buildProgressSection() {
+class _ProgressSection extends StatelessWidget {
+  final Map<String, dynamic> teamInfo;
+
+  const _ProgressSection({required this.teamInfo});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
       child: Column(
         children: [
-          _buildProgressItem(
+          _ProgressItem(
             title: '团队总活跃',
             current: teamInfo['team_hy'] ?? 0,
             target: teamInfo['next_team'] ?? 100,
@@ -228,7 +229,7 @@ class _TeamPageState extends State<TeamPage> {
             color: const Color(0xFFFEB52A),
           ),
           const SizedBox(height: 20),
-          _buildProgressItem(
+          _ProgressItem(
             title: '小区活跃',
             current: teamInfo['min_hy'] ?? 0,
             target: teamInfo['next_min'] ?? 50,
@@ -236,7 +237,7 @@ class _TeamPageState extends State<TeamPage> {
             color: const Color(0xFFFF0014),
           ),
           const SizedBox(height: 20),
-          _buildProgressItem(
+          _ProgressItem(
             title: '有效直推',
             current: teamInfo['yxzt'] ?? 0,
             target: teamInfo['next_zt'] ?? 30,
@@ -247,15 +248,25 @@ class _TeamPageState extends State<TeamPage> {
       ),
     );
   }
+}
 
-  /// 进度项
-  Widget _buildProgressItem({
-    required String title,
-    required int current,
-    required int target,
-    required double percent,
-    required Color color,
-  }) {
+class _ProgressItem extends StatelessWidget {
+  final String title;
+  final int current;
+  final int target;
+  final double percent;
+  final Color color;
+
+  const _ProgressItem({
+    required this.title,
+    required this.current,
+    required this.target,
+    required this.percent,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -263,7 +274,6 @@ class _TeamPageState extends State<TeamPage> {
         const SizedBox(height: 8),
         Stack(
           children: [
-            // 进度条背景
             Container(
               height: 15,
               decoration: BoxDecoration(
@@ -271,7 +281,6 @@ class _TeamPageState extends State<TeamPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            // 进度条
             FractionallySizedBox(
               widthFactor: percent > 1 ? 1 : percent,
               child: Container(
@@ -282,7 +291,6 @@ class _TeamPageState extends State<TeamPage> {
                 ),
               ),
             ),
-            // 左侧数值
             Positioned(
               left: 7,
               top: 0,
@@ -291,7 +299,6 @@ class _TeamPageState extends State<TeamPage> {
                 child: Text('$current', style: const TextStyle(fontSize: 11, color: Colors.white)),
               ),
             ),
-            // 右侧数值
             Positioned(
               right: 7,
               top: 0,

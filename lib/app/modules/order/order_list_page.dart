@@ -37,7 +37,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
   void initState() {
     super.initState();
     final statusParam = int.tryParse(Get.parameters['status'] ?? '') ?? 9;
-    final initialIndex = _tabStatus.indexOf(statusParam) < 0 ? 0 : _tabStatus.indexOf(statusParam);
+    final initialIndex = !_tabStatus.contains(statusParam) ? 0 : _tabStatus.indexOf(statusParam);
     _tabController = TabController(
       length: _tabTitles.length,
       vsync: this,

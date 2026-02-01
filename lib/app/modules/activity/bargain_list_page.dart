@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/activity_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/cached_image.dart';
 import 'package:shuhang_mall_flutter/widgets/loading_widget.dart';
 
@@ -13,6 +14,7 @@ class BargainListPage extends StatefulWidget {
 }
 
 class _BargainListPageState extends State<BargainListPage> {
+  final ActivityProvider _activityProvider = ActivityProvider();
   final List<Map<String, dynamic>> _bargainList = [];
   bool _loading = false;
   bool _loadend = false;
@@ -33,28 +35,20 @@ class _BargainListPageState extends State<BargainListPage> {
       _loading = true;
     });
 
-    // TODO: 调用API获取砍价列表
-    await Future.delayed(const Duration(seconds: 1));
-
-    // 模拟数据
-    final mockData = List.generate(
-      10,
-      (index) => {
-        'id': _page * 10 + index,
-        'image': 'https://via.placeholder.com/200',
-        'title': '砍价商品${_page * 10 + index}',
-        'people': 100 + index * 10,
-        'min_price': '${(index + 1) * 10}.00',
-        'price': '${(index + 1) * 100}.00',
-      },
-    );
-
-    setState(() {
-      _bargainList.addAll(mockData);
-      _page++;
-      _loadend = mockData.length < _limit;
-      _loading = false;
-    });
+    final response = await _activityProvider.getBargainList({'page': _page, 'limit': _limit});
+    if (response.isSuccess && response.data != null) {
+      final list = List<Map<String, dynamic>>.from(response.data);
+      setState(() {
+        _bargainList.addAll(list);
+        _page++;
+        _loadend = list.length < _limit;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   /// 跳转到砍价详情
@@ -88,18 +82,35 @@ class _BargainListPageState extends State<BargainListPage> {
         ),
         child: Column(
           children: [
-            // 头部背景图
-            _buildHeader(theme),
-            // 列表
-            Expanded(child: _buildList(theme)),
+            _BargainHeader(theme: theme),
+            Expanded(
+              child: Container(
+                color: const Color(0xFFF5F5F5),
+                child: _BargainListView(
+                  theme: theme,
+                  list: _bargainList,
+                  loading: _loading,
+                  loadEnd: _loadend,
+                  onRefresh: _onRefresh,
+                  onLoad: _getBargainList,
+                  onItemTap: _goDetail,
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  /// 构建头部
-  Widget _buildHeader(ThemeData theme) {
+class _BargainHeader extends StatelessWidget {
+  final ThemeData theme;
+
+  const _BargainHeader({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 150,
       width: double.infinity,
@@ -129,10 +140,30 @@ class _BargainListPageState extends State<BargainListPage> {
       ),
     );
   }
+}
 
-  /// 构建列表
-  Widget _buildList(ThemeData theme) {
-    if (_bargainList.isEmpty && !_loading) {
+class _BargainListView extends StatelessWidget {
+  final ThemeData theme;
+  final List<Map<String, dynamic>> list;
+  final bool loading;
+  final bool loadEnd;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function() onLoad;
+  final ValueChanged<Map<String, dynamic>> onItemTap;
+
+  const _BargainListView({
+    required this.theme,
+    required this.list,
+    required this.loading,
+    required this.loadEnd,
+    required this.onRefresh,
+    required this.onLoad,
+    required this.onItemTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (list.isEmpty && !loading) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -146,37 +177,50 @@ class _BargainListPageState extends State<BargainListPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _onRefresh,
+      onRefresh: onRefresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification) {
             if (notification.metrics.extentAfter < 100) {
-              _getBargainList();
+              onLoad();
             }
           }
           return false;
         },
         child: ListView.builder(
           padding: const EdgeInsets.all(15),
-          itemCount: _bargainList.length + (_loading ? 1 : 0),
+          itemCount: list.length + (loading ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == _bargainList.length) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: LoadingWidget()),
+            if (index == list.length) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: loadEnd
+                      ? const Text('没有更多数据了', style: TextStyle(color: Colors.grey, fontSize: 12))
+                      : const LoadingWidget(),
+                ),
               );
             }
-            return _buildBargainItem(_bargainList[index], theme);
+            final item = list[index];
+            return _BargainItem(theme: theme, item: item, onTap: () => onItemTap(item));
           },
         ),
       ),
     );
   }
+}
 
-  /// 构建砍价商品项
-  Widget _buildBargainItem(Map<String, dynamic> item, ThemeData theme) {
+class _BargainItem extends StatelessWidget {
+  final ThemeData theme;
+  final Map<String, dynamic> item;
+  final VoidCallback onTap;
+
+  const _BargainItem({required this.theme, required this.item, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _goDetail(item),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
@@ -193,7 +237,6 @@ class _BargainListPageState extends State<BargainListPage> {
         ),
         child: Row(
           children: [
-            // 商品图片
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: CachedImage(
@@ -204,13 +247,12 @@ class _BargainListPageState extends State<BargainListPage> {
               ),
             ),
             const SizedBox(width: 12),
-            // 商品信息
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['title'],
+                    item['title'] ?? '',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -221,7 +263,7 @@ class _BargainListPageState extends State<BargainListPage> {
                       Icon(Icons.people_outline, size: 14, color: theme.primaryColor),
                       const SizedBox(width: 4),
                       Text(
-                        '${item['people']}人正在参与',
+                        '${item['people'] ?? 0}人正在参与',
                         style: TextStyle(fontSize: 12, color: theme.primaryColor),
                       ),
                     ],
@@ -230,12 +272,11 @@ class _BargainListPageState extends State<BargainListPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 价格
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '最低: ¥${item['min_price']}',
+                            '最低: ¥${item['min_price'] ?? ''}',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -243,7 +284,7 @@ class _BargainListPageState extends State<BargainListPage> {
                             ),
                           ),
                           Text(
-                            '¥${item['price']}',
+                            '¥${item['price'] ?? ''}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -252,7 +293,6 @@ class _BargainListPageState extends State<BargainListPage> {
                           ),
                         ],
                       ),
-                      // 参与砍价按钮
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
@@ -264,24 +304,9 @@ class _BargainListPageState extends State<BargainListPage> {
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.content_cut,
-                              size: 14,
-                              color: Colors.white.withAlpha((0.9 * 255).round()),
-                            ),
-                            const SizedBox(width: 4),
-                            const Text(
-                              '参与砍价',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                        child: const Text(
+                          '参与砍价',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
                         ),
                       ),
                     ],

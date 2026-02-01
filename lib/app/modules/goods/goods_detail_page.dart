@@ -367,8 +367,8 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: 375,
-                  placeholder: (_, __) => const Center(child: CircularProgressIndicator()),
-                  errorWidget: (_, __, ___) =>
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) =>
                       const Center(child: Icon(Icons.image, size: 80, color: Colors.grey)),
                 ),
                 if (videoLink.isNotEmpty) _buildVideoPlayButton(videoLink),
@@ -782,7 +782,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                                         width: 40,
                                         height: 40,
                                         fit: BoxFit.cover,
-                                        errorWidget: (_, __, ___) => Container(
+                                        errorWidget: (context, url, error) => Container(
                                           width: 40,
                                           height: 40,
                                           color: const Color(0xFFEEEEEE),
@@ -1005,7 +1005,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                         width: 36,
                         height: 36,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(
+                        errorWidget: (context, url, error) => Container(
                           width: 36,
                           height: 36,
                           color: const Color(0xFFEEEEEE),
@@ -1600,7 +1600,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                               width: 230,
                               height: 230,
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => Container(
+                              errorWidget: (context, url, error) => Container(
                                 width: 230,
                                 height: 230,
                                 color: const Color(0xFFEEEEEE),

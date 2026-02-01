@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/activity_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/cached_image.dart';
 import 'package:shuhang_mall_flutter/widgets/loading_widget.dart';
 
@@ -13,6 +14,7 @@ class PresellListPage extends StatefulWidget {
 }
 
 class _PresellListPageState extends State<PresellListPage> with SingleTickerProviderStateMixin {
+  final ActivityProvider _activityProvider = ActivityProvider();
   late TabController _tabController;
   int _type = 1; // 1=全款, 2=定金
   final List<Map<String, dynamic>> _presellList = [];
@@ -60,39 +62,25 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       _loading = true;
     });
 
-    // TODO: 调用API获取预售列表
-    await Future.delayed(const Duration(seconds: 1));
-
-    // 模拟数据
-    final mockData = _generateMockData();
-
-    setState(() {
-      _presellList.addAll(mockData);
-      _page++;
-      _loadend = mockData.length < _limit;
-      _loading = false;
+    final response = await _activityProvider.getPresellList({
+      'page': _page,
+      'limit': _limit,
+      'type': _type,
     });
-  }
 
-  List<Map<String, dynamic>> _generateMockData() {
-    if (_page > 3) return [];
-
-    return List.generate(10, (index) {
-      final now = DateTime.now();
-      final endTime = now.add(Duration(days: index + 1, hours: index * 2));
-      return {
-        'id': _page * 10 + index,
-        'image': 'https://via.placeholder.com/200',
-        'title': '预售商品${_page * 10 + index} ${_type == 1 ? '全款预售' : '定金预售'}超值优惠',
-        'price': '${(index + 1) * 50 + _page * 10}.00',
-        'ot_price': '${(index + 1) * 100 + _page * 20}.00',
-        'deposit_price': '${(index + 1) * 10}.00',
-        'people': 100 + index * 10 + _page * 5,
-        'end_time': endTime.millisecondsSinceEpoch,
-        'presell_type': _type,
-        'stock': index % 4 == 0 ? 0 : 100,
-      };
-    });
+    if (response.isSuccess && response.data != null) {
+      final list = List<Map<String, dynamic>>.from(response.data);
+      setState(() {
+        _presellList.addAll(list);
+        _page++;
+        _loadend = list.length < _limit;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   /// 下拉刷新
@@ -128,18 +116,35 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
           child: Column(
             children: [
               // 自定义AppBar
-              _buildAppBar(theme),
+              _PresellAppBar(theme: theme),
               // 头部Banner
-              _buildHeader(theme),
+              _PresellHeader(theme: theme),
               // Tab栏
-              _buildTabBar(theme),
+              _PresellTabBar(theme: theme, controller: _tabController),
               // 列表
               Expanded(
                 child: Container(
                   color: const Color(0xFFF5F5F5),
                   child: TabBarView(
                     controller: _tabController,
-                    children: [_buildPresellList(), _buildPresellList()],
+                    children: [
+                      _PresellListView(
+                        list: _presellList,
+                        loading: _loading,
+                        loadEnd: _loadend,
+                        onRefresh: _onRefresh,
+                        onLoad: _getPresellList,
+                        onItemTap: _goDetail,
+                      ),
+                      _PresellListView(
+                        list: _presellList,
+                        loading: _loading,
+                        loadEnd: _loadend,
+                        onRefresh: _onRefresh,
+                        onLoad: _getPresellList,
+                        onItemTap: _goDetail,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -149,9 +154,15 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       ),
     );
   }
+}
 
-  /// 构建AppBar
-  Widget _buildAppBar(ThemeData theme) {
+class _PresellAppBar extends StatelessWidget {
+  final ThemeData theme;
+
+  const _PresellAppBar({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -174,9 +185,15 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       ),
     );
   }
+}
 
-  /// 构建头部
-  Widget _buildHeader(ThemeData theme) {
+class _PresellHeader extends StatelessWidget {
+  final ThemeData theme;
+
+  const _PresellHeader({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -209,9 +226,16 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       ),
     );
   }
+}
 
-  /// 构建Tab栏
-  Widget _buildTabBar(ThemeData theme) {
+class _PresellTabBar extends StatelessWidget {
+  final ThemeData theme;
+  final TabController controller;
+
+  const _PresellTabBar({required this.theme, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       decoration: BoxDecoration(
@@ -219,7 +243,7 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
         borderRadius: BorderRadius.circular(25),
       ),
       child: TabBar(
-        controller: _tabController,
+        controller: controller,
         labelColor: theme.primaryColor,
         unselectedLabelColor: Colors.white,
         indicatorSize: TabBarIndicatorSize.tab,
@@ -232,10 +256,28 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       ),
     );
   }
+}
 
-  /// 构建预售列表
-  Widget _buildPresellList() {
-    if (_presellList.isEmpty && !_loading) {
+class _PresellListView extends StatelessWidget {
+  final List<Map<String, dynamic>> list;
+  final bool loading;
+  final bool loadEnd;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function() onLoad;
+  final ValueChanged<Map<String, dynamic>> onItemTap;
+
+  const _PresellListView({
+    required this.list,
+    required this.loading,
+    required this.loadEnd,
+    required this.onRefresh,
+    required this.onLoad,
+    required this.onItemTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (list.isEmpty && !loading) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -249,41 +291,53 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
     }
 
     return RefreshIndicator(
-      onRefresh: _onRefresh,
+      onRefresh: onRefresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification) {
             if (notification.metrics.extentAfter < 100) {
-              _getPresellList();
+              onLoad();
             }
           }
           return false;
         },
         child: ListView.builder(
           padding: const EdgeInsets.all(15),
-          itemCount: _presellList.length + (_loading ? 1 : 0),
+          itemCount: list.length + (loading ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == _presellList.length) {
-              return const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: LoadingWidget()),
+            if (index == list.length) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: loadEnd
+                      ? const Text('没有更多数据了', style: TextStyle(color: Colors.grey, fontSize: 12))
+                      : const LoadingWidget(),
+                ),
               );
             }
-            return _buildPresellItem(_presellList[index]);
+            final item = list[index];
+            return _PresellItem(item: item, onTap: () => onItemTap(item));
           },
         ),
       ),
     );
   }
+}
 
-  /// 构建预售商品项
-  Widget _buildPresellItem(Map<String, dynamic> item) {
+class _PresellItem extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final VoidCallback onTap;
+
+  const _PresellItem({required this.item, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bool soldOut = item['stock'] == 0;
     final bool isDeposit = item['presell_type'] == 2;
 
     return GestureDetector(
-      onTap: () => _goDetail(item),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -299,7 +353,6 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
         ),
         child: Column(
           children: [
-            // 顶部倒计时
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -319,17 +372,15 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
                       Text('距结束', style: TextStyle(fontSize: 12, color: theme.primaryColor)),
                     ],
                   ),
-                  _buildCountdownText(item['end_time'], theme),
+                  _CountdownText(endTime: item['end_time'], theme: theme),
                 ],
               ),
             ),
-            // 商品信息
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 商品图片
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: CachedImage(
@@ -340,7 +391,6 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 商品详情
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,7 +421,6 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            // 价格
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -412,7 +461,6 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
                                 ),
                               ],
                             ),
-                            // 按钮
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
@@ -441,11 +489,19 @@ class _PresellListPageState extends State<PresellListPage> with SingleTickerProv
       ),
     );
   }
+}
 
-  /// 构建倒计时文本
-  Widget _buildCountdownText(int endTime, ThemeData theme) {
+class _CountdownText extends StatelessWidget {
+  final dynamic endTime;
+  final ThemeData theme;
+
+  const _CountdownText({required this.endTime, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final int end = int.tryParse('$endTime') ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
-    final diff = endTime - now;
+    final diff = end - now;
     if (diff <= 0) {
       return Text(
         '已结束',

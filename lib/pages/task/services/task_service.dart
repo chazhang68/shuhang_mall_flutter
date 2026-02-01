@@ -1,5 +1,6 @@
 /// 任务页面 API 服务
 /// 对应原 api/user.js 中的任务相关接口
+library;
 
 import 'package:shuhang_mall_flutter/app/data/providers/api_service.dart';
 

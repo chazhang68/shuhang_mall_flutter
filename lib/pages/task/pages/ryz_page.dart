@@ -25,8 +25,8 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   UserModel? _userInfo;
 
   // 数据列表
-  List<TaskRecordModel> _yueList = []; // SWP列表
-  List<TaskRecordModel> _fuDouList = []; // 积分列表
+  final List<TaskRecordModel> _yueList = []; // SWP列表
+  final List<TaskRecordModel> _fuDouList = []; // 积分列表
   List<TaskRecordModel> _showDataList = []; // 当前显示的列表
 
   // 分页
@@ -137,7 +137,6 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
           _showDataList.addAll(newData);
         });
       }
-    } catch (e) {
     } finally {
       _loading = false;
     }

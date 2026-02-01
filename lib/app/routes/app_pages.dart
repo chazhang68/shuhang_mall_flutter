@@ -76,6 +76,13 @@ import 'package:shuhang_mall_flutter/app/modules/points_mall/points_goods_detail
 import 'package:shuhang_mall_flutter/app/modules/lottery/lottery_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/lottery/lottery_record_page.dart';
 
+// OTC模块
+import 'package:shuhang_mall_flutter/app/modules/otc/otc_order_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/otc/otc_pay_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/otc/otc_pay_type_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/otc/otc_send_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/otc/otc_shop_page.dart';
+
 // User模块扩展
 import 'package:shuhang_mall_flutter/app/modules/user/bill_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/integral_page.dart';
@@ -181,6 +188,33 @@ class AppPages {
 
     // ==================== 购物车模块 ====================
     GetPage(name: AppRoutes.cart, page: () => const CartPage(), transition: Transition.rightToLeft),
+
+    // ==================== OTC 交易 ====================
+    GetPage(
+      name: AppRoutes.otcShop,
+      page: () => const OtcShopPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.otcOrder,
+      page: () => const OtcOrderPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.otcSend,
+      page: () => const OtcSendPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.otcPay,
+      page: () => const OtcPayPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.otcPayType,
+      page: () => const OtcPayTypePage(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ==================== 订单模块 ====================
     GetPage(

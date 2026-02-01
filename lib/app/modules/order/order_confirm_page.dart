@@ -34,7 +34,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   String _news = '0';
   int _noCoupon = 0;
   int _addressId = 0;
-  int _shippingType = 1;
+  final int _shippingType = 1;
   bool _isLoading = false;
   String _orderKey = '';
 
@@ -238,7 +238,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
         final result = await Get.toNamed(
           AppRoutes.userAddressList,
           parameters: {
-            if (_cartId != null) 'cartId': _cartId!,
+            'cartId': ?_cartId,
             'pinkId': _pinkId.toString(),
             'couponId': _couponId.toString(),
             'new': _news,

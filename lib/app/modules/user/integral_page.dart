@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/loading_widget.dart';
 
 /// 积分页面
@@ -12,9 +13,11 @@ class IntegralPage extends StatefulWidget {
 }
 
 class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderStateMixin {
+  final UserProvider _userProvider = UserProvider();
   late TabController _tabController;
   int _type = 0; // 0=全部, 1=收入, 2=支出
   final List<Map<String, dynamic>> _integralList = [];
+  final Map<String, List<Map<String, dynamic>>> _groupedItems = {};
   bool _loading = false;
   bool _loadend = false;
   int _page = 1;
@@ -47,12 +50,16 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
 
   /// 获取用户积分
   Future<void> _getUserIntegral() async {
-    // TODO: 调用API获取积分
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() {
-      _totalIntegral = 5680;
-      _usedIntegral = 1200;
-    });
+    final response = await _userProvider.getUserInfo();
+    if (response.isSuccess && response.data != null) {
+      final extra = response.data!.extra ?? {};
+      final used = _readInt(extra['integral_use'] ?? extra['integralUse'] ?? 0);
+      final total = response.data!.integral.toInt();
+      setState(() {
+        _totalIntegral = total;
+        _usedIntegral = used;
+      });
+    }
   }
 
   /// 切换类型
@@ -62,6 +69,7 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       _loadend = false;
       _page = 1;
       _integralList.clear();
+      _groupedItems.clear();
     });
     _getIntegralList();
   }
@@ -74,48 +82,61 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       _loading = true;
     });
 
-    // TODO: 调用API获取积分列表
-    await Future.delayed(const Duration(seconds: 1));
+    final response = await _userProvider.getIntegralList({'page': _page, 'limit': _limit});
 
-    // 模拟数据
-    final mockData = _generateMockData();
+    if (response.isSuccess && response.data != null) {
+      final list = List<Map<String, dynamic>>.from(response.data);
+      final filtered = _filterByType(list);
+      _mergeIntegralList(filtered);
+      setState(() {
+        _page++;
+        _loadend = list.length < _limit;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse('$value') ?? 0;
+  }
+
+  List<Map<String, dynamic>> _filterByType(List<Map<String, dynamic>> list) {
+    if (_type == 0) return list;
+    return list.where((item) {
+      final isIncome = item['pm'] == true || item['pm'] == 1;
+      if (_type == 1) return isIncome;
+      if (_type == 2) return !isIncome;
+      return true;
+    }).toList();
+  }
+
+  void _mergeIntegralList(List<Map<String, dynamic>> list) {
+    for (final item in list) {
+      final key = _groupKey(item['add_time']);
+      _groupedItems.putIfAbsent(key, () => []);
+      _groupedItems[key]!.add(item);
+    }
 
     setState(() {
-      _integralList.addAll(mockData);
-      _page++;
-      _loadend = mockData.isEmpty || mockData.length < _limit;
-      _loading = false;
+      _integralList
+        ..clear()
+        ..addAll(
+          _groupedItems.entries.map((entry) => {'time': entry.key, 'child': entry.value}).toList(),
+        );
     });
   }
 
-  List<Map<String, dynamic>> _generateMockData() {
-    if (_page > 3) return [];
-
-    return [
-      {
-        'time': '2024-0$_page',
-        'child': [
-          {
-            'title': _type == 1 ? '签到奖励' : (_type == 2 ? '积分兑换' : '签到奖励'),
-            'add_time': '2024-0$_page-15 08:00:00',
-            'pm': _type != 2,
-            'number': '${_page * 10}',
-          },
-          {
-            'title': _type == 1 ? '购物返积分' : (_type == 2 ? '商品兑换' : '购物返积分'),
-            'add_time': '2024-0$_page-10 15:30:00',
-            'pm': _type != 2,
-            'number': '${_page * 50}',
-          },
-          {
-            'title': _type == 1 ? '邀请好友' : (_type == 2 ? '优惠券兑换' : '抽奖消耗'),
-            'add_time': '2024-0$_page-05 12:20:00',
-            'pm': _type == 1,
-            'number': '${_page * 20}',
-          },
-        ],
-      },
-    ];
+  String _groupKey(dynamic value) {
+    final text = '${value ?? ''}';
+    if (text.length >= 10) return text.substring(0, 10);
+    if (text.length >= 7) return text.substring(0, 7);
+    return text.isEmpty ? '未知' : text;
   }
 
   /// 下拉刷新
@@ -142,40 +163,72 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       body: Column(
         children: [
           // 顶部积分展示
-          _buildHeader(theme),
-          // Tab栏
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              labelColor: theme.primaryColor,
-              unselectedLabelColor: const Color(0xFF282828),
-              indicatorColor: theme.primaryColor,
-              indicatorWeight: 2,
-              indicatorSize: TabBarIndicatorSize.label,
-              tabs: const [
-                Tab(text: '全部'),
-                Tab(text: '收入'),
-                Tab(text: '支出'),
-              ],
-            ),
+          _IntegralHeader(
+            theme: theme,
+            totalIntegral: _totalIntegral,
+            usedIntegral: _usedIntegral,
+            topPadding: MediaQuery.of(context).padding.top,
+            onBack: () => Get.back(),
+            onPointsMall: _goPointsMall,
           ),
+          // Tab栏
+          _IntegralTabBar(theme: theme, controller: _tabController),
           // 列表
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildIntegralList(), _buildIntegralList(), _buildIntegralList()],
+              children: [
+                _IntegralListView(
+                  list: _integralList,
+                  loading: _loading,
+                  loadEnd: _loadend,
+                  onRefresh: _onRefresh,
+                  onLoad: _getIntegralList,
+                ),
+                _IntegralListView(
+                  list: _integralList,
+                  loading: _loading,
+                  loadEnd: _loadend,
+                  onRefresh: _onRefresh,
+                  onLoad: _getIntegralList,
+                ),
+                _IntegralListView(
+                  list: _integralList,
+                  loading: _loading,
+                  loadEnd: _loadend,
+                  onRefresh: _onRefresh,
+                  onLoad: _getIntegralList,
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  /// 构建头部
-  Widget _buildHeader(ThemeData theme) {
+class _IntegralHeader extends StatelessWidget {
+  final ThemeData theme;
+  final int totalIntegral;
+  final int usedIntegral;
+  final double topPadding;
+  final VoidCallback onBack;
+  final VoidCallback onPointsMall;
+
+  const _IntegralHeader({
+    required this.theme,
+    required this.totalIntegral,
+    required this.usedIntegral,
+    required this.topPadding,
+    required this.onBack,
+    required this.onPointsMall,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      padding: EdgeInsets.only(top: topPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -185,14 +238,13 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       ),
       child: Column(
         children: [
-          // AppBar
           Container(
             height: 50,
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Get.back(),
+                  onTap: onBack,
                   child: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
                 ),
                 const Expanded(
@@ -211,7 +263,6 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
               ],
             ),
           ),
-          // 积分信息
           Container(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -219,7 +270,7 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
                 const Text('当前积分', style: TextStyle(fontSize: 14, color: Colors.white70)),
                 const SizedBox(height: 8),
                 Text(
-                  '$_totalIntegral',
+                  '$totalIntegral',
                   style: const TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
@@ -230,20 +281,19 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildIntegralInfo('已使用', _usedIntegral),
+                    _IntegralInfo(label: '已使用', value: usedIntegral),
                     Container(
                       width: 1,
                       height: 30,
                       margin: const EdgeInsets.symmetric(horizontal: 30),
                       color: Colors.white30,
                     ),
-                    _buildIntegralInfo('累计获得', _totalIntegral + _usedIntegral),
+                    _IntegralInfo(label: '累计获得', value: totalIntegral + usedIntegral),
                   ],
                 ),
                 const SizedBox(height: 15),
-                // 积分商城按钮
                 GestureDetector(
-                  onTap: _goPointsMall,
+                  onTap: onPointsMall,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                     decoration: BoxDecoration(
@@ -261,9 +311,16 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       ),
     );
   }
+}
 
-  /// 构建积分信息项
-  Widget _buildIntegralInfo(String label, int value) {
+class _IntegralInfo extends StatelessWidget {
+  final String label;
+  final int value;
+
+  const _IntegralInfo({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Text(
@@ -275,10 +332,53 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       ],
     );
   }
+}
 
-  /// 构建积分列表
-  Widget _buildIntegralList() {
-    if (_integralList.isEmpty && !_loading) {
+class _IntegralTabBar extends StatelessWidget {
+  final ThemeData theme;
+  final TabController controller;
+
+  const _IntegralTabBar({required this.theme, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: controller,
+        labelColor: theme.primaryColor,
+        unselectedLabelColor: const Color(0xFF282828),
+        indicatorColor: theme.primaryColor,
+        indicatorWeight: 2,
+        indicatorSize: TabBarIndicatorSize.label,
+        tabs: const [
+          Tab(text: '全部'),
+          Tab(text: '收入'),
+          Tab(text: '支出'),
+        ],
+      ),
+    );
+  }
+}
+
+class _IntegralListView extends StatelessWidget {
+  final List<Map<String, dynamic>> list;
+  final bool loading;
+  final bool loadEnd;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function() onLoad;
+
+  const _IntegralListView({
+    required this.list,
+    required this.loading,
+    required this.loadEnd,
+    required this.onRefresh,
+    required this.onLoad,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (list.isEmpty && !loading) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -292,39 +392,45 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
     }
 
     return RefreshIndicator(
-      onRefresh: _onRefresh,
+      onRefresh: onRefresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification) {
             if (notification.metrics.extentAfter < 100) {
-              _getIntegralList();
+              onLoad();
             }
           }
           return false;
         },
         child: ListView.builder(
           padding: const EdgeInsets.all(15),
-          itemCount: _integralList.length + (_loading ? 1 : 0),
+          itemCount: list.length + (loading ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == _integralList.length) {
+            if (index == list.length) {
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: Center(
-                  child: _loadend
+                  child: loadEnd
                       ? const Text('没有更多数据了', style: TextStyle(color: Colors.grey, fontSize: 12))
                       : const LoadingWidget(),
                 ),
               );
             }
-            return _buildIntegralGroup(_integralList[index]);
+            return _IntegralGroup(group: list[index]);
           },
         ),
       ),
     );
   }
+}
 
-  /// 构建积分分组
-  Widget _buildIntegralGroup(Map<String, dynamic> group) {
+class _IntegralGroup extends StatelessWidget {
+  final Map<String, dynamic> group;
+
+  const _IntegralGroup({required this.group});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final List<dynamic> children = group['child'] ?? [];
 
@@ -333,7 +439,6 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 日期标题
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Text(
@@ -345,13 +450,12 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
               ),
             ),
           ),
-          // 积分列表
           Container(
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
             child: Column(
               children: [
                 for (int i = 0; i < children.length; i++)
-                  _buildIntegralItem(children[i], i == children.length - 1, theme),
+                  _IntegralItem(item: children[i], isLast: i == children.length - 1, theme: theme),
               ],
             ),
           ),
@@ -359,10 +463,18 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       ),
     );
   }
+}
 
-  /// 构建积分项
-  Widget _buildIntegralItem(Map<String, dynamic> item, bool isLast, ThemeData theme) {
-    final bool isIncome = item['pm'] == true;
+class _IntegralItem extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final bool isLast;
+  final ThemeData theme;
+
+  const _IntegralItem({required this.item, required this.isLast, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isIncome = item['pm'] == true || item['pm'] == 1;
 
     return Container(
       padding: const EdgeInsets.all(15),
@@ -374,7 +486,6 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 左侧信息
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,7 +504,6 @@ class _IntegralPageState extends State<IntegralPage> with SingleTickerProviderSt
               ],
             ),
           ),
-          // 积分数
           Row(
             children: [
               Text(
