@@ -1,6 +1,6 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/public_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -14,7 +14,6 @@ class CouponCenterPage extends StatefulWidget {
 
 class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerProviderStateMixin {
   final PublicProvider _publicProvider = PublicProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _couponsList = [];
   int _page = 1;
@@ -37,7 +36,6 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -59,7 +57,6 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -102,16 +99,6 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
   }
 
   Future<void> _receiveCoupon(int id, Map<String, dynamic> item) async {
@@ -132,14 +119,6 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
 
     await Future.delayed(const Duration(milliseconds: 500));
     _receiveLoading = false;
-  }
-
-  void _onRefresh() {
-    _getCoupons(reset: true);
-  }
-
-  void _onLoading() {
-    _getCoupons();
   }
 
   int get _totalCount {
@@ -353,20 +332,36 @@ class _CouponCenterPageState extends State<CouponCenterPage> with SingleTickerPr
           if (_totalCount > 1) const SizedBox(height: 8),
 
           Expanded(
-            child: _couponsList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无优惠券')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: () => _getCoupons(reset: true),
+              onLoad: _loadEnd ? null : () => _getCoupons(),
+              child: _couponsList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无优惠券')],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(top: 8, bottom: 24),
                       itemCount: _couponsList.length,
                       itemBuilder: (context, index) => _buildCouponCard(_couponsList[index]),
                     ),
-                  ),
+            ),
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/lottery_provider.dart';
@@ -18,7 +18,6 @@ class PointsGoodsDetailPage extends StatefulWidget {
 class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
   final PointsMallProvider _pointsMallProvider = PointsMallProvider();
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
   final ScrollController _scrollController = ScrollController();
 
   int _id = 0;
@@ -40,7 +39,6 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -65,7 +63,6 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         _userCollect = _storeInfo['userCollect'] ?? false;
       });
     }
-    _refreshController.refreshCompleted();
   }
 
   void _setCollect() async {
@@ -76,7 +73,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         setState(() {
           _userCollect = false;
         });
-        FlutterToastPro.showMessage( '取消收藏成功');
+        FlutterToastPro.showMessage('取消收藏成功');
       }
     } else {
       final response = await _storeProvider.collectProduct(productId);
@@ -84,7 +81,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         setState(() {
           _userCollect = true;
         });
-        FlutterToastPro.showMessage( '收藏成功');
+        FlutterToastPro.showMessage('收藏成功');
       }
     }
   }
@@ -92,7 +89,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
   void _goExchange() {
     int stock = _storeInfo['stock'] ?? 0;
     if (stock <= 0) {
-      FlutterToastPro.showMessage( '库存不足');
+      FlutterToastPro.showMessage('库存不足');
       return;
     }
 
@@ -125,9 +122,9 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
               Get.back();
               final response = await _pointsMallProvider.pointsExchange({'id': _id, 'num': 1});
               if (response.isSuccess) {
-                FlutterToastPro.showMessage( '兑换成功');
+                FlutterToastPro.showMessage('兑换成功');
               } else {
-                FlutterToastPro.showMessage( response.msg);
+                FlutterToastPro.showMessage(response.msg);
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: ThemeColors.red.primary),
@@ -312,9 +309,14 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
     return Scaffold(
       body: Stack(
         children: [
-          SmartRefresher(
-            controller: _refreshController,
-            enablePullDown: true,
+          EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              failedText: '刷新失败',
+            ),
             onRefresh: _getDetail,
             child: CustomScrollView(
               controller: _scrollController,
@@ -368,5 +370,3 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
     );
   }
 }
-
-

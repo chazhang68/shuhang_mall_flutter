@@ -1,14 +1,20 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import '../../../data/models/address_model.dart';
+import '../../../data/models/city_model.dart';
+import '../../../data/providers/public_provider.dart';
 import '../../../data/providers/user_provider.dart';
+import '../../../routes/app_routes.dart';
 
 class UserAddressController extends GetxController {
   final UserProvider _userProvider = UserProvider();
+  final PublicProvider _publicProvider = PublicProvider();
 
-  // 地址信息
-  final RxMap<String, dynamic> _addressInfo = <String, dynamic>{}.obs;
-  Map<String, dynamic> get addressInfo => _addressInfo;
+  final TextEditingController realNameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController detailController = TextEditingController();
 
   // 地区选择
   final RxList<String> _region = <String>['省', '市', '区'].obs;
@@ -23,8 +29,8 @@ class UserAddressController extends GetxController {
   int get cityId => _cityId.value;
 
   // 地区数据
-  final RxList<dynamic> _districtData = <dynamic>[].obs;
-  List<dynamic> get districtData => _districtData;
+  final RxList<CityNode> _districtData = <CityNode>[].obs;
+  List<CityNode> get districtData => _districtData;
 
   // 多级选择数组
   final RxList<List<String>> _multiArray = <List<String>>[].obs;
@@ -41,11 +47,48 @@ class UserAddressController extends GetxController {
   // 地址ID（用于编辑）
   String? addressId;
 
+  // 订单相关参数
+  String? cartId;
+  int pinkId = 0;
+  int couponId = 0;
+  String news = '0';
+  int noCoupon = 0;
+
   @override
   void onInit() {
     super.onInit();
-    // 初始化地区数据
+    _bindParams();
     _initializeRegionData();
+    _loadInitialData();
+  }
+
+  @override
+  void onClose() {
+    realNameController.dispose();
+    phoneController.dispose();
+    detailController.dispose();
+    super.onClose();
+  }
+
+  void _bindParams() {
+    final params = Get.parameters;
+    final args = Get.arguments;
+
+    final argId = args is Map ? args['id']?.toString() : null;
+    addressId = params['id'] ?? argId;
+
+    cartId = params['cartId'];
+    pinkId = _toInt(params['pinkId']);
+    couponId = _toInt(params['couponId']);
+    news = params['new'] ?? params['news'] ?? '0';
+    noCoupon = _toInt(params['noCoupon']);
+  }
+
+  Future<void> _loadInitialData() async {
+    await getCityList();
+    if (addressId != null && addressId!.isNotEmpty) {
+      await getAddressDetail(addressId!);
+    }
   }
 
   // 初始化地区数据
@@ -58,10 +101,17 @@ class UserAddressController extends GetxController {
   Future<void> getCityList() async {
     try {
       _isLoading.value = true;
-      await _userProvider.getAddressList(null);
-      // 注意：这里需要调用实际的获取城市列表API
-      // 由于现有API中没有专门的城市列表接口，我们暂时模拟数据
-      // 在实际应用中，需要调用特定的地区API
+      final response = await _publicProvider.getCityList();
+      if (response.isSuccess && response.data != null) {
+        final rawList = response.data as List<dynamic>;
+        final list = rawList
+            .map((item) => CityNode.fromJson(item as Map<String, dynamic>))
+            .toList();
+        _districtData.assignAll(list);
+        _syncIndicesFromRegion();
+        _buildMultiArray();
+        _applyRegionFromIndices();
+      }
     } catch (e) {
       debugPrint('获取城市列表失败: $e');
     } finally {
@@ -75,19 +125,18 @@ class UserAddressController extends GetxController {
       _isLoading.value = true;
       final response = await _userProvider.getAddressDetail(int.parse(id));
       if (response.isSuccess && response.data != null) {
-        _addressInfo.assignAll(response.data!);
+        final detail = AddressDetail.fromJson(response.data as Map<String, dynamic>);
 
-        // 设置地区信息
-        final province = response.data!['province'] ?? '';
-        final city = response.data!['city'] ?? '';
-        final district = response.data!['district'] ?? '';
-        _region.assignAll([province, city, district]);
+        realNameController.text = detail.realName;
+        phoneController.text = detail.phone;
+        detailController.text = detail.detail;
 
-        // 设置是否为默认地址
-        _isDefault.value = (response.data!['is_default'] == 1);
+        _region.assignAll([detail.province, detail.city, detail.district]);
+        _isDefault.value = detail.isDefault == 1;
+        _cityId.value = detail.cityId;
 
-        // 设置城市ID
-        _cityId.value = response.data!['city_id'] ?? 0;
+        _syncIndicesFromRegion();
+        _buildMultiArray();
       }
     } catch (e) {
       debugPrint('获取地址详情失败: $e');
@@ -96,22 +145,6 @@ class UserAddressController extends GetxController {
     }
   }
 
-  // 更新收货人姓名
-  void updateRealName(String name) {
-    _addressInfo['real_name'] = name;
-  }
-
-  // 更新联系电话
-  void updatePhone(String phone) {
-    _addressInfo['phone'] = phone;
-  }
-
-  // 更新详细地址
-  void updateDetailAddress(String detail) {
-    _addressInfo['detail'] = detail;
-  }
-
-  // 更新地区信息
   void updateRegion(List<String> regionList) {
     _region.assignAll(regionList);
   }
@@ -122,66 +155,176 @@ class UserAddressController extends GetxController {
   }
 
   // 保存地址信息
-  Future<bool> saveAddress() async {
+  Future<void> saveAddress() async {
     try {
       _isLoading.value = true;
 
       // 验证输入
-      if ((_addressInfo['real_name'] ?? '').toString().trim().isEmpty) {
-        FlutterToastPro.showMessage( '请填写收货人姓名');
-        return false;
+      if (realNameController.text.trim().isEmpty) {
+        FlutterToastPro.showMessage('请填写收货人姓名');
+        return;
       }
 
-      if ((_addressInfo['phone'] ?? '').toString().trim().isEmpty) {
-        FlutterToastPro.showMessage( '请填写联系电话');
-        return false;
+      if (phoneController.text.trim().isEmpty) {
+        FlutterToastPro.showMessage('请填写联系电话');
+        return;
       }
 
-      if (!RegExp(r'^1(3|4|5|7|8|9|6)\d{9}$').hasMatch(_addressInfo['phone'])) {
-        FlutterToastPro.showMessage( '请输入正确的手机号码');
-        return false;
+      if (!RegExp(r'^1(3|4|5|7|8|9|6)\d{9}$').hasMatch(phoneController.text)) {
+        FlutterToastPro.showMessage('请输入正确的手机号码');
+        return;
       }
 
       if (_region[0] == '省') {
-        FlutterToastPro.showMessage( '请选择所在地区');
-        return false;
+        FlutterToastPro.showMessage('请选择所在地区');
+        return;
       }
 
-      if ((_addressInfo['detail'] ?? '').toString().trim().isEmpty) {
-        FlutterToastPro.showMessage( '请填写详细地址');
-        return false;
+      if (detailController.text.trim().isEmpty) {
+        FlutterToastPro.showMessage('请填写详细地址');
+        return;
       }
 
       // 准备提交数据
       Map<String, dynamic> submitData = {
         'id': addressId != null ? int.parse(addressId!) : 0, // 如果是编辑则传入ID
-        'real_name': _addressInfo['real_name'] ?? '',
-        'phone': _addressInfo['phone'] ?? '',
-        'province': _region[0],
-        'city': _region[1],
-        'district': _region[2],
-        'detail': _addressInfo['detail'] ?? '',
+        'real_name': realNameController.text,
+        'phone': phoneController.text,
+        'detail': detailController.text,
         'is_default': _isDefault.value ? 1 : 0,
-        'city_id': _cityId.value,
+        'address': {
+          'province': _region[0],
+          'city': _region[1],
+          'district': _region[2],
+          'city_id': _cityId.value,
+        },
       };
 
       // 调用API保存地址
       final response = await _userProvider.editAddress(submitData);
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( addressId != null ? '修改成功' : '添加成功');
-        return true;
+        FlutterToastPro.showMessage(addressId != null ? '修改成功' : '添加成功');
+        final id = _resolveSavedId(response.data);
+        _handleAfterSave(id);
+        return;
       } else {
-        FlutterToastPro.showMessage( response.msg);
-        return false;
+        FlutterToastPro.showMessage(response.msg);
+        return;
       }
     } catch (e) {
       debugPrint('保存地址失败: $e');
-      FlutterToastPro.showMessage( '保存失败: $e');
-      return false;
+      FlutterToastPro.showMessage('保存失败: $e');
     } finally {
       _isLoading.value = false;
     }
   }
+
+  int _resolveSavedId(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return _toInt(data['id']);
+    }
+    return _toInt(addressId);
+  }
+
+  void _handleAfterSave(int savedId) {
+    if (cartId != null && cartId!.isNotEmpty) {
+      Get.offNamed(
+        AppRoutes.orderConfirm,
+        parameters: {
+          'cartId': cartId!,
+          'addressId': savedId.toString(),
+          'pinkId': pinkId.toString(),
+          'couponId': couponId.toString(),
+          'new': news,
+          'noCoupon': noCoupon.toString(),
+          'is_address': '1',
+        },
+      );
+      return;
+    }
+
+    Get.back(result: true);
+  }
+
+  void updateProvinceIndex(int index) {
+    _multiIndex[0] = index;
+    _multiIndex[1] = 0;
+    _multiIndex[2] = 0;
+    _buildMultiArray();
+  }
+
+  void updateCityIndex(int index) {
+    _multiIndex[1] = index;
+    _multiIndex[2] = 0;
+    _buildMultiArray();
+  }
+
+  void updateDistrictIndex(int index) {
+    _multiIndex[2] = index;
+    _buildMultiArray();
+  }
+
+  void applyRegionSelection() {
+    _applyRegionFromIndices();
+  }
+
+  void _buildMultiArray() {
+    if (_districtData.isEmpty) return;
+
+    final province = _districtData[_multiIndex[0]];
+    final cityList = province.children;
+    final city = cityList.isNotEmpty
+        ? cityList[_multiIndex[1].clamp(0, cityList.length - 1)]
+        : null;
+    final areaList = city?.children ?? <CityNode>[];
+
+    _multiArray.assignAll([
+      _districtData.map((item) => item.name).toList(),
+      cityList.map((item) => item.name).toList(),
+      areaList.map((item) => item.name).toList(),
+    ]);
+  }
+
+  void _applyRegionFromIndices() {
+    if (_districtData.isEmpty) return;
+
+    final province = _districtData[_multiIndex[0]];
+    final cityList = province.children;
+    final city = cityList.isNotEmpty
+        ? cityList[_multiIndex[1].clamp(0, cityList.length - 1)]
+        : null;
+    final areaList = city?.children ?? <CityNode>[];
+    final district = areaList.isNotEmpty
+        ? areaList[_multiIndex[2].clamp(0, areaList.length - 1)]
+        : null;
+
+    final provinceName = province.name;
+    final cityName = city?.name ?? '市';
+    final districtName = district?.name ?? '区';
+
+    _region.assignAll([provinceName, cityName, districtName]);
+    _cityId.value = city?.value ?? 0;
+  }
+
+  void _syncIndicesFromRegion() {
+    if (_districtData.isEmpty) return;
+
+    final provinceIndex = _districtData.indexWhere((item) => item.name == _region[0]);
+    final pIndex = provinceIndex >= 0 ? provinceIndex : 0;
+
+    final cityList = _districtData[pIndex].children;
+    final cityIndex = cityList.indexWhere((item) => item.name == _region[1]);
+    final cIndex = cityIndex >= 0 ? cityIndex : 0;
+
+    final areaList = cityList.isNotEmpty ? cityList[cIndex].children : <CityNode>[];
+    final districtIndex = areaList.indexWhere((item) => item.name == _region[2]);
+    final dIndex = districtIndex >= 0 ? districtIndex : 0;
+
+    _multiIndex.assignAll([pIndex, cIndex, dIndex]);
+  }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
 }
-
-

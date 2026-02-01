@@ -1,5 +1,5 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -13,7 +13,6 @@ class UserIntegralPage extends StatefulWidget {
 
 class _UserIntegralPageState extends State<UserIntegralPage> {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   double _integral = 0;
   List<Map<String, dynamic>> _integralList = [];
@@ -30,7 +29,6 @@ class _UserIntegralPageState extends State<UserIntegralPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -50,7 +48,6 @@ class _UserIntegralPageState extends State<UserIntegralPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -83,25 +80,6 @@ class _UserIntegralPageState extends State<UserIntegralPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
-  }
-
-  void _onRefresh() {
-    _getUserInfo();
-    _getIntegralList(reset: true);
-  }
-
-  void _onLoading() {
-    _getIntegralList();
   }
 
   Widget _buildHeader() {
@@ -189,20 +167,39 @@ class _UserIntegralPageState extends State<UserIntegralPage> {
           _buildHeader(),
 
           Expanded(
-            child: _integralList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无消费券记录哦～')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: () {
+                _getUserInfo();
+                return _getIntegralList(reset: true);
+              },
+              onLoad: _loadEnd ? null : () => _getIntegralList(),
+              child: _integralList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无消费券记录哦～')],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(top: 16, bottom: 24),
                       itemCount: _integralList.length,
                       itemBuilder: (context, index) => _buildIntegralItem(_integralList[index]),
                     ),
-                  ),
+            ),
           ),
         ],
       ),

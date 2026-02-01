@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/activity_provider.dart';
@@ -18,7 +18,6 @@ class PresellDetailPage extends StatefulWidget {
 class _PresellDetailPageState extends State<PresellDetailPage> {
   final ActivityProvider _activityProvider = ActivityProvider();
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
   final ScrollController _scrollController = ScrollController();
 
   int _id = 0;
@@ -50,7 +49,6 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -85,7 +83,6 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         };
       });
     }
-    _refreshController.refreshCompleted();
   }
 
   void _setCollect() async {
@@ -95,7 +92,7 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         setState(() {
           _userCollect = false;
         });
-        FlutterToastPro.showMessage( '取消收藏成功');
+        FlutterToastPro.showMessage('取消收藏成功');
       }
     } else {
       final response = await _storeProvider.collectProduct(_storeInfo['product_id'] ?? 0);
@@ -103,18 +100,18 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
         setState(() {
           _userCollect = true;
         });
-        FlutterToastPro.showMessage( '收藏成功');
+        FlutterToastPro.showMessage('收藏成功');
       }
     }
   }
 
   void _goBuy() {
     if (_payStatus == 1) {
-      FlutterToastPro.showMessage( '活动未开始');
+      FlutterToastPro.showMessage('活动未开始');
       return;
     }
     if (_payStatus == 3) {
-      FlutterToastPro.showMessage( '活动已结束');
+      FlutterToastPro.showMessage('活动已结束');
       return;
     }
     // TODO: 跳转到订单确认页面
@@ -498,9 +495,14 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
     return Scaffold(
       body: Stack(
         children: [
-          SmartRefresher(
-            controller: _refreshController,
-            enablePullDown: true,
+          EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              failedText: '刷新失败',
+            ),
             onRefresh: _getPresellDetail,
             child: CustomScrollView(
               controller: _scrollController,
@@ -571,5 +573,3 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
     );
   }
 }
-
-

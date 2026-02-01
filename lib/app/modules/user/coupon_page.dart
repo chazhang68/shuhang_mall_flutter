@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/widgets/widgets.dart';
 
@@ -13,10 +13,8 @@ class CouponPage extends StatefulWidget {
   State<CouponPage> createState() => _CouponPageState();
 }
 
-class _CouponPageState extends State<CouponPage>
-    with SingleTickerProviderStateMixin {
+class _CouponPageState extends State<CouponPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<RefreshController> _refreshControllers = [];
 
   // Tab状态: 0-可使用, 1-已使用, 2-已过期
   final List<String> _tabTitles = ['可使用', '已使用', '已过期'];
@@ -30,7 +28,6 @@ class _CouponPageState extends State<CouponPage>
     _tabController = TabController(length: _tabTitles.length, vsync: this);
 
     for (int i = 0; i < _tabTitles.length; i++) {
-      _refreshControllers.add(RefreshController());
       _couponData[i] = [];
       _pageData[i] = 1;
       _hasMoreData[i] = true;
@@ -42,9 +39,6 @@ class _CouponPageState extends State<CouponPage>
   @override
   void dispose() {
     _tabController.dispose();
-    for (var controller in _refreshControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
@@ -82,17 +76,6 @@ class _CouponPageState extends State<CouponPage>
       _pageData[tabIndex] = _pageData[tabIndex]! + 1;
       _hasMoreData[tabIndex] = newItems.length >= 5;
     });
-
-    final controller = _refreshControllers[tabIndex];
-    if (isRefresh) {
-      controller.refreshCompleted();
-    } else {
-      if (_hasMoreData[tabIndex]!) {
-        controller.loadComplete();
-      } else {
-        controller.loadNoData();
-      }
-    }
   }
 
   @override
@@ -131,27 +114,42 @@ class _CouponPageState extends State<CouponPage>
 
   Widget _buildCouponList(int tabIndex, themeColor) {
     final coupons = _couponData[tabIndex] ?? [];
-    final controller = _refreshControllers[tabIndex];
-
-    return SmartRefresher(
-      controller: controller,
-      enablePullDown: true,
-      enablePullUp: true,
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
       onRefresh: () => _loadData(tabIndex, isRefresh: true),
-      onLoading: () => _loadData(tabIndex),
+      onLoad: (_hasMoreData[tabIndex] ?? false) ? () => _loadData(tabIndex) : null,
       child: coupons.isEmpty
-          ? const EmptyCoupon()
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [EmptyCoupon()],
+            )
           : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(15),
               itemCount: coupons.length,
               itemBuilder: (context, index) {
                 return CouponCard(
                   coupon: coupons[index],
                   isReceived: true,
-                  onUse: tabIndex == 0 ? () {
-                    // 去使用
-                    Get.back();
-                  } : null,
+                  onUse: tabIndex == 0
+                      ? () {
+                          Get.back();
+                        }
+                      : null,
                 );
               },
             ),

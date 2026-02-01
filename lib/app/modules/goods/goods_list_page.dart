@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
@@ -16,7 +16,6 @@ class GoodsListPage extends StatefulWidget {
 }
 
 class _GoodsListPageState extends State<GoodsListPage> {
-  final RefreshController _refreshController = RefreshController();
   final ScrollController _scrollController = ScrollController();
 
   String? _keyword;
@@ -36,7 +35,6 @@ class _GoodsListPageState extends State<GoodsListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -72,16 +70,6 @@ class _GoodsListPageState extends State<GoodsListPage> {
       _page++;
       _hasMore = newItems.length >= 10;
     });
-
-    if (isRefresh) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_hasMore) {
-        _refreshController.loadComplete();
-      } else {
-        _refreshController.loadNoData();
-      }
-    }
   }
 
   @override
@@ -98,14 +86,29 @@ class _GoodsListPageState extends State<GoodsListPage> {
               _buildSortBar(themeColor),
               // 商品列表
               Expanded(
-                child: SmartRefresher(
-                  controller: _refreshController,
-                  enablePullDown: true,
-                  enablePullUp: true,
+                child: EasyRefresh(
+                  header: const ClassicHeader(
+                    dragText: '下拉刷新',
+                    armedText: '松手刷新',
+                    processingText: '刷新中...',
+                    processedText: '刷新完成',
+                    failedText: '刷新失败',
+                  ),
+                  footer: const ClassicFooter(
+                    dragText: '上拉加载',
+                    armedText: '松手加载',
+                    processingText: '加载中...',
+                    processedText: '加载完成',
+                    failedText: '加载失败',
+                    noMoreText: '我也是有底线的',
+                  ),
                   onRefresh: () => _loadData(isRefresh: true),
-                  onLoading: () => _loadData(),
+                  onLoad: _hasMore ? () => _loadData() : null,
                   child: _goodsList.isEmpty
-                      ? EmptySearch(keyword: _keyword)
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [EmptySearch(keyword: _keyword)],
+                        )
                       : _isGrid
                       ? _buildGridView()
                       : _buildListView(),

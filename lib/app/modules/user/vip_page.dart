@@ -1,12 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/user_provider.dart';
 import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../routes/app_routes.dart';
 // import '../widgets/custom_app_bar.dart'; // 注释掉不存在的导入
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 /// VIP等级页面 - 对应 pages/users/user_vip/index.vue
 class VipPage extends StatefulWidget {
@@ -20,7 +20,6 @@ class _VipPageState extends State<VipPage> {
   final UserProvider _userProvider = UserProvider();
   final StoreProvider _storeProvider = StoreProvider();
   final PageController _pageController = PageController(viewportFraction: 0.8);
-  final RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   List<Map<String, dynamic>> vipList = [];
   Map<String, dynamic> levelInfo = {};
@@ -47,7 +46,6 @@ class _VipPageState extends State<VipPage> {
   @override
   void dispose() {
     _pageController.dispose();
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -64,9 +62,8 @@ class _VipPageState extends State<VipPage> {
   }
 
   /// 下拉刷新
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     await _loadData();
-    _refreshController.refreshCompleted();
   }
 
   /// 获取用户信息
@@ -246,22 +243,30 @@ class _VipPageState extends State<VipPage> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
         children: [
-          SmartRefresher(
-            controller: _refreshController,
+          EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              failedText: '刷新失败',
+            ),
             onRefresh: _onRefresh,
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(child: _buildHeader()),
                       SliverToBoxAdapter(child: _buildPrivileges()),
                       SliverToBoxAdapter(child: _buildSkillSection()),
                       if (recommendList.isNotEmpty)
                         SliverToBoxAdapter(child: _buildRecommendSection()),
+                      SliverToBoxAdapter(child: _buildServiceSection()),
+                      SliverToBoxAdapter(child: _buildFooterSection()),
                     ],
                   ),
           ),
-          // 成长值说明弹窗
           if (showGrowthRule) _buildGrowthRuleDialog(),
         ],
       ),
@@ -271,11 +276,11 @@ class _VipPageState extends State<VipPage> {
   /// 头部区域
   Widget _buildHeader() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [const Color(0xFF2C2C2C), const Color(0xFF1A1A1A)],
+          colors: [Color(0xFF2C2C2C), Color(0xFF1A1A1A)],
         ),
       ),
       child: SafeArea(child: Column(children: [_buildAppBar(), _buildVipSwiper()])),
@@ -766,6 +771,66 @@ class _VipPageState extends State<VipPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 会员服务
+  Widget _buildServiceSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '会员服务',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+          ),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildServiceItem(Icons.support_agent, '专属客服'),
+              _buildServiceItem(Icons.card_membership, '会员权益'),
+              _buildServiceItem(Icons.help_outline, '常见问题'),
+              _buildServiceItem(Icons.local_offer, '专属活动'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceItem(IconData icon, String title) {
+    return Column(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: _primaryColor.withAlpha((0.08 * 255).round()),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Icon(icon, size: 22, color: _primaryColor),
+        ),
+        const SizedBox(height: 8),
+        Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF666666))),
+      ],
+    );
+  }
+
+  /// 底部说明
+  Widget _buildFooterSection() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 30, top: 5),
+      child: Column(
+        children: const [
+          Text('会员权益以实际展示为准', style: TextStyle(fontSize: 12, color: Color(0xFF999999))),
+          SizedBox(height: 6),
+          Text('如有疑问请联系专属客服', style: TextStyle(fontSize: 12, color: Color(0xFF999999))),
+        ],
       ),
     );
   }

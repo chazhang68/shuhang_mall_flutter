@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/lottery_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -15,7 +15,6 @@ class PointsGoodsListPage extends StatefulWidget {
 
 class _PointsGoodsListPageState extends State<PointsGoodsListPage> {
   final PointsMallProvider _pointsMallProvider = PointsMallProvider();
-  final RefreshController _refreshController = RefreshController();
   final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _productList = [];
@@ -40,7 +39,6 @@ class _PointsGoodsListPageState extends State<PointsGoodsListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -52,7 +50,6 @@ class _PointsGoodsListPageState extends State<PointsGoodsListPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -104,24 +101,14 @@ class _PointsGoodsListPageState extends State<PointsGoodsListPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
   }
 
-  void _onRefresh() {
-    _getProductList(reset: true);
+  Future<void> _onRefresh() async {
+    await _getProductList(reset: true);
   }
 
-  void _onLoading() {
-    _getProductList();
+  Future<void> _onLoading() async {
+    await _getProductList();
   }
 
   void _searchSubmit(String value) {
@@ -452,31 +439,47 @@ class _PointsGoodsListPageState extends State<PointsGoodsListPage> {
           _buildSearchBar(),
           _buildSortBar(),
           Expanded(
-            child: _productList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无商品')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: _isSwitch
-                        ? GridView.builder(
-                            padding: const EdgeInsets.all(12),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.65,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                            itemCount: _productList.length,
-                            itemBuilder: (context, index) => _buildProductItem(_productList[index]),
-                          )
-                        : ListView.builder(
-                            itemCount: _productList.length,
-                            itemBuilder: (context, index) => _buildProductItem(_productList[index]),
-                          ),
-                  ),
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: _onRefresh,
+              onLoad: _loadEnd ? null : _onLoading,
+              child: _productList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无商品')],
+                    )
+                  : _isSwitch
+                  ? GridView.builder(
+                      padding: const EdgeInsets.all(12),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.65,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: _productList.length,
+                      itemBuilder: (context, index) => _buildProductItem(_productList[index]),
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: _productList.length,
+                      itemBuilder: (context, index) => _buildProductItem(_productList[index]),
+                    ),
+            ),
           ),
         ],
       ),

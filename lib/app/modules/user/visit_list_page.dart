@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:get/get.dart';
 import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -18,7 +18,6 @@ class VisitListPage extends StatefulWidget {
 
 class _VisitListPageState extends State<VisitListPage> {
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
 
   // 数据 - 按日期分组
   final List<VisitGroup> _visitGroups = [];
@@ -44,7 +43,6 @@ class _VisitListPageState extends State<VisitListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -112,15 +110,6 @@ class _VisitListPageState extends State<VisitListPage> {
       setState(() {
         _isLoading = false;
       });
-      if (isRefresh) {
-        _refreshController.refreshCompleted();
-      } else {
-        if (_hasMore) {
-          _refreshController.loadComplete();
-        } else {
-          _refreshController.loadNoData();
-        }
-      }
     }
   }
 
@@ -161,37 +150,37 @@ class _VisitListPageState extends State<VisitListPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      FlutterToastPro.showMessage( '请选择删除商品');
+      FlutterToastPro.showMessage('请选择删除商品');
       return;
     }
 
     try {
       final response = await _storeProvider.deleteVisit(_selectedIds.toList());
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
         _loadVisitList(isRefresh: true);
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
-      FlutterToastPro.showMessage( '操作失败');
+      FlutterToastPro.showMessage('操作失败');
     }
   }
 
   Future<void> _collectSelected() async {
     if (_selectedIds.isEmpty) {
-      FlutterToastPro.showMessage( '请选择收藏商品');
+      FlutterToastPro.showMessage('请选择收藏商品');
       return;
     }
 
     // TODO: 实现批量收藏
-    FlutterToastPro.showMessage( '收藏成功');
+    FlutterToastPro.showMessage('收藏成功');
   }
 
   void _goDetail(VisitProduct product) {
     if (_isManageMode) return;
     if (!product.isShow) {
-      FlutterToastPro.showMessage( '该商品已下架');
+      FlutterToastPro.showMessage('该商品已下架');
       return;
     }
     Get.toNamed('/goods/detail', arguments: {'id': product.productId});
@@ -253,23 +242,37 @@ class _VisitListPageState extends State<VisitListPage> {
   }
 
   Widget _buildList() {
-    if (_visitGroups.isEmpty && !_isLoading) {
-      return const EmptyPage(text: '暂无浏览记录');
-    }
-
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
-      onRefresh: () => _loadVisitList(isRefresh: true),
-      onLoading: () => _loadVisitList(),
-      child: ListView.builder(
-        padding: const EdgeInsets.only(top: 16, bottom: 100),
-        itemCount: _visitGroups.length,
-        itemBuilder: (context, index) {
-          return _buildGroup(_visitGroups[index]);
-        },
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
       ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
+      onRefresh: () => _loadVisitList(isRefresh: true),
+      onLoad: _hasMore ? () => _loadVisitList() : null,
+      child: _visitGroups.isEmpty && !_isLoading
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [EmptyPage(text: '暂无浏览记录')],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 16, bottom: 100),
+              itemCount: _visitGroups.length,
+              itemBuilder: (context, index) {
+                return _buildGroup(_visitGroups[index]);
+              },
+            ),
     );
   }
 
@@ -499,5 +502,3 @@ class VisitProduct {
     required this.stock,
   });
 }
-
-

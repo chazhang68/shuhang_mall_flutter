@@ -70,6 +70,11 @@ class OrderProvider {
     return await _api.post('order/create', data: data);
   }
 
+  /// 获取当前金额可用优惠券
+  Future<ApiResponse> getCouponsOrderPrice(double price, Map<String, dynamic> params) async {
+    return await _api.get('coupons/order/$price', queryParameters: params);
+  }
+
   // ==================== 订单列表 ====================
 
   /// 获取订单列表

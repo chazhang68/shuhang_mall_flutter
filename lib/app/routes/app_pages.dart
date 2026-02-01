@@ -7,8 +7,7 @@ import 'package:shuhang_mall_flutter/app/modules/home/home_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 
 // Task模块
-import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart'
-    as task_ryz;
+import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart' as task_ryz;
 import 'package:shuhang_mall_flutter/pages/task/pages/jifen_exchange_page.dart';
 import 'package:shuhang_mall_flutter/pages/task/pages/swp_exchange_page.dart';
 
@@ -139,11 +138,7 @@ import 'package:shuhang_mall_flutter/app/modules/user_set/views/user_set_view.da
 class AppPages {
   static final pages = [
     // ==================== 主框架 ====================
-    GetPage(
-      name: AppRoutes.main,
-      page: () => const MainPage(),
-      transition: Transition.fadeIn,
-    ),
+    GetPage(name: AppRoutes.main, page: () => const MainPage(), transition: Transition.fadeIn),
 
     // ==================== 首页模块 ====================
     GetPage(name: AppRoutes.home, page: () => const HomePage()),
@@ -185,11 +180,7 @@ class AppPages {
     ),
 
     // ==================== 购物车模块 ====================
-    GetPage(
-      name: AppRoutes.cart,
-      page: () => const CartPage(),
-      transition: Transition.rightToLeft,
-    ),
+    GetPage(name: AppRoutes.cart, page: () => const CartPage(), transition: Transition.rightToLeft),
 
     // ==================== 订单模块 ====================
     GetPage(
@@ -527,16 +518,8 @@ class AppPages {
       page: () => const FubaoPage(),
       transition: Transition.rightToLeft,
     ),
-    GetPage(
-      name: AppRoutes.gxz,
-      page: () => const GxzPage(),
-      transition: Transition.rightToLeft,
-    ),
-    GetPage(
-      name: AppRoutes.ryz,
-      page: () => const RyzPage(),
-      transition: Transition.rightToLeft,
-    ),
+    GetPage(name: AppRoutes.gxz, page: () => const GxzPage(), transition: Transition.rightToLeft),
+    GetPage(name: AppRoutes.ryz, page: () => const RyzPage(), transition: Transition.rightToLeft),
 
     // ==================== 用户扩展页面 ====================
     GetPage(
@@ -587,13 +570,13 @@ class AppPages {
 
     // ==================== 地址管理（带Binding） ====================
     GetPage(
-      name: '/user/address',
+      name: AppRoutes.userAddress,
       page: () => const UserAddressView(),
       binding: UserAddressBinding(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
-      name: '/user/address-list',
+      name: AppRoutes.userAddressList,
       page: () => const UserAddressListView(),
       binding: UserAddressListBinding(),
       transition: Transition.rightToLeft,

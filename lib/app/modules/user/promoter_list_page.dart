@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
 
@@ -16,7 +16,6 @@ class PromoterListPage extends StatefulWidget {
 
 class _PromoterListPageState extends State<PromoterListPage> {
   final UserProvider _userProvider = Get.find<UserProvider>();
-  final RefreshController _refreshController = RefreshController();
   final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _recordList = [];
@@ -27,6 +26,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
   int _grade = 0; // 0: 一级, 1: 二级
   int _brokerageLevel = 0;
   bool _isLoading = true;
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _PromoterListPageState extends State<PromoterListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -44,6 +43,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
   Future<void> _loadData({bool isRefresh = false}) async {
     if (isRefresh) {
       _page = 1;
+      _hasMore = true;
       _recordList.clear();
     }
 
@@ -57,7 +57,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
     if (response.isSuccess && response.data != null) {
       final data = response.data;
       List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(data['list'] ?? []);
-      
+
       setState(() {
         if (isRefresh) {
           _recordList = list;
@@ -69,19 +69,11 @@ class _PromoterListPageState extends State<PromoterListPage> {
         _teamCount = data['count'] ?? 0;
         _brokerageLevel = data['brokerage_level'] ?? 0;
         _page++;
+        _hasMore = list.length >= 20;
         _isLoading = false;
       });
-
-      if (list.length < 20) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-      _refreshController.refreshCompleted();
     } else {
       setState(() => _isLoading = false);
-      _refreshController.refreshFailed();
-      _refreshController.loadFailed();
     }
   }
 
@@ -89,11 +81,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text('推广人统计'),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('推广人统计'), centerTitle: true, elevation: 0),
       body: Column(
         children: [
           // 头部统计
@@ -131,13 +119,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '推广人数',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
+              const Text('推广人数', style: TextStyle(color: Colors.white70, fontSize: 14)),
               const SizedBox(height: 8),
               RichText(
                 text: TextSpan(
@@ -252,10 +234,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _onSearch,
-          ),
+          IconButton(icon: const Icon(Icons.search), onPressed: _onSearch),
         ],
       ),
     );
@@ -268,16 +247,42 @@ class _PromoterListPageState extends State<PromoterListPage> {
     }
 
     if (_recordList.isEmpty) {
-      return const EmptyPage(text: '暂无数据');
+      return EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        onRefresh: () => _loadData(isRefresh: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [EmptyPage(text: '暂无数据')],
+        ),
+      );
     }
 
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
       onRefresh: () => _loadData(isRefresh: true),
-      onLoading: _loadData,
+      onLoad: _hasMore ? _loadData : null,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _recordList.length,
         itemBuilder: (context, index) => _buildItem(_recordList[index]),
       ),
@@ -317,10 +322,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
               children: [
                 Text(
                   item['nickname'] ?? '',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -391,11 +393,7 @@ class _PromoterListPageState extends State<PromoterListPage> {
         onTap: () => Get.toNamed('/user/spread-code'),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.qr_code, size: 24),
-            SizedBox(width: 8),
-            Text('邀请码'),
-          ],
+          children: [Icon(Icons.qr_code, size: 24), SizedBox(width: 8), Text('邀请码')],
         ),
       ),
     );

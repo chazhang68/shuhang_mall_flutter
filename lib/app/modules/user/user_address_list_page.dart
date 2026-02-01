@@ -1,7 +1,7 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:get/get.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -15,7 +15,6 @@ class UserAddressListPage extends StatefulWidget {
 
 class _UserAddressListPageState extends State<UserAddressListPage> {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _addressList = [];
   int _page = 1;
@@ -32,7 +31,6 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -43,7 +41,6 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -75,16 +72,6 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
       setState(() {
         _loading = false;
       });
-    }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
     }
   }
 
@@ -119,7 +106,7 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
       setState(() {
         _addressList.removeAt(index);
       });
-      FlutterToastPro.showMessage( '删除成功');
+      FlutterToastPro.showMessage('删除成功');
     }
   }
 
@@ -139,14 +126,6 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
     if (_cartId != null) {
       Get.back(result: id);
     }
-  }
-
-  void _onRefresh() {
-    _getAddressList(reset: true);
-  }
-
-  void _onLoading() {
-    _getAddressList();
   }
 
   Widget _buildAddressItem(Map<String, dynamic> item, int index) {
@@ -264,21 +243,37 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
       body: Column(
         children: [
           Expanded(
-            child: _addressList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无收货地址')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: () => _getAddressList(reset: true),
+              onLoad: _loadEnd ? null : () => _getAddressList(),
+              child: _addressList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无收货地址')],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(top: 8, bottom: 100),
                       itemCount: _addressList.length,
                       itemBuilder: (context, index) =>
                           _buildAddressItem(_addressList[index], index),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
@@ -313,5 +308,3 @@ class _UserAddressListPageState extends State<UserAddressListPage> {
     );
   }
 }
-
-

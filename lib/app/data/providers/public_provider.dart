@@ -23,7 +23,7 @@ class PublicProvider {
 
   /// 获取城市列表
   Future<ApiResponse> getCityList() async {
-    return await _api.get('city', noAuth: true);
+    return await _api.get('city_list', noAuth: true);
   }
 
   /// 获取城市列表 v2

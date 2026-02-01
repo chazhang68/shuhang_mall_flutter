@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../data/models/address_model.dart';
 import '../controllers/user_address_list_controller.dart';
 
 class UserAddressListView extends GetView<UserAddressListController> {
@@ -9,76 +10,161 @@ class UserAddressListView extends GetView<UserAddressListController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('地址管理'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(1.5), child: _buildTopLine()),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // 地址列表
-            Expanded(
-              child: SmartRefresher(
-                onRefresh: () => controller.getAddressList(isRefresh: true),
-                onLoading: () => controller.loadMore(),
-                controller: RefreshController(initialRefresh: true),
-                child: Obx(() {
-                  if (controller.addressList.isEmpty) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(AppIcons.location, size: 60, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('暂无地址', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                        ],
-                      ),
-                    );
-                  }
+        child: Obx(() {
+          final list = controller.addressList;
+          final defaultIndex = list.indexWhere((element) => element.isDefault == 1);
 
-                  return ListView.builder(
-                    itemCount: controller.addressList.length,
-                    itemBuilder: (context, index) {
-                      final address = controller.addressList[index];
-                      return _buildAddressItem(address, index);
-                    },
-                  );
-                }),
-              ),
+          final Widget listView = list.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(top: 80, bottom: 80),
+                  children: [_buildEmpty()],
+                )
+              : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final address = list[index];
+                    return _buildAddressItem(address, index, defaultIndex, theme);
+                  },
+                );
+
+          return EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              readyText: '正在刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              noMoreText: '我也是有底线的',
+              failedText: '刷新失败',
+              messageText: '最后更新于 %T',
             ),
+            footer: const ClassicFooter(
+              dragText: '上拉加载',
+              armedText: '松手加载',
+              readyText: '正在加载',
+              processingText: '加载中...',
+              processedText: '加载完成',
+              noMoreText: '我也是有底线的',
+              failedText: '加载失败',
+              messageText: '最后更新于 %T',
+            ),
+            onRefresh: () async => controller.getAddressList(isRefresh: true),
+            onLoad: controller.loadEnd
+                ? null
+                : () async {
+                    await controller.getAddressList();
+                  },
+            child: listView,
+          );
+        }),
+      ),
+      bottomNavigationBar: _buildFooter(theme),
+    );
+  }
 
-            // 底部操作栏
+  // 构建地址项
+  Widget _buildAddressItem(AddressItem address, int index, int defaultIndex, ThemeData theme) {
+    return GestureDetector(
+      onTap: () {
+        if (controller.cartId != null && controller.cartId!.isNotEmpty) {
+          controller.selectAddress(address.id);
+        }
+      },
+      child: Container(
+        color: Colors.white,
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withAlpha((0.2 * 255).round()),
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '收货人：${address.realName}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF282828),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        address.phone,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF282828)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '收货地址：${address.province}${address.city}'
+                    '${address.district}${address.detail}',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF282828)),
+                    softWrap: true,
                   ),
                 ],
               ),
+            ),
+            SizedBox(
+              height: 42,
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => controller.addNewAddress(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                  Row(
+                    children: [
+                      Radio<int>(
+                        value: index,
+                        groupValue: defaultIndex,
+                        onChanged: (_) => controller.setDefaultAddress(address.id, index),
+                        activeColor: theme.primaryColor,
+                        visualDensity: VisualDensity.compact,
                       ),
-                      child: const Text(
-                        '添加新地址',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      const Text('设为默认', style: TextStyle(fontSize: 14, color: Color(0xFF282828))),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => controller.editAddress(address.id),
+                        child: Row(
+                          children: const [
+                            Icon(AppIcons.edit, size: 18, color: Color(0xFF2C2C2C)),
+                            SizedBox(width: 4),
+                            Text('编辑', style: TextStyle(fontSize: 14, color: Color(0xFF282828))),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 20),
+                      InkWell(
+                        onTap: () => _showDeleteDialog(address.id, index),
+                        child: Row(
+                          children: const [
+                            Icon(AppIcons.delete, size: 18, color: Color(0xFF2C2C2C)),
+                            SizedBox(width: 4),
+                            Text('删除', style: TextStyle(fontSize: 14, color: Color(0xFF282828))),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -89,75 +175,55 @@ class UserAddressListView extends GetView<UserAddressListController> {
     );
   }
 
-  // 构建地址项
-  Widget _buildAddressItem(dynamic address, int index) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  Widget _buildTopLine() {
+    return SizedBox(
+      height: 1.5,
+      width: double.infinity,
+      child: Image.asset('assets/images/line.jpg', fit: BoxFit.cover),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/images/address.png', width: 120, fit: BoxFit.contain),
+          const SizedBox(height: 12),
+          const Text('暂无地址', style: TextStyle(fontSize: 14, color: Color(0xFF999999))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(ThemeData theme) {
+    return SafeArea(
+      top: false,
       child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 收货人信息
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '收货人：${address['real_name'] ?? ''}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Text(
-                  address['phone'] ?? '',
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
+        height: 53,
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+        color: Colors.white,
+        child: SizedBox(
+          height: 38,
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => controller.addNewAddress(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+              padding: EdgeInsets.zero,
+              elevation: 0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(AppIcons.add, size: 18, color: Colors.white),
+                SizedBox(width: 6),
+                Text('添加新地址', style: TextStyle(fontSize: 15)),
               ],
             ),
-            const SizedBox(height: 8),
-
-            // 地址信息
-            Text(
-              '收货地址：${address['province'] ?? ''}${address['city'] ?? ''}${address['district'] ?? ''}${address['detail'] ?? ''}',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-              softWrap: true,
-            ),
-            const SizedBox(height: 16),
-
-            // 操作按钮行
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 设为默认地址
-                Row(
-                  children: [
-                    Obx(
-                      () => Checkbox(
-                        value: (address['is_default'] ?? 0) == 1,
-                        onChanged: (value) =>
-                            controller.setDefaultAddress(address['id'] ?? 0, index),
-                      ),
-                    ),
-                    const Text('设为默认'),
-                  ],
-                ),
-
-                // 编辑和删除按钮
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () => controller.editAddress(address['id'] ?? 0),
-                      child: const Text('编辑', style: TextStyle(color: Colors.blue)),
-                    ),
-                    const SizedBox(width: 16),
-                    TextButton(
-                      onPressed: () => _showDeleteDialog(address['id'] ?? 0, index),
-                      child: const Text('删除', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -165,19 +231,80 @@ class UserAddressListView extends GetView<UserAddressListController> {
 
   // 显示删除确认对话框
   void _showDeleteDialog(int addressId, int index) {
-    Get.defaultDialog(
-      title: '确认删除',
-      content: const Text('确定要删除这个地址吗？'),
-      actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text('取消')),
-        TextButton(
-          onPressed: () {
-            Get.back();
-            controller.deleteAddress(addressId, index);
-          },
-          child: const Text('删除', style: TextStyle(color: Colors.red)),
+    final theme = Get.theme;
+    Get.dialog(
+      Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: 300,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(color: Color(0x22000000), blurRadius: 16, offset: Offset(0, 6)),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFCECEC),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Icon(Icons.delete_outline, color: Color(0xFFE64A4A), size: 26),
+                ),
+                const SizedBox(height: 12),
+                const Text('确认删除', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                const Text(
+                  '确定要删除这个地址吗？',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF888888)),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF666666),
+                          side: const BorderSide(color: Color(0xFFDDDDDD)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('取消', style: TextStyle(fontSize: 14)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          controller.deleteAddress(addressId, index);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          elevation: 0,
+                        ),
+                        child: const Text('确认删除', style: TextStyle(fontSize: 14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
+      ),
     );
   }
 }

@@ -1,5 +1,5 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 
@@ -19,7 +19,6 @@ class _VipExpRecordViewState extends State<VipExpRecordView> {
   String loadTitle = "加载更多";
   int page = 1;
   int limit = 20;
-  final RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -50,58 +49,31 @@ class _VipExpRecordViewState extends State<VipExpRecordView> {
           page = page + 1;
           loading = false;
         });
-
-        if (mounted) {
-          if (page == 2) {
-            _refreshController.refreshCompleted();
-          } else {
-            _refreshController.loadComplete();
-          }
-        }
       } else {
         setState(() {
           loading = false;
           loadTitle = '加载更多';
         });
-
-        if (mounted) {
-          if (page == 1) {
-            _refreshController.refreshFailed();
-          } else {
-            _refreshController.loadFailed();
-          }
-        }
       }
     } catch (e) {
       setState(() {
         loading = false;
         loadTitle = '加载更多';
       });
-
-      if (mounted) {
-        if (page == 1) {
-          _refreshController.refreshFailed();
-        } else {
-          _refreshController.loadFailed();
-        }
-      }
     }
   }
 
   /// 刷新
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     page = 1;
     loadend = false;
-    _getExpList();
+    await _getExpList();
   }
 
   /// 加载更多
-  void _onLoading() async {
-    if (!loadend) {
-      _getExpList();
-    } else {
-      _refreshController.loadNoData();
-    }
+  Future<void> _onLoading() async {
+    if (loadend) return;
+    await _getExpList();
   }
 
   @override
@@ -113,12 +85,30 @@ class _VipExpRecordViewState extends State<VipExpRecordView> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: SmartRefresher(
-        controller: _refreshController,
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        footer: const ClassicFooter(
+          dragText: '上拉加载',
+          armedText: '松手加载',
+          processingText: '加载中...',
+          processedText: '加载完成',
+          failedText: '加载失败',
+          noMoreText: '我也是有底线的',
+        ),
         onRefresh: _onRefresh,
-        onLoading: _onLoading,
-        enablePullUp: expList.isNotEmpty,
-        child: expList.isEmpty && !loading ? _buildEmptyWidget() : _buildContentWidget(),
+        onLoad: loadend ? null : _onLoading,
+        child: expList.isEmpty && !loading
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [_buildEmptyWidget()],
+              )
+            : _buildContentWidget(),
       ),
     );
   }
@@ -185,7 +175,6 @@ class _VipExpRecordViewState extends State<VipExpRecordView> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
 import '../../data/providers/store_provider.dart';
@@ -24,8 +24,7 @@ class _CommentListPageState extends State<CommentListPage> {
 
   int _page = 1;
   final int _limit = 20;
-
-  final RefreshController _refreshController = RefreshController();
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _CommentListPageState extends State<CommentListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -59,6 +57,11 @@ class _CommentListPageState extends State<CommentListPage> {
 
   /// 获取评论列表
   Future<void> _getProductReplyList({bool isLoadMore = false}) async {
+    if (!isLoadMore) {
+      _page = 1;
+      _hasMore = true;
+    }
+
     try {
       final response = await _storeProvider.getReplyList(_productId, {
         'page': _page,
@@ -72,35 +75,17 @@ class _CommentListPageState extends State<CommentListPage> {
         setState(() {
           if (isLoadMore) {
             _reply.addAll(list);
-            if (list.length < _limit) {
-              _refreshController.loadNoData();
-            } else {
-              _refreshController.loadComplete();
-              _page++;
-            }
+            _hasMore = list.length >= _limit;
+            _page++;
           } else {
             _reply = list;
-            _refreshController.refreshCompleted();
+            _hasMore = list.length >= _limit;
             _page = 2;
-            if (list.length < _limit) {
-              _refreshController.loadNoData();
-            }
           }
         });
-      } else {
-        if (isLoadMore) {
-          _refreshController.loadFailed();
-        } else {
-          _refreshController.refreshFailed();
-        }
       }
     } catch (e) {
       debugPrint('获取评论列表失败: $e');
-      if (isLoadMore) {
-        _refreshController.loadFailed();
-      } else {
-        _refreshController.refreshFailed();
-      }
     }
   }
 
@@ -112,6 +97,7 @@ class _CommentListPageState extends State<CommentListPage> {
       _type = type;
       _page = 1;
       _reply = [];
+      _hasMore = true;
     });
 
     _getProductReplyList();
@@ -171,15 +157,31 @@ class _CommentListPageState extends State<CommentListPage> {
 
             // 评论列表
             Expanded(
-              child: _reply.isEmpty
-                  ? const EmptyPage(text: '暂无评论')
-                  : SmartRefresher(
-                      controller: _refreshController,
-                      enablePullDown: true,
-                      enablePullUp: true,
-                      onRefresh: () => _getProductReplyList(),
-                      onLoading: () => _getProductReplyList(isLoadMore: true),
-                      child: ListView.separated(
+              child: EasyRefresh(
+                header: const ClassicHeader(
+                  dragText: '下拉刷新',
+                  armedText: '松手刷新',
+                  processingText: '刷新中...',
+                  processedText: '刷新完成',
+                  failedText: '刷新失败',
+                ),
+                footer: const ClassicFooter(
+                  dragText: '上拉加载',
+                  armedText: '松手加载',
+                  processingText: '加载中...',
+                  processedText: '加载完成',
+                  failedText: '加载失败',
+                  noMoreText: '我也是有底线的',
+                ),
+                onRefresh: () => _getProductReplyList(),
+                onLoad: _hasMore ? () => _getProductReplyList(isLoadMore: true) : null,
+                child: _reply.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: const [EmptyPage(text: '暂无评论')],
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(15),
                         itemCount: _reply.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 15),
@@ -188,7 +190,7 @@ class _CommentListPageState extends State<CommentListPage> {
                           return _buildCommentItem(item);
                         },
                       ),
-                    ),
+              ),
             ),
           ],
         ),

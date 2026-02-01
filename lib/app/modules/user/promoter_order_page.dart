@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
 
@@ -18,7 +18,6 @@ class PromoterOrderPage extends StatefulWidget {
 
 class _PromoterOrderPageState extends State<PromoterOrderPage> {
   final UserProvider _userProvider = Get.find<UserProvider>();
-  final RefreshController _refreshController = RefreshController();
 
   final List<Map<String, dynamic>> _recordList = [];
   final List<String> _times = [];
@@ -35,7 +34,6 @@ class _PromoterOrderPageState extends State<PromoterOrderPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -48,7 +46,6 @@ class _PromoterOrderPageState extends State<PromoterOrderPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -90,17 +87,8 @@ class _PromoterOrderPageState extends State<PromoterOrderPage> {
         _loadEnd = list.length < 8;
         _isLoading = false;
       });
-
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-      _refreshController.refreshCompleted();
     } else {
       setState(() => _isLoading = false);
-      _refreshController.refreshFailed();
-      _refreshController.loadFailed();
     }
   }
 
@@ -176,16 +164,42 @@ class _PromoterOrderPageState extends State<PromoterOrderPage> {
     }
 
     if (_recordList.isEmpty) {
-      return EmptyPage(text: '暂无推广订单～');
+      return EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        onRefresh: () => _loadData(isRefresh: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [EmptyPage(text: '暂无推广订单～')],
+        ),
+      );
     }
 
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
       onRefresh: () => _loadData(isRefresh: true),
-      onLoading: _loadData,
+      onLoad: _loadEnd ? null : _loadData,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _recordList.length,
         itemBuilder: (context, index) => _buildDateSection(_recordList[index]),
       ),

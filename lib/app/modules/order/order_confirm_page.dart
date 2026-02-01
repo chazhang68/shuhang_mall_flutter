@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/models/address_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/order_provider.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:shuhang_mall_flutter/widgets/widgets.dart';
@@ -16,42 +20,32 @@ class OrderConfirmPage extends StatefulWidget {
 }
 
 class _OrderConfirmPageState extends State<OrderConfirmPage> {
-  Map<String, dynamic>? _selectedAddress;
+  final UserProvider _userProvider = UserProvider();
+  final OrderProvider _orderProvider = OrderProvider();
+
+  AddressItem? _selectedAddress;
   Map<String, dynamic>? _selectedCoupon;
   String _remark = '';
   int _payType = 0; // 0: 在线支付
 
-  // 示例商品数据
-  final List<Map<String, dynamic>> _orderItems = [
-    {'id': 1, 'name': '示例商品名称', 'image': '', 'spec': '规格: 默认', 'price': 199.00, 'count': 2},
-  ];
+  String? _cartId;
+  int _pinkId = 0;
+  int _couponId = 0;
+  String _news = '0';
+  int _noCoupon = 0;
+  int _addressId = 0;
+  int _shippingType = 1;
+  bool _isLoading = false;
+  String _orderKey = '';
 
-  // 示例地址数据
-  final List<Map<String, dynamic>> _addressList = [
-    {
-      'id': 1,
-      'real_name': '张三',
-      'phone': '13800138000',
-      'province': '广东省',
-      'city': '深圳市',
-      'district': '南山区',
-      'detail': '科技园路xxx号',
-      'is_default': 1,
-    },
-  ];
+  final List<CartItem> _orderItems = <CartItem>[];
+  final List<Map<String, dynamic>> _couponList = <Map<String, dynamic>>[];
 
-  double get _goodsTotal {
-    return _orderItems.fold(0.0, (sum, item) {
-      return sum + (item['price'] as double) * (item['count'] as int);
-    });
-  }
+  double _goodsTotal = 0;
+  double _freight = 0;
 
   double get _couponDiscount {
     return _selectedCoupon?['coupon_price']?.toDouble() ?? 0.0;
-  }
-
-  double get _freight {
-    return 0.0; // 包邮
   }
 
   double get _totalPrice {
@@ -61,16 +55,136 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   @override
   void initState() {
     super.initState();
-    _initDefaultAddress();
+    _bindParams();
+    _loadInitialAddress();
+    _loadOrderConfirm();
   }
 
-  void _initDefaultAddress() {
-    final defaultAddr = _addressList.firstWhereOrNull((addr) => addr['is_default'] == 1);
-    if (defaultAddr != null) {
-      _selectedAddress = defaultAddr;
-    } else if (_addressList.isNotEmpty) {
-      _selectedAddress = _addressList.first;
+  void _bindParams() {
+    final params = Get.parameters;
+    _cartId = params['cartId'];
+    _addressId = _toInt(params['addressId']);
+    _pinkId = _toInt(params['pinkId']);
+    _couponId = _toInt(params['couponId']);
+    _news = params['new'] ?? params['news'] ?? '0';
+    _noCoupon = _toInt(params['noCoupon']);
+  }
+
+  Future<void> _loadInitialAddress() async {
+    if (_addressId > 0) {
+      await _loadAddressDetail(_addressId);
+      return;
     }
+
+    await _loadDefaultAddress();
+  }
+
+  Future<void> _loadDefaultAddress() async {
+    try {
+      final response = await _userProvider.getAddressDefault();
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _selectedAddress = AddressItem.fromJson(response.data as Map<String, dynamic>);
+          _addressId = _selectedAddress?.id ?? _addressId;
+        });
+        _loadOrderConfirm();
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取默认地址失败: $e');
+    }
+  }
+
+  Future<void> _loadAddressDetail(int id) async {
+    try {
+      final response = await _userProvider.getAddressDetail(id);
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _selectedAddress = AddressItem.fromJson(response.data as Map<String, dynamic>);
+        });
+        _addressId = id;
+        _loadOrderConfirm();
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取地址详情失败: $e');
+    }
+  }
+
+  Future<void> _loadOrderConfirm() async {
+    if (_cartId == null || _cartId!.isEmpty) return;
+
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final response = await _orderProvider.orderConfirm({
+        'cartId': _cartId,
+        'new': _news,
+        'addressId': _addressId,
+        'shipping_type': _shippingType,
+      });
+
+      if (response.isSuccess && response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        final cartInfo = _parseCartInfo(data['cartInfo'] ?? data['cart_info']);
+
+        setState(() {
+          _orderItems
+            ..clear()
+            ..addAll(cartInfo);
+          final apiTotal = _toDouble(data['total_price']);
+          _goodsTotal = apiTotal > 0 ? apiTotal : _calcGoodsTotal(cartInfo);
+          _freight = _toDouble(data['pay_postage']);
+          _orderKey = data['orderKey']?.toString() ?? _orderKey;
+        });
+
+        await _loadCouponList();
+      } else {
+        FlutterToastPro.showMessage(response.msg);
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取订单信息失败: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadCouponList() async {
+    if (_cartId == null || _cartId!.isEmpty) return;
+
+    try {
+      final response = await _orderProvider.getCouponsOrderPrice(_goodsTotal, {
+        'cartId': _cartId,
+        'new': _news,
+        'shippingType': _shippingType,
+      });
+
+      if (response.isSuccess && response.data is List) {
+        setState(() {
+          _couponList
+            ..clear()
+            ..addAll(List<Map<String, dynamic>>.from(response.data as List));
+          _selectedCoupon = _resolveSelectedCoupon();
+          _couponId = _selectedCoupon?['id'] ?? _couponId;
+        });
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取优惠券失败: $e');
+    }
+  }
+
+  Map<String, dynamic>? _resolveSelectedCoupon() {
+    if (_couponId <= 0) return _selectedCoupon;
+    for (final item in _couponList) {
+      if (item['id'] == _couponId) {
+        return item;
+      }
+    }
+    return _selectedCoupon;
   }
 
   @override
@@ -121,17 +235,19 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   Widget _buildAddressSection(ThemeColorData themeColor) {
     return GestureDetector(
       onTap: () async {
-        final result = await AddressPickerDialog.show(
-          addressList: _addressList,
-          selectedId: _selectedAddress?['id'],
-          onAddAddress: () {
-            Get.toNamed(AppRoutes.addressEdit);
+        final result = await Get.toNamed(
+          AppRoutes.userAddressList,
+          parameters: {
+            if (_cartId != null) 'cartId': _cartId!,
+            'pinkId': _pinkId.toString(),
+            'couponId': _couponId.toString(),
+            'new': _news,
+            'noCoupon': _noCoupon.toString(),
           },
         );
-        if (result != null) {
-          setState(() {
-            _selectedAddress = result;
-          });
+
+        if (result is int) {
+          await _loadAddressDetail(result);
         }
       },
       child: Container(
@@ -159,19 +275,20 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
                         Row(
                           children: [
                             Text(
-                              _selectedAddress!['real_name'] ?? '',
+                              _selectedAddress!.realName,
                               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              _selectedAddress!['phone'] ?? '',
+                              _selectedAddress!.phone,
                               style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${_selectedAddress!['province']}${_selectedAddress!['city']}${_selectedAddress!['district']}${_selectedAddress!['detail']}',
+                          '${_selectedAddress!.province}${_selectedAddress!.city}'
+                          '${_selectedAddress!.district}${_selectedAddress!.detail}',
                           style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
                         ),
                       ],
@@ -204,13 +321,25 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
             ),
           ),
           // 商品列表
-          ...(_orderItems.map((item) => _buildGoodsItem(item))),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            ..._orderItems.map(_buildGoodsItem),
         ],
       ),
     );
   }
 
-  Widget _buildGoodsItem(Map<String, dynamic> item) {
+  Widget _buildGoodsItem(CartItem item) {
+    final productInfo = item.productInfo;
+    final image = productInfo?.attrInfo?.image ?? productInfo?.image ?? '';
+    final name = productInfo?.storeName ?? '';
+    final spec = productInfo?.attrInfo?.suk ?? '';
+    final price = item.unitPrice;
+
     return Container(
       padding: const EdgeInsets.all(15),
       child: Row(
@@ -224,8 +353,8 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: item['image'] != null && item['image'].toString().isNotEmpty
-                ? CachedImage(imageUrl: item['image'], width: 80, height: 80, borderRadius: 8)
+            child: image.isNotEmpty
+                ? CachedImage(imageUrl: image, width: 80, height: 80, borderRadius: 8)
                 : const Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
           ),
           const SizedBox(width: 12),
@@ -235,22 +364,19 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'] ?? '',
+                  name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  item['spec'] ?? '',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
-                ),
+                Text(spec, style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '¥${(item['price'] as double).toStringAsFixed(2)}',
+                      '¥${price.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -258,7 +384,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
                       ),
                     ),
                     Text(
-                      'x${item['count']}',
+                      'x${item.cartNum}',
                       style: const TextStyle(fontSize: 14, color: Color(0xFF999999)),
                     ),
                   ],
@@ -274,10 +400,14 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   Widget _buildCouponSection(ThemeColorData themeColor) {
     return GestureDetector(
       onTap: () async {
-        final result = await CouponDialog.show(couponList: [], selectedId: _selectedCoupon?['id']);
+        final result = await CouponDialog.show(
+          couponList: _couponList,
+          selectedId: _selectedCoupon?['id'],
+        );
         if (result != null) {
           setState(() {
             _selectedCoupon = result;
+            _couponId = result['id'] ?? 0;
           });
         }
       },
@@ -445,13 +575,38 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
 
   void _submitOrder() {
     if (_selectedAddress == null) {
-      FlutterToastPro.showMessage( '请选择收货地址');
+      FlutterToastPro.showMessage('请选择收货地址');
       return;
     }
 
     // 提交订单逻辑
     Get.toNamed(AppRoutes.orderPayStatus, parameters: {'order_id': '123456', 'remark': _remark});
   }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  List<CartItem> _parseCartInfo(dynamic value) {
+    if (value is! List) return <CartItem>[];
+    return value
+        .whereType<Map>()
+        .map((item) => CartItem.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  double _calcGoodsTotal(List<CartItem> items) {
+    double total = 0;
+    for (final item in items) {
+      total += item.unitPrice * item.cartNum;
+    }
+    return total;
+  }
 }
-
-

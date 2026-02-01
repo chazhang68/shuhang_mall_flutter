@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:get/get.dart';
 import '../../data/providers/activity_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/countdown_widget.dart';
@@ -16,7 +16,6 @@ class BargainDetailPage extends StatefulWidget {
 
 class _BargainDetailPageState extends State<BargainDetailPage> {
   final ActivityProvider _activityProvider = ActivityProvider();
-  final RefreshController _refreshController = RefreshController();
 
   int _id = 0;
   int _bargainUid = 0;
@@ -45,7 +44,6 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -62,7 +60,6 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
         _datatime = _bargainInfo['datatime'] ?? 0;
       });
     }
-    _refreshController.refreshCompleted();
   }
 
   Future<void> _getBargainUserHelp() async {
@@ -80,7 +77,7 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
 
   void _setBargainHelp() {
     // TODO: 实现帮砍一刀逻辑
-    FlutterToastPro.showMessage( '帮砍一刀功能待实现');
+    FlutterToastPro.showMessage('帮砍一刀功能待实现');
   }
 
   void _goBargainList() {
@@ -572,14 +569,20 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(title: const Text('砍价详情'), elevation: 0),
-      body: SmartRefresher(
-        controller: _refreshController,
-        enablePullDown: true,
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
         onRefresh: () async {
           await _getBargainDetail();
           await _getBargainUserHelp();
         },
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             _buildHeader(),
             _buildProductInfo(),
@@ -637,5 +640,3 @@ class _BargainDetailPageState extends State<BargainDetailPage> {
     );
   }
 }
-
-

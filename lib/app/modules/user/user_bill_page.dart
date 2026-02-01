@@ -1,6 +1,6 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -14,7 +14,6 @@ class UserBillPage extends StatefulWidget {
 
 class _UserBillPageState extends State<UserBillPage> {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _billList = [];
   List<String> _times = [];
@@ -41,7 +40,6 @@ class _UserBillPageState extends State<UserBillPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -65,7 +63,6 @@ class _UserBillPageState extends State<UserBillPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -120,26 +117,6 @@ class _UserBillPageState extends State<UserBillPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
-  }
-
-  void _onRefresh() {
-    _billList = [];
-    _times = [];
-    _getUserBillList(reset: true);
-  }
-
-  void _onLoading() {
-    _getUserBillList();
   }
 
   Widget _buildNav() {
@@ -257,32 +234,54 @@ class _UserBillPageState extends State<UserBillPage> {
     );
   }
 
+  Widget _buildList() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
+      onRefresh: () {
+        _billList = [];
+        _times = [];
+        return _getUserBillList(reset: true);
+      },
+      onLoad: _loadEnd ? null : () => _getUserBillList(),
+      child: _billList.isEmpty && !_loading
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [EmptyPage(text: '暂无账单的记录哦～')],
+            )
+          : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: _billList.map(_buildMonthSection).toList(),
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isEmpty = _billList.isEmpty || _billList.every((item) => (item['child'] as List).isEmpty);
-
     return Scaffold(
       appBar: AppBar(title: const Text('账单记录'), centerTitle: true),
       body: Column(
         children: [
           _buildNav(),
 
-          Expanded(
-            child: isEmpty && !_loading
-                ? const EmptyPage(text: '暂无账单的记录哦～')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.only(top: 8, bottom: 24),
-                      itemCount: _billList.length,
-                      itemBuilder: (context, index) => _buildMonthSection(_billList[index]),
-                    ),
-                  ),
-          ),
+          Expanded(child: _buildList()),
         ],
       ),
     );

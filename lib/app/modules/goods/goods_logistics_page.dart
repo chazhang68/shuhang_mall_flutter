@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/order_provider.dart';
 import '../../data/providers/store_provider.dart';
@@ -18,7 +18,6 @@ class GoodsLogisticsPage extends StatefulWidget {
 class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
   final OrderProvider _orderProvider = OrderProvider();
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
 
   String _orderId = '';
   List<Map<String, dynamic>> _product = [];
@@ -39,7 +38,6 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -56,7 +54,6 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
         _expressList = List<Map<String, dynamic>>.from(result['list'] ?? []);
       });
     }
-    _refreshController.refreshCompleted();
   }
 
   Future<void> _getHostProduct() async {
@@ -72,7 +69,7 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
     String deliveryId = _orderInfo['delivery_id'] ?? '';
     if (deliveryId.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: deliveryId));
-      FlutterToastPro.showMessage( '复制成功');
+      FlutterToastPro.showMessage('复制成功');
     }
   }
 
@@ -329,11 +326,17 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
       appBar: AppBar(title: const Text('物流详情'), centerTitle: true),
       body: _product.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : SmartRefresher(
-              controller: _refreshController,
-              enablePullDown: true,
+          : EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
               onRefresh: _getExpress,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   // 商品列表
                   ..._product.map((item) => _buildProductItem(item)),
@@ -351,5 +354,3 @@ class _GoodsLogisticsPageState extends State<GoodsLogisticsPage> {
     );
   }
 }
-
-

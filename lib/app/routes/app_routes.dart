@@ -59,6 +59,7 @@ abstract class AppRoutes {
   static const String userCash = '/user/cash';
   static const String userSpread = '/user/spread';
   static const String userAddressList = '/user/address-list';
+  static const String userAddress = '/user/address';
   static const String userPayment = '/user/payment';
   static const String userAbout = '/user/about';
   static const String userPrivacy = '/user/privacy';

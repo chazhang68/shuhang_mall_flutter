@@ -1,5 +1,5 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -13,7 +13,6 @@ class UserSignListPage extends StatefulWidget {
 
 class _UserSignListPageState extends State<UserSignListPage> {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _signList = [];
   int _page = 1;
@@ -28,7 +27,6 @@ class _UserSignListPageState extends State<UserSignListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -39,7 +37,6 @@ class _UserSignListPageState extends State<UserSignListPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -72,24 +69,6 @@ class _UserSignListPageState extends State<UserSignListPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
-  }
-
-  void _onRefresh() {
-    _getSignMonthList(reset: true);
-  }
-
-  void _onLoading() {
-    _getSignMonthList();
   }
 
   Widget _buildMonthSection(Map<String, dynamic> item) {
@@ -171,20 +150,36 @@ class _UserSignListPageState extends State<UserSignListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('签到记录'), centerTitle: true),
-      body: _signList.isEmpty && !_loading
-          ? const EmptyPage(text: '暂无签到记录~')
-          : SmartRefresher(
-              controller: _refreshController,
-              enablePullDown: true,
-              enablePullUp: true,
-              onRefresh: _onRefresh,
-              onLoading: _onLoading,
-              child: ListView.builder(
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        footer: const ClassicFooter(
+          dragText: '上拉加载',
+          armedText: '松手加载',
+          processingText: '加载中...',
+          processedText: '加载完成',
+          failedText: '加载失败',
+          noMoreText: '我也是有底线的',
+        ),
+        onRefresh: () => _getSignMonthList(reset: true),
+        onLoad: _loadEnd ? null : () => _getSignMonthList(),
+        child: _signList.isEmpty && !_loading
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [EmptyPage(text: '暂无签到记录~')],
+              )
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(top: 8, bottom: 24),
                 itemCount: _signList.length,
                 itemBuilder: (context, index) => _buildMonthSection(_signList[index]),
               ),
-            ),
+      ),
     );
   }
 }

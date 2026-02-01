@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../data/providers/public_provider.dart';
@@ -17,7 +17,6 @@ class NewsListPage extends StatefulWidget {
 
 class _NewsListPageState extends State<NewsListPage> {
   final PublicProvider _publicProvider = PublicProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _bannerList = [];
   List<Map<String, dynamic>> _categoryList = [];
@@ -35,7 +34,6 @@ class _NewsListPageState extends State<NewsListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -70,7 +68,6 @@ class _NewsListPageState extends State<NewsListPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -106,16 +103,6 @@ class _NewsListPageState extends State<NewsListPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
   }
 
   void _selectCategory(int id) {
@@ -131,14 +118,14 @@ class _NewsListPageState extends State<NewsListPage> {
     Get.toNamed(AppRoutes.newsDetail, parameters: {'id': id.toString()});
   }
 
-  void _onRefresh() {
+  Future<void> _onRefresh() async {
     _getArticleBanner();
     _getArticleCategory();
-    _getArticleList(reset: true);
+    await _getArticleList(reset: true);
   }
 
-  void _onLoading() {
-    _getArticleList();
+  Future<void> _onLoading() async {
+    await _getArticleList();
   }
 
   Widget _buildBanner() {
@@ -359,15 +346,31 @@ class _NewsListPageState extends State<NewsListPage> {
           _buildCategoryTabs(),
 
           Expanded(
-            child: SmartRefresher(
-              controller: _refreshController,
-              enablePullDown: true,
-              enablePullUp: true,
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
               onRefresh: _onRefresh,
-              onLoading: _onLoading,
+              onLoad: _loadEnd ? null : _onLoading,
               child: _articleList.isEmpty && !_loading
-                  ? const EmptyPage(text: '暂无资讯')
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无资讯')],
+                    )
                   : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: _articleList.length + 1,
                       itemBuilder: (context, index) {
                         if (index == 0) {

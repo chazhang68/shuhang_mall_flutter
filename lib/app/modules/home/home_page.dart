@@ -1,6 +1,6 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
@@ -19,7 +19,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
-  final RefreshController _refreshController = RefreshController(initialRefresh: false);
   final ScrollController _scrollController = ScrollController();
   final PublicProvider _publicProvider = PublicProvider();
 
@@ -47,7 +46,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   @override
   void dispose() {
-    _refreshController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -123,12 +121,11 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     }
   }
 
-  void _onRefresh() async {
+  Future<void> _onRefresh() async {
     _page = 1;
     _loadEnd = false;
     _hotList.clear();
     await _loadIndexData();
-    _refreshController.refreshCompleted();
   }
 
   void _goSearch() {
@@ -157,11 +154,17 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           backgroundColor: const Color(0xFFF5F5F5),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : SmartRefresher(
-                  controller: _refreshController,
+              : EasyRefresh(
+                  header: const ClassicHeader(
+                    dragText: '下拉刷新',
+                    armedText: '松手刷新',
+                    processingText: '刷新中...',
+                    processedText: '刷新完成',
+                    failedText: '刷新失败',
+                  ),
                   onRefresh: _onRefresh,
-                  header: WaterDropHeader(waterDropColor: themeColor.primary),
                   child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     controller: _scrollController,
                     slivers: [
                       // 顶部Logo

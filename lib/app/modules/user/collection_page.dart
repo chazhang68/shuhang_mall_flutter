@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -18,7 +18,6 @@ class CollectionPage extends StatefulWidget {
 
 class _CollectionPageState extends State<CollectionPage> {
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
 
   // 数据
   List<Map<String, dynamic>> _collectList = [];
@@ -44,7 +43,6 @@ class _CollectionPageState extends State<CollectionPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -87,15 +85,6 @@ class _CollectionPageState extends State<CollectionPage> {
       setState(() {
         _isLoading = false;
       });
-      if (isRefresh) {
-        _refreshController.refreshCompleted();
-      } else {
-        if (_hasMore) {
-          _refreshController.loadComplete();
-        } else {
-          _refreshController.loadNoData();
-        }
-      }
     }
   }
 
@@ -130,7 +119,7 @@ class _CollectionPageState extends State<CollectionPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      FlutterToastPro.showMessage( '请选择商品');
+      FlutterToastPro.showMessage('请选择商品');
       return;
     }
 
@@ -139,13 +128,13 @@ class _CollectionPageState extends State<CollectionPage> {
         _selectedIds.map((e) => int.tryParse(e) ?? 0).toList(),
       );
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
         _loadCollectList(isRefresh: true);
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
-      FlutterToastPro.showMessage( '操作失败');
+      FlutterToastPro.showMessage('操作失败');
     }
   }
 
@@ -153,7 +142,7 @@ class _CollectionPageState extends State<CollectionPage> {
     if (item['is_show'] == true || item['is_show'] == 1) {
       Get.toNamed('/goods/detail', arguments: {'id': item['pid']});
     } else {
-      FlutterToastPro.showMessage( '该商品已下架');
+      FlutterToastPro.showMessage('该商品已下架');
     }
   }
 
@@ -212,22 +201,38 @@ class _CollectionPageState extends State<CollectionPage> {
   }
 
   Widget _buildList() {
-    if (_collectList.isEmpty && !_isLoading) {
-      return const EmptyPage(text: '暂无收藏商品');
-    }
+    final listView = _collectList.isEmpty && !_isLoading
+        ? ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [EmptyPage(text: '暂无收藏商品')],
+          )
+        : ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: _collectList.length,
+            itemBuilder: (context, index) {
+              return _buildItem(_collectList[index]);
+            },
+          );
 
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
-      onRefresh: () => _loadCollectList(isRefresh: true),
-      onLoading: () => _loadCollectList(),
-      child: ListView.builder(
-        itemCount: _collectList.length,
-        itemBuilder: (context, index) {
-          return _buildItem(_collectList[index]);
-        },
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
       ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
+      onRefresh: () => _loadCollectList(isRefresh: true),
+      onLoad: _hasMore ? () => _loadCollectList() : null,
+      child: listView,
     );
   }
 
@@ -365,5 +370,3 @@ class _CollectionPageState extends State<CollectionPage> {
     );
   }
 }
-
-

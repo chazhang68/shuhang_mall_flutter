@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:get/get.dart';
 import '../../data/providers/store_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/theme_colors.dart';
@@ -17,7 +17,6 @@ class UserCollectionPage extends StatefulWidget {
 
 class _UserCollectionPageState extends State<UserCollectionPage> {
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
 
   List<Map<String, dynamic>> _collectionList = [];
   Set<int> _selectedIds = {};
@@ -36,7 +35,6 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -47,7 +45,6 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -82,16 +79,6 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
       setState(() {
         _loading = false;
       });
-    }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
     }
   }
 
@@ -129,13 +116,13 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
 
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
-      FlutterToastPro.showMessage( '请选择商品');
+      FlutterToastPro.showMessage('请选择商品');
       return;
     }
 
     final response = await _storeProvider.batchUncollect(_selectedIds.toList());
     if (response.isSuccess) {
-      FlutterToastPro.showMessage( '取消收藏成功');
+      FlutterToastPro.showMessage('取消收藏成功');
       setState(() {
         _collectionList.removeWhere((item) => _selectedIds.contains(item['pid']));
         _count = _collectionList.length;
@@ -148,19 +135,11 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
   void _goToDetail(Map<String, dynamic> item) {
     bool isShow = item['is_show'] == 1 || item['is_show'] == true;
     if (!isShow) {
-      FlutterToastPro.showMessage( '该商品已下架');
+      FlutterToastPro.showMessage('该商品已下架');
       return;
     }
     int pid = item['pid'] ?? 0;
     Get.toNamed(AppRoutes.goodsDetail, parameters: {'id': pid.toString()});
-  }
-
-  void _onRefresh() {
-    _getCollectionList(reset: true);
-  }
-
-  void _onLoading() {
-    _getCollectionList();
   }
 
   Widget _buildCollectionItem(Map<String, dynamic> item) {
@@ -331,20 +310,36 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
             ),
 
           Expanded(
-            child: _collectionList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无收藏商品')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: () => _getCollectionList(reset: true),
+              onLoad: _loadEnd ? null : () => _getCollectionList(),
+              child: _collectionList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无收藏商品')],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.only(top: 8, bottom: 24),
                       itemCount: _collectionList.length,
                       itemBuilder: (context, index) => _buildCollectionItem(_collectionList[index]),
                     ),
-                  ),
+            ),
           ),
 
           _buildFooter(),
@@ -353,5 +348,3 @@ class _UserCollectionPageState extends State<UserCollectionPage> {
     );
   }
 }
-
-

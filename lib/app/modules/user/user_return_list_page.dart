@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+import 'package:get/get.dart';
 import '../../data/providers/order_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -16,7 +16,6 @@ class UserReturnListPage extends StatefulWidget {
 
 class _UserReturnListPageState extends State<UserReturnListPage> {
   final OrderProvider _orderProvider = OrderProvider();
-  final RefreshController _refreshController = RefreshController();
 
   int _type = 0;
   int _page = 1;
@@ -42,7 +41,6 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -53,7 +51,6 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
     }
 
     if (_loadEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -92,24 +89,6 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_loadEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
-  }
-
-  void _onRefresh() {
-    _getOrderList(reset: true);
-  }
-
-  void _onLoading() {
-    _getOrderList();
   }
 
   void _changeTabs(int index) {
@@ -122,7 +101,7 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
 
   void _goOrderDetails(String orderId) {
     if (orderId.isEmpty) {
-      FlutterToastPro.showMessage( '缺少订单号无法查看订单详情');
+      FlutterToastPro.showMessage('缺少订单号无法查看订单详情');
       return;
     }
     Get.toNamed('/order/detail', parameters: {'id': orderId, 'isReturn': '1'});
@@ -317,24 +296,38 @@ class _UserReturnListPageState extends State<UserReturnListPage> {
 
           // 订单列表
           Expanded(
-            child: _orderList.isEmpty && !_loading
-                ? const EmptyPage(text: '暂无退款订单~')
-                : SmartRefresher(
-                    controller: _refreshController,
-                    enablePullDown: true,
-                    enablePullUp: true,
-                    onRefresh: _onRefresh,
-                    onLoading: _onLoading,
-                    child: ListView.builder(
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: const ClassicFooter(
+                dragText: '上拉加载',
+                armedText: '松手加载',
+                processingText: '加载中...',
+                processedText: '加载完成',
+                failedText: '加载失败',
+                noMoreText: '我也是有底线的',
+              ),
+              onRefresh: () => _getOrderList(reset: true),
+              onLoad: _loadEnd ? null : () => _getOrderList(),
+              child: _orderList.isEmpty && !_loading
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [EmptyPage(text: '暂无退款订单~')],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: _orderList.length,
                       itemBuilder: (context, index) => _buildOrderItem(_orderList[index]),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import '../models/task_record_model.dart';
 
 /// 我的账户页面（积分/SWP详情）
@@ -17,7 +17,6 @@ class RyzPage extends StatefulWidget {
 
 class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   // 当前选中的 tab (0=仓库积分, 1=可用积分, 2=SWP)
   int _current = 0;
@@ -43,12 +42,6 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
     final args = Get.arguments as Map<String, dynamic>?;
     _current = args?['index'] ?? 0;
     _loadData();
-  }
-
-  @override
-  void dispose() {
-    _refreshController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -78,20 +71,11 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
     List<TaskRecordModel> dataList,
   ) async {
     try {
-      final response = await callback({
-        'page': _page,
-        'limit': _limit,
-        'pm': 0,
-      }, 0);
+      final response = await callback({'page': _page, 'limit': _limit, 'pm': 0}, 0);
       if (response.isSuccess && response.data != null) {
         final List<dynamic> list = response.data as List? ?? [];
         dataList.addAll(
-          list
-              .map(
-                (item) =>
-                    TaskRecordModel.fromJson(item as Map<String, dynamic>),
-              )
-              .toList(),
+          list.map((item) => TaskRecordModel.fromJson(item as Map<String, dynamic>)).toList(),
         );
       }
     } catch (e) {
@@ -99,10 +83,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  Future<dynamic> _getCommissionInfo(
-    Map<String, dynamic>? params,
-    int type,
-  ) async {
+  Future<dynamic> _getCommissionInfo(Map<String, dynamic>? params, int type) async {
     return await _userProvider.getCommissionInfo(params, type);
   }
 
@@ -131,12 +112,10 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
     _fuDouList.clear();
     _page = 1;
     await _loadData();
-    _refreshController.refreshCompleted();
   }
 
   Future<void> _onLoading() async {
     if (_loading || _loadend) {
-      _refreshController.loadComplete();
       return;
     }
 
@@ -145,29 +124,20 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
 
     try {
       final callback = _current == 2 ? _getCommissionInfo : _getFudouList;
-      final response = await callback({
-        'page': _page,
-        'limit': _limit,
-        'pm': 0,
-      }, 0);
+      final response = await callback({'page': _page, 'limit': _limit, 'pm': 0}, 0);
 
       if (response.isSuccess && response.data != null) {
         final List<dynamic> list = response.data as List? ?? [];
         final newData = list
-            .map(
-              (item) => TaskRecordModel.fromJson(item as Map<String, dynamic>),
-            )
+            .map((item) => TaskRecordModel.fromJson(item as Map<String, dynamic>))
             .toList();
         _loadend = newData.length < _limit;
 
         setState(() {
           _showDataList.addAll(newData);
         });
-
-        _refreshController.loadComplete();
       }
     } catch (e) {
-      _refreshController.loadFailed();
     } finally {
       _loading = false;
     }
@@ -295,10 +265,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                       child: GestureDetector(
                         onTap: _goExchange,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(4),
@@ -365,10 +332,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
         child: Center(
           child: Text(
             title,
-            style: TextStyle(
-              fontSize: 15,
-              color: isActive ? Colors.white : Colors.black,
-            ),
+            style: TextStyle(fontSize: 15, color: isActive ? Colors.white : Colors.black),
           ),
         ),
       ),
@@ -380,12 +344,27 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
       return const EmptyPage(title: '暂无数据~');
     }
 
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        readyText: '正在刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+        noMoreText: '我也是有底线的',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        readyText: '正在加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
       onRefresh: _onRefresh,
-      onLoading: _onLoading,
+      onLoad: _loadend ? null : _onLoading,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _showDataList.length,
@@ -399,9 +378,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
 
   Widget _buildListItem(TaskRecordModel item) {
     final isAdd = item.isIncome;
-    final number = _current == 1 || _current == 0
-        ? item.num
-        : item.displayAmount;
+    final number = _current == 1 || _current == 0 ? item.num : item.displayAmount;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -426,10 +403,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                 const SizedBox(height: 10),
                 Text(
                   '时间：${item.addTime}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF333333),
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
                 ),
               ],
             ),
@@ -442,17 +416,12 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isAdd
-                      ? const Color(0xFFFF5A5A)
-                      : const Color(0xFF333333),
+                  color: isAdd ? const Color(0xFFFF5A5A) : const Color(0xFF333333),
                   fontFamily: 'DIN Alternate',
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                item.title,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
-              ),
+              Text(item.title, style: const TextStyle(fontSize: 12, color: Color(0xFF333333))),
             ],
           ),
         ],

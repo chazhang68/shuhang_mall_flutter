@@ -1,6 +1,6 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/empty_page.dart';
@@ -16,7 +16,6 @@ class GxzPage extends StatefulWidget {
 
 class _GxzPageState extends State<GxzPage> {
   final UserProvider _userProvider = UserProvider();
-  final RefreshController _refreshController = RefreshController();
 
   // 筛选类型: 0-全部, 1-入账, 2-消费
   int _currentType = 0;
@@ -43,7 +42,6 @@ class _GxzPageState extends State<GxzPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -102,15 +100,6 @@ class _GxzPageState extends State<GxzPage> {
       setState(() {
         _isLoading = false;
       });
-      if (isRefresh) {
-        _refreshController.refreshCompleted();
-      } else {
-        if (_hasMore) {
-          _refreshController.loadComplete();
-        } else {
-          _refreshController.loadNoData();
-        }
-      }
     }
   }
 
@@ -242,23 +231,37 @@ class _GxzPageState extends State<GxzPage> {
   }
 
   Widget _buildRecordList() {
-    if (_recordList.isEmpty && !_isLoading) {
-      return const EmptyPage(text: '暂无数据~');
-    }
-
-    return SmartRefresher(
-      controller: _refreshController,
-      enablePullDown: true,
-      enablePullUp: true,
-      onRefresh: () => _loadRecordList(isRefresh: true),
-      onLoading: () => _loadRecordList(),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: _recordList.length,
-        itemBuilder: (context, index) {
-          return _buildRecordItem(_recordList[index]);
-        },
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
       ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
+      onRefresh: () => _loadRecordList(isRefresh: true),
+      onLoad: _hasMore ? () => _loadRecordList() : null,
+      child: _recordList.isEmpty && !_isLoading
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [EmptyPage(text: '暂无数据~')],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _recordList.length,
+              itemBuilder: (context, index) {
+                return _buildRecordItem(_recordList[index]);
+              },
+            ),
     );
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../controllers/user_sign_record_controller.dart';
 
 class UserSignRecordView extends GetView<UserSignRecordController> {
@@ -15,10 +15,16 @@ class UserSignRecordView extends GetView<UserSignRecordController> {
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
       ),
-      body: SmartRefresher(
-        controller: RefreshController(),
-        onRefresh: () {
-          controller.refresh();
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        onRefresh: () async {
+          await controller.refresh();
         },
         child: Obx(() {
           if (controller.isLoading) {
@@ -26,19 +32,25 @@ class UserSignRecordView extends GetView<UserSignRecordController> {
           }
 
           if (controller.signRecords.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.event_note, size: 60, color: Colors.grey[400]),
-                  SizedBox(height: 16),
-                  Text('暂无签到记录', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
-                ],
-              ),
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.event_note, size: 60, color: Colors.grey[400]),
+                      SizedBox(height: 16),
+                      Text('暂无签到记录', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                    ],
+                  ),
+                ),
+              ],
             );
           }
 
           return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: controller.signRecords.length,
             itemBuilder: (context, index) {
               final record = controller.signRecords[index];

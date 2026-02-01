@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
 import 'package:shuhang_mall_flutter/app/data/models/order_list_model.dart';
@@ -22,7 +22,6 @@ class OrderListPage extends StatefulWidget {
 class _OrderListPageState extends State<OrderListPage> with SingleTickerProviderStateMixin {
   final OrderProvider _orderProvider = OrderProvider();
   late TabController _tabController;
-  final List<RefreshController> _refreshControllers = [];
   static const int _pageLimit = 20;
 
   // Tab状态: 对齐 uniapp（9-全部, 0-待付款, 1-待发货, 2-待收货, 3-已完成）
@@ -46,7 +45,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     );
 
     for (int i = 0; i < _tabTitles.length; i++) {
-      _refreshControllers.add(RefreshController());
       _orderData[i] = [];
       _pageData[i] = 1;
       _hasMoreData[i] = true;
@@ -59,9 +57,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
   @override
   void dispose() {
     _tabController.dispose();
-    for (var controller in _refreshControllers) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
@@ -72,7 +67,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     }
 
     if (!(_hasMoreData[tabIndex] ?? true) && !isRefresh) {
-      _refreshControllers[tabIndex].loadNoData();
       return;
     }
 
@@ -87,7 +81,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       final response = await _orderProvider.getOrderList(params);
       if (!response.isSuccess) {
         FlutterToastPro.showMessage(response.msg);
-        _finishLoad(tabIndex, isRefresh, isError: true);
         return;
       }
 
@@ -102,11 +95,8 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
         _pageData[tabIndex] = page + 1;
         _hasMoreData[tabIndex] = newItems.length >= _pageLimit;
       });
-
-      _finishLoad(tabIndex, isRefresh);
     } catch (e) {
       FlutterToastPro.showMessage('加载失败');
-      _finishLoad(tabIndex, isRefresh, isError: true);
     }
   }
 
@@ -119,25 +109,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
         });
       }
     } catch (_) {}
-  }
-
-  void _finishLoad(int tabIndex, bool isRefresh, {bool isError = false}) {
-    final controller = _refreshControllers[tabIndex];
-    if (isRefresh) {
-      isError ? controller.refreshFailed() : controller.refreshCompleted();
-      return;
-    }
-
-    if (isError) {
-      controller.loadFailed();
-      return;
-    }
-
-    if (_hasMoreData[tabIndex] ?? false) {
-      controller.loadComplete();
-    } else {
-      controller.loadNoData();
-    }
   }
 
   @override
@@ -177,23 +148,36 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
 
   Widget _buildOrderList(int tabIndex, themeColor) {
     final orders = _orderData[tabIndex] ?? [];
-    final controller = _refreshControllers[tabIndex];
 
-    return SmartRefresher(
-      controller: controller,
-      enablePullDown: true,
-      enablePullUp: true,
+    final listView = orders.isEmpty
+        ? ListView(physics: const AlwaysScrollableScrollPhysics(), children: const [EmptyOrder()])
+        : ListView.builder(
+            padding: const EdgeInsets.all(10),
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              return _buildOrderCard(orders[index], themeColor);
+            },
+          );
+
+    return EasyRefresh(
+      header: const ClassicHeader(
+        dragText: '下拉刷新',
+        armedText: '松手刷新',
+        processingText: '刷新中...',
+        processedText: '刷新完成',
+        failedText: '刷新失败',
+      ),
+      footer: const ClassicFooter(
+        dragText: '上拉加载',
+        armedText: '松手加载',
+        processingText: '加载中...',
+        processedText: '加载完成',
+        failedText: '加载失败',
+        noMoreText: '我也是有底线的',
+      ),
       onRefresh: () => _loadData(tabIndex, isRefresh: true),
-      onLoading: () => _loadData(tabIndex),
-      child: orders.isEmpty
-          ? const EmptyOrder()
-          : ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: orders.length,
-              itemBuilder: (context, index) {
-                return _buildOrderCard(orders[index], themeColor);
-              },
-            ),
+      onLoad: (_hasMoreData[tabIndex] ?? false) ? () => _loadData(tabIndex) : null,
+      child: listView,
     );
   }
 

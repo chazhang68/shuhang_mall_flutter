@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/providers/activity_provider.dart';
 import '../../theme/theme_colors.dart';
@@ -16,7 +16,6 @@ class GroupbuyStatusPage extends StatefulWidget {
 
 class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
   final ActivityProvider _activityProvider = ActivityProvider();
-  final RefreshController _refreshController = RefreshController();
 
   int _pinkId = 0;
   int _pinkBool = 0; // 0进行中, 1成功, -1失败
@@ -40,12 +39,6 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _refreshController.dispose();
-    super.dispose();
-  }
-
   Future<void> _getCombinationPink() async {
     final response = await _activityProvider.getCombinationPink(_pinkId);
     if (response.isSuccess && response.data != null) {
@@ -61,7 +54,6 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
         _storeCombinationHost = response.data['storeCombinationHost'] ?? [];
       });
     }
-    _refreshController.refreshCompleted();
   }
 
   void _goDetail(int id) {
@@ -110,10 +102,10 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
     if (confirm == true) {
       final response = await _activityProvider.cancelCombination(_pinkId);
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( '取消成功');
+        FlutterToastPro.showMessage('取消成功');
         _getCombinationPink();
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     }
   }
@@ -525,7 +517,7 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
                       onTap: () {
                         // 分享到微信好友
                         _closePosters();
-                        FlutterToastPro.showMessage( '分享功能开发中');
+                        FlutterToastPro.showMessage('分享功能开发中');
                       },
                       child: Column(
                         children: [
@@ -547,7 +539,7 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
                       onTap: () {
                         // 生成海报
                         _closePosters();
-                        FlutterToastPro.showMessage( '海报生成中...');
+                        FlutterToastPro.showMessage('海报生成中...');
                       },
                       child: Column(
                         children: [
@@ -583,9 +575,14 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
       appBar: AppBar(title: const Text('拼团状态'), centerTitle: true),
       body: Stack(
         children: [
-          SmartRefresher(
-            controller: _refreshController,
-            enablePullDown: true,
+          EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              failedText: '刷新失败',
+            ),
             onRefresh: _getCombinationPink,
             child: ListView(
               children: [_buildHeader(), _buildStatusSection(), _buildRecommendSection()],
@@ -597,5 +594,3 @@ class _GroupbuyStatusPageState extends State<GroupbuyStatusPage> {
     );
   }
 }
-
-

@@ -1,6 +1,6 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../data/providers/user_provider.dart';
 import '../../data/providers/store_provider.dart';
 import '../../routes/app_routes.dart';
@@ -16,7 +16,6 @@ class UserMoneyPage extends StatefulWidget {
 class _UserMoneyPageState extends State<UserMoneyPage> {
   final UserProvider _userProvider = UserProvider();
   final StoreProvider _storeProvider = StoreProvider();
-  final RefreshController _refreshController = RefreshController();
 
   Map<String, dynamic> _userInfo = {};
   List<Map<String, dynamic>> _hostProduct = [];
@@ -33,7 +32,6 @@ class _UserMoneyPageState extends State<UserMoneyPage> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
     super.dispose();
   }
 
@@ -58,7 +56,6 @@ class _UserMoneyPageState extends State<UserMoneyPage> {
     }
 
     if (_hotScrollEnd) {
-      _refreshController.loadNoData();
       return;
     }
 
@@ -90,25 +87,6 @@ class _UserMoneyPageState extends State<UserMoneyPage> {
         _loading = false;
       });
     }
-
-    if (reset) {
-      _refreshController.refreshCompleted();
-    } else {
-      if (_hotScrollEnd) {
-        _refreshController.loadNoData();
-      } else {
-        _refreshController.loadComplete();
-      }
-    }
-  }
-
-  void _onRefresh() {
-    _getUserInfo();
-    _getHotProducts(reset: true);
-  }
-
-  void _onLoading() {
-    _getHotProducts();
   }
 
   Widget _buildHeader() {
@@ -252,13 +230,29 @@ class _UserMoneyPageState extends State<UserMoneyPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('我的余额'), centerTitle: true),
       backgroundColor: Colors.grey[100],
-      body: SmartRefresher(
-        controller: _refreshController,
-        enablePullDown: true,
-        enablePullUp: true,
-        onRefresh: _onRefresh,
-        onLoading: _onLoading,
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        footer: const ClassicFooter(
+          dragText: '上拉加载',
+          armedText: '松手加载',
+          processingText: '加载中...',
+          processedText: '加载完成',
+          failedText: '加载失败',
+          noMoreText: '我也是有底线的',
+        ),
+        onRefresh: () {
+          _getUserInfo();
+          return _getHotProducts(reset: true);
+        },
+        onLoad: _hotScrollEnd ? null : () => _getHotProducts(),
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

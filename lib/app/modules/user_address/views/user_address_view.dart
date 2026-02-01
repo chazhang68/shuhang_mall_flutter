@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_icons.dart';
@@ -8,268 +9,315 @@ class UserAddressView extends GetView<UserAddressController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() => Text(controller.addressId != null ? '修改地址' : '添加地址')),
+        title: Text(controller.addressId != null ? '修改地址' : '添加地址'),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
       ),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Form(
-          child: Column(
-            children: [
-              // 地址表单
-              Expanded(
-                child: SingleChildScrollView(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.white,
                   child: Column(
                     children: [
-                      // 姓名输入
-                      _buildInputField(
+                      _buildInputRow(
                         label: '姓名',
                         hint: '请输入姓名',
-                        initialValue: controller.addressInfo['real_name'] ?? '',
+                        controller: controller.realNameController,
                         keyboardType: TextInputType.text,
-                        onChanged: controller.updateRealName,
                       ),
-
-                      // 电话输入
-                      _buildInputField(
+                      _buildInputRow(
                         label: '联系电话',
                         hint: '请输入联系电话',
-                        initialValue: controller.addressInfo['phone'] ?? '',
+                        controller: controller.phoneController,
                         keyboardType: TextInputType.phone,
-                        onChanged: controller.updatePhone,
                       ),
-
-                      // 地区选择
-                      _buildRegionSelector(),
-
-                      // 详细地址
-                      _buildInputField(
+                      _buildRegionRow(theme),
+                      _buildInputRow(
                         label: '详细地址',
                         hint: '请填写具体地址',
-                        initialValue: controller.addressInfo['detail'] ?? '',
+                        controller: controller.detailController,
                         keyboardType: TextInputType.text,
-                        maxLines: 3,
-                        onChanged: controller.updateDetailAddress,
+                        maxLines: 1,
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              // 设置为默认地址
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                child: Obx(
-                  () => CheckboxListTile(
-                    title: const Text('设置为默认地址'),
-                    value: controller.isDefault,
-                    onChanged: (_) => controller.toggleDefaultAddress(),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                ),
-              ),
-
-              // 保存按钮
-              Container(
-                margin: const EdgeInsets.all(20),
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () => _saveAddress(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                  ),
-                  child: const Text(
-                    '立即保存',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-
-              // 导入微信地址按钮（暂时隐藏，因为需要微信插件）
-              /*
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
-                  onPressed: () => _importWechatAddress(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Theme.of(context).primaryColor),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Text(
-                    '导入微信地址',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-              */
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 构建输入字段
-  Widget _buildInputField({
-    required String label,
-    required String hint,
-    required String initialValue,
-    required Function(String) onChanged,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              TextFormField(
-                initialValue: initialValue,
-                onChanged: onChanged,
-                keyboardType: keyboardType,
-                maxLines: maxLines,
-                decoration: InputDecoration(
-                  hintText: hint,
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 构建地区选择器
-  Widget _buildRegionSelector() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('所在地区', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Obx(
-                () => InkWell(
-                  onTap: () => _showRegionPicker(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                const SizedBox(height: 12),
+                Container(
+                  color: Colors.white,
+                  height: 45,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: InkWell(
+                    onTap: controller.toggleDefaultAddress,
                     child: Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            '${controller.region[0]} ${controller.region[1]} ${controller.region[2]}',
-                            style: TextStyle(
-                              color: controller.region[0] == '省' ? Colors.grey : Colors.black,
-                            ),
+                        Obx(
+                          () => Checkbox(
+                            value: controller.isDefault,
+                            onChanged: (_) => controller.toggleDefaultAddress(),
                           ),
                         ),
-                        const Icon(AppIcons.forward, size: 16, color: Colors.grey),
+                        const Text(
+                          '设置为默认地址',
+                          style: TextStyle(fontSize: 14, color: Color(0xFF333333)),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 25),
+                SizedBox(
+                  width: 345,
+                  height: 43,
+                  child: ElevatedButton(
+                    onPressed: _saveAddress,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                      elevation: 0,
+                    ),
+                    child: const Text('立即保存', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: 345,
+                  height: 43,
+                  child: OutlinedButton(
+                    onPressed: null,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: theme.primaryColor),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                    child: Text(
+                      '导入微信地址',
+                      style: TextStyle(color: theme.primaryColor, fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputRow({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 98,
+            child: Text(label, style: const TextStyle(fontSize: 15, color: Color(0xFF333333))),
+          ),
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(fontSize: 15, color: Color(0xFFCCCCCC)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+              style: const TextStyle(fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegionRow(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 98,
+            child: Text('所在地区', style: TextStyle(fontSize: 15, color: Color(0xFF333333))),
+          ),
+          Expanded(
+            child: InkWell(
+              onTap: _showRegionPicker,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Obx(
+                      () => Text(
+                        '${controller.region[0]}，${controller.region[1]}，${controller.region[2]}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: controller.region[0] == '省'
+                              ? const Color(0xFFCCCCCC)
+                              : const Color(0xFF333333),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(AppIcons.location, size: 20, color: theme.primaryColor),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // 显示地区选择器
   void _showRegionPicker() {
-    // 这里需要实现省市区选择器，可以使用第三方库如 flutter_picker 或者自定义
-    // 暂时使用简单的对话框
-    Get.defaultDialog(
-      title: '选择地区',
-      content: Column(
-        children: [
-          Obx(() {
-            TextEditingController provinceController = TextEditingController(
-              text: controller.region[0],
-            );
-            return TextField(
-              controller: provinceController,
-              decoration: const InputDecoration(labelText: '省份'),
-              onChanged: (value) {
-                List<String> region = [...controller.region];
-                region[0] = value;
-                controller.updateRegion(region);
-              },
-            );
-          }),
-          Obx(() {
-            TextEditingController cityController = TextEditingController(
-              text: controller.region[1],
-            );
-            return TextField(
-              controller: cityController,
-              decoration: const InputDecoration(labelText: '城市'),
-              onChanged: (value) {
-                List<String> region = [...controller.region];
-                region[1] = value;
-                controller.updateRegion(region);
-              },
-            );
-          }),
-          Obx(() {
-            TextEditingController areaController = TextEditingController(
-              text: controller.region[2],
-            );
-            return TextField(
-              controller: areaController,
-              decoration: const InputDecoration(labelText: '区域'),
-              onChanged: (value) {
-                List<String> region = [...controller.region];
-                region[2] = value;
-                controller.updateRegion(region);
-              },
-            );
-          }),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Get.back(), child: const Text('取消')),
-        TextButton(
-          onPressed: () {
-            Get.back();
-          },
-          child: const Text('确定'),
-        ),
-      ],
+    if (controller.districtData.isEmpty) {
+      Get.snackbar('提示', '地区数据加载中');
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: Get.context!,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Obx(() {
+              if (controller.multiArray.length < 3) {
+                return const SizedBox(
+                  height: 120,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              int safeIndex(int length, int index) {
+                if (length <= 0) return 0;
+                return index.clamp(0, length - 1);
+              }
+
+              final provinceIndex = safeIndex(
+                controller.multiArray[0].length,
+                controller.multiIndex[0],
+              );
+              final cityIndex = safeIndex(
+                controller.multiArray[1].length,
+                controller.multiIndex[1],
+              );
+              final districtIndex = safeIndex(
+                controller.multiArray[2].length,
+                controller.multiIndex[2],
+              );
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(onPressed: () => Get.back(), child: const Text('取消')),
+                      const Text(
+                        '选择地区',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          controller.applyRegionSelection();
+                          Get.back();
+                        },
+                        child: const Text('确定'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 220,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: FixedExtentScrollController(
+                              initialItem: provinceIndex,
+                            ),
+                            backgroundColor: Colors.white,
+                            itemExtent: 36,
+                            onSelectedItemChanged: controller.updateProvinceIndex,
+                            children: controller.multiArray[0]
+                                .map(
+                                  (item) => Center(
+                                    child: Text(item, style: const TextStyle(fontSize: 13)),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: FixedExtentScrollController(initialItem: cityIndex),
+                            backgroundColor: Colors.white,
+                            itemExtent: 36,
+                            onSelectedItemChanged: controller.updateCityIndex,
+                            children: controller.multiArray[1]
+                                .map(
+                                  (item) => Center(
+                                    child: Text(item, style: const TextStyle(fontSize: 13)),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        Expanded(
+                          child: CupertinoPicker(
+                            scrollController: FixedExtentScrollController(
+                              initialItem: districtIndex,
+                            ),
+                            backgroundColor: Colors.white,
+                            itemExtent: 36,
+                            onSelectedItemChanged: controller.updateDistrictIndex,
+                            children: controller.multiArray[2]
+                                .map(
+                                  (item) => Center(
+                                    child: Text(item, style: const TextStyle(fontSize: 13)),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 
   // 保存地址
   void _saveAddress() async {
-    bool success = await controller.saveAddress();
-    if (success) {
-      Get.back(); // 返回上一页
-    }
+    await controller.saveAddress();
   }
 }
