@@ -8,6 +8,7 @@ import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
 
 /// 首页
 /// 对应原 pages/index/index.vue
@@ -214,7 +215,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                   childAspectRatio: 0.65,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
-                                  (context, index) => _buildGoodsItem(_hotList[index]),
+                                  (context, index) => HomeProductCard(
+                                    product: _hotList[index],
+                                    onTap: () => _goGoodsDetail(_hotList[index].id),
+                                  ),
                                   childCount: _hotList.length,
                                 ),
                               ),
@@ -413,100 +417,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               child: Text('输入你想搜索的商品', style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 14)),
             ),
             const Text('搜索', style: TextStyle(color: Color(0xFF444444), fontSize: 13)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 商品卡片
-  Widget _buildGoodsItem(HomeHotProduct item) {
-    final id = item.id;
-    final image = item.image;
-    final storeName = item.storeName;
-    final keyword = item.keyword;
-    final price = item.price.toStringAsFixed(2);
-
-    return GestureDetector(
-      onTap: () => _goGoodsDetail(id),
-      child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 商品图片
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-              child: CachedNetworkImage(
-                imageUrl: image,
-                width: double.infinity,
-                height: 169,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 169,
-                  color: Colors.grey[100],
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 169,
-                  color: Colors.grey[100],
-                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                ),
-              ),
-            ),
-            // 商品信息
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      storeName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    if (keyword.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        keyword,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFFE9AD00)),
-                      ),
-                    ],
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Image.asset(
-                          'assets/images/xiaofeiquan.png',
-                          width: 41,
-                          height: 15.5,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          price,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFA281D),
-                            fontFamily: 'DIN Alternate',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),

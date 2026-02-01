@@ -1,9 +1,11 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/widgets/banner_swiper.dart';
+import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
 
 /// 商城页面
 /// 对应原 pages/active/active.vue
@@ -15,16 +17,14 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
-  final AppController _appController = Get.find<AppController>();
   final PublicProvider _publicProvider = PublicProvider();
 
-  List<Map<String, dynamic>> _bannerList = [];
-  final List<Map<String, dynamic>> _productList = [];
+  List<HomeBannerItem> _banners = [];
+  final List<HomeHotProduct> _productList = [];
   int _page = 1;
   final int _limit = 10;
   bool _loading = false;
   bool _loadEnd = false;
-  String _loadTitle = '加载更多';
 
   @override
   void initState() {
@@ -35,10 +35,11 @@ class _ShopPageState extends State<ShopPage> {
 
   Future<void> _loadIndexData() async {
     try {
-      final response = await _publicProvider.getIndexDataByType(2);
+      final response = await _publicProvider.getHomeIndexDataByType(2);
       if (response.isSuccess && response.data != null) {
+        final data = response.data!;
         setState(() {
-          _bannerList = List<Map<String, dynamic>>.from(response.data['banner'] ?? []);
+          _banners = data.banners;
         });
       }
     } catch (e) {
@@ -51,25 +52,23 @@ class _ShopPageState extends State<ShopPage> {
 
     setState(() {
       _loading = true;
-      _loadTitle = '';
     });
 
     try {
-      final response = await _publicProvider.getProducts(2, {'page': _page, 'limit': _limit});
+      final response = await _publicProvider.getHomeProductsByType(2, {
+        'page': _page,
+        'limit': _limit,
+      });
       if (response.isSuccess && response.data != null) {
-        final List<dynamic> data = response.data is List ? response.data : [];
+        final data = response.data ?? <HomeHotProduct>[];
         setState(() {
           _loadEnd = data.length < _limit;
-          _productList.addAll(List<Map<String, dynamic>>.from(data));
-          _loadTitle = _loadEnd ? '我也是有底线的' : '加载更多';
+          _productList.addAll(data);
           _page++;
         });
       }
     } catch (e) {
       debugPrint('加载商品列表失败: $e');
-      setState(() {
-        _loadTitle = '加载更多';
-      });
     } finally {
       setState(() {
         _loading = false;
@@ -93,13 +92,39 @@ class _ShopPageState extends State<ShopPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = _appController.themeColor;
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    final bannerList = _banners
+        .map(
+          (banner) => {
+            'id': banner.id,
+            'image': banner.imgUrl,
+            'pic': banner.imgUrl,
+            'url': banner.url,
+            'type': banner.type,
+          },
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: RefreshIndicator(
+      body: EasyRefresh(
+        header: const ClassicHeader(
+          dragText: '下拉刷新',
+          armedText: '松手刷新',
+          processingText: '刷新中...',
+          processedText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        footer: const ClassicFooter(
+          dragText: '上拉加载',
+          armedText: '松手加载',
+          processingText: '加载中...',
+          processedText: '加载完成',
+          noMoreText: '我也是有底线的',
+          failedText: '加载失败',
+        ),
         onRefresh: _onRefresh,
+        onLoad: _loadEnd ? null : _loadProductList,
         child: CustomScrollView(
           slivers: [
             // 顶部Logo
@@ -127,8 +152,8 @@ class _ShopPageState extends State<ShopPage> {
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 height: 188,
-                child: _bannerList.isNotEmpty
-                    ? BannerSwiper(banners: _bannerList, height: 188)
+                child: bannerList.isNotEmpty
+                    ? BannerSwiper(banners: bannerList, height: 188)
                     : Container(
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
@@ -153,131 +178,13 @@ class _ShopPageState extends State<ShopPage> {
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final item = _productList[index];
-                  return _buildProductItem(item, themeColor);
+                  return HomeProductCard(product: item, onTap: () => _goDetail(item.id));
                 }, childCount: _productList.length),
               ),
             ),
 
-            // 加载更多
-            SliverToBoxAdapter(
-              child: _productList.isNotEmpty
-                  ? GestureDetector(
-                      onTap: _loadEnd ? null : _loadProductList,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        alignment: Alignment.center,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_loading)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            if (_loading) const SizedBox(width: 8),
-                            Text(
-                              _loadTitle,
-                              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-
             // 底部间距
             const SliverToBoxAdapter(child: SizedBox(height: 98)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductItem(Map<String, dynamic> item, dynamic themeColor) {
-    return GestureDetector(
-      onTap: () => _goDetail(item['id'] ?? 0),
-      child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 商品图片
-            AspectRatio(
-              aspectRatio: 1,
-              child: Image.network(
-                item['image'] ?? '',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.image, size: 40, color: Colors.grey),
-                  );
-                },
-              ),
-            ),
-            // 商品信息
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['store_name'] ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'SWP',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Color(0xFFFA281D),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              '${item['price'] ?? '0'}',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFFFA281D),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Image.asset(
-                          'assets/images/shop-card.png',
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.shopping_cart_outlined,
-                              size: 20,
-                              color: themeColor.primary,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
