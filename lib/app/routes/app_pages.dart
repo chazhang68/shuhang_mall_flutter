@@ -19,6 +19,7 @@ import 'package:shuhang_mall_flutter/app/modules/goods/goods_search_page.dart';
 
 // Cart模块
 import 'package:shuhang_mall_flutter/app/modules/cart/cart_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/chat/chat_page.dart';
 
 // Order模块
 import 'package:shuhang_mall_flutter/app/modules/order/order_confirm_page.dart';
@@ -303,6 +304,9 @@ class AppPages {
       binding: UserSignRecordBinding(),
       transition: Transition.rightToLeft,
     ),
+
+    // ==================== 客服 ====================
+    GetPage(name: AppRoutes.chat, page: () => const ChatPage(), transition: Transition.rightToLeft),
 
     // ==================== 实名认证 ====================
     GetPage(

@@ -6,6 +6,7 @@ import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 
 /// 登录页面
@@ -39,7 +40,20 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _ensureBackUrl();
     _loadLogo();
+  }
+
+  void _ensureBackUrl() {
+    final cached = Cache.getString(CacheKey.backUrl) ?? '';
+    if (cached.isNotEmpty) {
+      return;
+    }
+
+    final previousRoute = Get.previousRoute;
+    if (previousRoute.isNotEmpty && !previousRoute.contains('/login')) {
+      Cache.setString(CacheKey.backUrl, previousRoute);
+    }
   }
 
   @override
@@ -335,15 +349,15 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _sendCode() async {
     String phone = _accountController.text.trim();
     if (phone.isEmpty) {
-      FlutterToastPro.showMessage( '请填写手机号码');
+      FlutterToastPro.showMessage('请填写手机号码');
       return;
     }
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      FlutterToastPro.showMessage( '请输入正确的手机号码');
+      FlutterToastPro.showMessage('请输入正确的手机号码');
       return;
     }
     if (!_protocol) {
-      FlutterToastPro.showMessage( '请先阅读并同意协议');
+      FlutterToastPro.showMessage('请先阅读并同意协议');
       return;
     }
 
@@ -352,10 +366,10 @@ class _LoginPageState extends State<LoginPage> {
       type: _currentTab == 2 ? 'register' : 'login',
     );
     if (response.isSuccess) {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
       _startCountdown();
     } else {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 
@@ -375,13 +389,13 @@ class _LoginPageState extends State<LoginPage> {
   /// 提交
   Future<void> _submit() async {
     if (!_protocol) {
-      FlutterToastPro.showMessage( '请先阅读并同意协议');
+      FlutterToastPro.showMessage('请先阅读并同意协议');
       return;
     }
 
     String phone = _accountController.text.trim();
     if (phone.isEmpty) {
-      FlutterToastPro.showMessage( '请填写手机号码');
+      FlutterToastPro.showMessage('请填写手机号码');
       return;
     }
 
@@ -409,7 +423,7 @@ class _LoginPageState extends State<LoginPage> {
     String password = _passwordController.text;
 
     if (password.isEmpty) {
-      FlutterToastPro.showMessage( '请填写密码');
+      FlutterToastPro.showMessage('请填写密码');
       return;
     }
 
@@ -417,7 +431,7 @@ class _LoginPageState extends State<LoginPage> {
     if (response.isSuccess) {
       _handleLoginSuccess(response.data);
     } else {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 
@@ -427,7 +441,7 @@ class _LoginPageState extends State<LoginPage> {
     String captcha = _captchaController.text.trim();
 
     if (captcha.isEmpty) {
-      FlutterToastPro.showMessage( '请填写验证码');
+      FlutterToastPro.showMessage('请填写验证码');
       return;
     }
 
@@ -435,7 +449,7 @@ class _LoginPageState extends State<LoginPage> {
     if (response.isSuccess) {
       _handleLoginSuccess(response.data);
     } else {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 
@@ -450,40 +464,40 @@ class _LoginPageState extends State<LoginPage> {
 
     // 验证码检查
     if (captcha.isEmpty) {
-      FlutterToastPro.showMessage( '请填写验证码');
+      FlutterToastPro.showMessage('请填写验证码');
       return;
     }
     // 对应 uni-app: /^[\w\d]+$/i
     if (!RegExp(r'^[\w\d]+$').hasMatch(captcha)) {
-      FlutterToastPro.showMessage( '请输入正确的验证码');
+      FlutterToastPro.showMessage('请输入正确的验证码');
       return;
     }
 
     // 密码检查
     if (password.isEmpty) {
-      FlutterToastPro.showMessage( '请填写密码');
+      FlutterToastPro.showMessage('请填写密码');
       return;
     }
     // 对应 uni-app: /^([0-9]|[a-z]|[A-Z]){0,6}$/i 密码复杂度检查
     // 如果密码只包含数字或字母且长度<=6，则认为太简单
     if (RegExp(r'^[0-9a-zA-Z]{0,6}$').hasMatch(password)) {
-      FlutterToastPro.showMessage( '您输入的密码过于简单');
+      FlutterToastPro.showMessage('您输入的密码过于简单');
       return;
     }
 
     // 支付密码检查
     if (payPwd.isEmpty) {
-      FlutterToastPro.showMessage( '请填写支付6位密码');
+      FlutterToastPro.showMessage('请填写支付6位密码');
       return;
     }
     if (payPwd.length != 6) {
-      FlutterToastPro.showMessage( '请填写6位数字支付密码');
+      FlutterToastPro.showMessage('请填写6位数字支付密码');
       return;
     }
 
     // 邀请码检查
     if (spread.isEmpty) {
-      FlutterToastPro.showMessage( '请填写邀请码');
+      FlutterToastPro.showMessage('请填写邀请码');
       return;
     }
 
@@ -496,7 +510,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (response.isSuccess) {
-      FlutterToastPro.showMessage( response.msg.isNotEmpty ? response.msg : '注册成功');
+      FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '注册成功');
       // 对应 uni-app: that.current = 0 注册成功后切换到登录
       setState(() => _currentTab = 0);
       // 清空表单
@@ -505,7 +519,7 @@ class _LoginPageState extends State<LoginPage> {
       _payPwdController.clear();
       _spreadController.clear();
     } else {
-      FlutterToastPro.showMessage( response.msg);
+      FlutterToastPro.showMessage(response.msg);
     }
   }
 
@@ -513,7 +527,7 @@ class _LoginPageState extends State<LoginPage> {
   /// 对应 uni-app: loginMobile/submit 成功回调
   Future<void> _handleLoginSuccess(dynamic data) async {
     if (data == null) {
-      FlutterToastPro.showMessage( '登录失败');
+      FlutterToastPro.showMessage('登录失败');
       return;
     }
 
@@ -522,7 +536,7 @@ class _LoginPageState extends State<LoginPage> {
     final int expiresTime = loginData['expires_time'] ?? 0;
 
     if (token.isEmpty) {
-      FlutterToastPro.showMessage( '登录失败，token为空');
+      FlutterToastPro.showMessage('登录失败，token为空');
       return;
     }
 
@@ -554,27 +568,22 @@ class _LoginPageState extends State<LoginPage> {
         _navigateAfterLogin(backUrl);
       } else {
         await appController.logout();
-        FlutterToastPro.showMessage( '获取用户信息失败');
+        FlutterToastPro.showMessage('获取用户信息失败');
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
       await appController.logout();
-      FlutterToastPro.showMessage( '获取用户信息失败');
+      FlutterToastPro.showMessage('获取用户信息失败');
     }
   }
 
   /// 登录后跳转
   /// 对应 uni-app: uni.reLaunch({url: backUrl})
   void _navigateAfterLogin(String backUrl) {
-    /* // 如果返回URL是登录页，改为首页
-    if (backUrl.isEmpty || backUrl.contains('/user/login')) {
+    if (backUrl.isEmpty || backUrl.contains('/login')) {
       Get.offAllNamed(AppRoutes.main);
-    } else {
-      // 返回之前的页面
-      Get.offAllNamed(backUrl);
-    }*/
-    Get.back();
+      return;
+    }
+    Get.offAllNamed(backUrl);
   }
 }
-
-

@@ -141,70 +141,33 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: Column(
-        children: [
-          // 自定义AppBar
-          Container(
-            color: theme.primaryColor,
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Get.back(),
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        '订单详情',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
+      appBar: AppBar(title: const Text('订单详情'), centerTitle: true),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 订单状态卡片
+                  _buildStatusCard(theme),
+
+                  // 收货地址
+                  _buildAddressCard(theme),
+
+                  // 商品列表
+                  _buildGoodsCard(theme),
+
+                  // 价格信息
+                  _buildPriceCard(theme),
+
+                  // 订单信息
+                  _buildOrderInfoCard(theme),
+
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
-          ),
-
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        // 订单状态卡片
-                        _buildStatusCard(theme),
-
-                        // 收货地址
-                        _buildAddressCard(theme),
-
-                        // 商品列表
-                        _buildGoodsCard(theme),
-
-                        // 价格信息
-                        _buildPriceCard(theme),
-
-                        // 订单信息
-                        _buildOrderInfoCard(theme),
-
-                        const SizedBox(height: 80),
-                      ],
-                    ),
-                  ),
-          ),
-
-          // 底部按钮
-          if (!isLoading) _buildBottomButtons(theme),
-        ],
-      ),
+      bottomNavigationBar: Visibility(visible: !isLoading, child: _buildBottomButtons(theme)),
     );
   }
 
@@ -239,6 +202,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -302,6 +266,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -349,6 +314,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildPriceRow('商品总价', '¥$totalPrice'),
           _buildPriceRow('优惠券', '-¥$couponPrice'),
@@ -393,6 +359,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('订单信息', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -432,6 +399,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Widget _buildBottomButtons(ThemeData theme) {
     return Container(
+      width: MediaQuery.sizeOf(context).width,
+      // height: 48,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -443,55 +412,68 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // 待付款状态
-            if (statusType == 0) ...[
-              OutlinedButton(onPressed: _cancelOrder, child: const Text('取消订单')),
-              const SizedBox(width: 12),
-              ElevatedButton(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // 待付款状态
+          if (statusType == 0) ...[
+            SizedBox(
+              width: 120,
+              height: 40,
+              child: OutlinedButton(onPressed: _cancelOrder, child: const Text('取消订单')),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 120,
+              height: 40,
+              child: ElevatedButton(
                 onPressed: _goPayment,
                 style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor),
                 child: const Text('立即付款', style: TextStyle(color: Colors.white)),
               ),
-            ],
+            ),
+          ],
 
-            // 待收货状态
-            if (statusType == 2) ...[
-              OutlinedButton(
+          // 待收货状态
+          if (statusType == 2) ...[
+            SizedBox(
+              width: 120,
+              height: 40,
+              child: OutlinedButton(
                 onPressed: () {
                   Get.toNamed(AppRoutes.orderLogistics, parameters: {'orderId': orderId});
                 },
                 child: const Text('查看物流'),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton(
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 120,
+              height: 40,
+              child: ElevatedButton(
                 onPressed: _confirmReceipt,
                 style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor),
                 child: const Text('确认收货', style: TextStyle(color: Colors.white)),
               ),
-            ],
-
-            // 已完成状态
-            if (statusType == 4) ...[
-              OutlinedButton(
-                onPressed: () {
-                  _deleteOrder();
-                },
-                child: const Text('删除订单'),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _submitAgainOrder,
-                style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor),
-                child: const Text('再次购买', style: TextStyle(color: Colors.white)),
-              ),
-            ],
+            ),
           ],
-        ),
+
+          // 已完成状态
+          if (statusType == 4) ...[
+            OutlinedButton(
+              onPressed: () {
+                _deleteOrder();
+              },
+              child: const Text('删除订单'),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _submitAgainOrder,
+              style: ElevatedButton.styleFrom(backgroundColor: theme.primaryColor),
+              child: const Text('再次购买', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ],
       ),
     );
   }
