@@ -121,7 +121,11 @@ class UserProvider {
 
   /// 用户签到
   Future<ApiResponse> setSignIntegral() async {
-    return await _api.post('sign/integral');
+    final response = await _api.post('sign/integral', data: {});
+    if (response.status == -1 && response.msg.contains('404')) {
+      return await _api.get('sign/integral');
+    }
+    return response;
   }
 
   /// 签到列表(年月)

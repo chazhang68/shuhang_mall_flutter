@@ -115,7 +115,7 @@ class _UserPageState extends State<UserPage>
       const _ServiceMenuItem(
         icon: 'assets/images/shimingrenzheng.png',
         title: '实名认证',
-        route: AppRoutes.userSign,
+        route: AppRoutes.realName,
         show: true,
       ),
       const _ServiceMenuItem(
@@ -171,6 +171,16 @@ class _UserPageState extends State<UserPage>
     final controller = Get.find<AppController>();
     if (!controller.isLogin) {
       Get.toNamed(AppRoutes.login);
+      return;
+    }
+
+    if (route == AppRoutes.realName) {
+      final isSigned = controller.userInfo?.isSign == true;
+      if (isSigned) {
+        FlutterToastPro.showMessage('已实名');
+        return;
+      }
+      Get.toNamed(AppRoutes.realName);
       return;
     }
 

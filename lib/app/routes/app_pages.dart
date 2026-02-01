@@ -35,6 +35,8 @@ import 'package:shuhang_mall_flutter/app/modules/user/address_list_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/address_edit_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/wallet_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/coupon_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/real_name/real_name_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/real_name/manual_review_page.dart';
 
 // Activity模块
 import 'package:shuhang_mall_flutter/app/modules/activity/seckill_list_page.dart';
@@ -299,6 +301,18 @@ class AppPages {
       name: AppRoutes.userSignList,
       page: () => const UserSignRecordView(),
       binding: UserSignRecordBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 实名认证 ====================
+    GetPage(
+      name: AppRoutes.realName,
+      page: () => const RealNamePage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.manualReview,
+      page: () => const ManualReviewPage(),
       transition: Transition.rightToLeft,
     ),
 

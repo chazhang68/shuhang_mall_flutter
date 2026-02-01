@@ -144,4 +144,18 @@ class StoreProvider {
   Future<ApiResponse> getPromoteProducts(Map<String, dynamic>? params) async {
     return await _api.get('groom/list/4', queryParameters: params, noAuth: true);
   }
+
+  // ==================== 实名认证 ====================
+
+  /// 提交实名认证信息
+  /// 对应原 api/store.js 的 createRealName
+  Future<ApiResponse> createRealName(Map<String, dynamic> data) async {
+    return await _api.post('user/real_name', data: data);
+  }
+
+  /// 获取实名认证详情
+  /// 对应原 api/store.js 的 getRealDetails
+  Future<ApiResponse> getRealDetails() async {
+    return await _api.get('user/apply/info', noAuth: true);
+  }
 }
