@@ -34,15 +34,10 @@ class CouponTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _CouponTagPainter(
-        borderColor: color,
-        backgroundColor: backgroundColor,
-      ),
+      size: Size(48, 16),
+      painter: _CouponTagPainter(borderColor: color, backgroundColor: backgroundColor),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: verticalPadding,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
         child: Text(
           text,
           style: TextStyle(
@@ -62,10 +57,7 @@ class _CouponTagPainter extends CustomPainter {
   final Color borderColor;
   final Color backgroundColor;
 
-  _CouponTagPainter({
-    required this.borderColor,
-    required this.backgroundColor,
-  });
+  _CouponTagPainter({required this.borderColor, required this.backgroundColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,7 +133,6 @@ class _CouponTagPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CouponTagPainter oldDelegate) {
-    return oldDelegate.borderColor != borderColor ||
-        oldDelegate.backgroundColor != backgroundColor;
+    return oldDelegate.borderColor != borderColor || oldDelegate.backgroundColor != backgroundColor;
   }
 }

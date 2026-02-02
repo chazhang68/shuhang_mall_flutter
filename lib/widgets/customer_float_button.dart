@@ -13,12 +13,8 @@ class CustomerFloatButton extends StatefulWidget {
   /// 是否显示
   final bool visible;
 
-  const CustomerFloatButton({
-    Key? key,
-    this.productId,
-    this.initialTop,
-    this.visible = true,
-  }) : super(key: key);
+  const CustomerFloatButton({Key? key, this.productId, this.initialTop, this.visible = true})
+    : super(key: key);
 
   @override
   State<CustomerFloatButton> createState() => _CustomerFloatButtonState();
@@ -55,17 +51,17 @@ class _CustomerFloatButtonState extends State<CustomerFloatButton> {
           setState(() {
             // 更新位置，限制在安全区域内
             double newTop = _top + details.delta.dy;
-            
+
             // 限制最小和最大位置
             final minTop = statusBarHeight + 66.0;
             final maxTop = screenHeight - bottomPadding - 96.0;
-            
+
             if (newTop < minTop) {
               newTop = minTop;
             } else if (newTop > maxTop) {
               newTop = maxTop;
             }
-            
+
             _top = newTop;
           });
         },
@@ -73,21 +69,11 @@ class _CustomerFloatButtonState extends State<CustomerFloatButton> {
           width: 48.0,
           height: 48.0,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(24.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 8.0,
-                offset: const Offset(0, 1.5),
-              ),
-            ],
+            color: Colors.white.withValues(alpha: 0.8),
+            shape: .circle,
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6.0)],
           ),
-          child: const Icon(
-            Icons.headset_mic_outlined,
-            size: 24.0,
-            color: Color(0xFF666666),
-          ),
+          child: const Icon(Icons.headset_mic_outlined, size: 24.0, color: Colors.black),
         ),
       ),
     );

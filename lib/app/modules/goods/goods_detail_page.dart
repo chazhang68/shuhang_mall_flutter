@@ -1,3 +1,5 @@
+import 'package:chat_context_menu/chat_context_menu.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -32,26 +34,25 @@ class GoodsDetailPage extends StatefulWidget {
 
 class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  bool _showTopBar = false;
-  int _currentNavIndex = 0; // 当前高亮的导航索引
-  bool _isScrolling = false; // 是否正在滚动（防止滚动时切换导航）
 
   // 商品ID
   int _productId = 0;
+
   // 是否加载中
   bool _isLoading = true;
+
   // 错误信息
   String? _errorMsg;
-  
+
   // 各个区域的 GlobalKey，用于滚动定位
   final GlobalKey _productInfoKey = GlobalKey();
   final GlobalKey _productDetailKey = GlobalKey();
   final GlobalKey _productReviewKey = GlobalKey();
-  
+
   // 导航列表
   List<String> _navList = [];
+
   // 各个区域的位置信息
-  List<double> _sectionOffsets = [];
 
   final StoreProvider _storeProvider = StoreProvider();
   final OrderProvider _orderProvider = OrderProvider();
@@ -60,37 +61,42 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
 
   // 商品数据
   ProductStoreInfo? _productInfo;
+
   // 商品详情描述(HTML)
   String _description = '';
+
   // 商品属性
   List<ProductAttr> _productAttr = [];
+
   // 商品规格值
   Map<String, ProductSku> _productValue = {};
+
   // 评论列表
   List<ProductReply> _reviews = [];
+
   // 评论数量
   int _replyCount = 0;
+
   // 优惠券列表
   List<ProductCoupon> _couponList = [];
+
   // 活动列表
   // ignore: unused_field
   List<ProductActivity> _activity = [];
+
   // 购物车数量
   int _cartCount = 0;
+
   // 是否已是付费会员
   bool _isMoneyLevel = false;
 
   ProductStoreInfo get _storeInfo => _productInfo ?? ProductStoreInfo.empty();
+
   bool get _hasSpec => _productAttr.isNotEmpty && _productValue.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-
-    // 获取商品ID参数 - 支持两种传参方式
-    // 1. arguments: Get.toNamed(route, arguments: {'id': id})
-    // 2. parameters: Get.toNamed(route, parameters: {'id': id.toString()})
     final argId = Get.arguments?['id'];
     final paramId = Get.parameters['id'];
     _productId = int.tryParse(argId?.toString() ?? paramId ?? '0') ?? 0;
@@ -188,7 +194,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           _couponList = data.coupons;
           _activity = data.activity;
           _isLoading = false;
-          
+
           // 构建导航列表（与 uni-app 一致）
           _navList = ['商品'.tr, '详情'.tr];
           if (_replyCount > 0) {
@@ -196,7 +202,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           }
         });
         debugPrint('商品详情加载成功: ${data.storeInfo.storeName}');
-        
+
         // 延迟计算区域位置
         Future.delayed(const Duration(milliseconds: 500), () {
           _calculateSectionOffsets();
@@ -222,67 +228,11 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     super.dispose();
   }
 
-  void _onScroll() {
-    final offset = _scrollController.offset;
-    final showTopBar = offset > 200;
-    
-    if (showTopBar != _showTopBar) {
-      setState(() {
-        _showTopBar = showTopBar;
-      });
-    }
-    
-    // 根据滚动位置自动高亮对应的导航
-    if (!_isScrolling && _sectionOffsets.isNotEmpty) {
-      _updateNavIndexByScroll(offset);
-    }
-  }
-  
-  /// 根据滚动位置更新导航索引
-  void _updateNavIndexByScroll(double offset) {
-    for (int i = 0; i < _sectionOffsets.length; i++) {
-      final sectionStart = _sectionOffsets[i];
-      final sectionEnd = i < _sectionOffsets.length - 1 
-          ? _sectionOffsets[i + 1] 
-          : double.infinity;
-      
-      if (offset >= sectionStart - 100 && offset < sectionEnd - 100) {
-        if (_currentNavIndex != i) {
-          setState(() {
-            _currentNavIndex = i;
-          });
-        }
-        break;
-      }
-    }
-  }
-  
-  /// 点击导航，滚动到对应区域
-  void _scrollToSection(int index) {
-    if (index >= _sectionOffsets.length) return;
-    
-    setState(() {
-      _isScrolling = true;
-      _currentNavIndex = index;
-    });
-    
-    final targetOffset = _sectionOffsets[index];
-    _scrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    ).then((_) {
-      setState(() {
-        _isScrolling = false;
-      });
-    });
-  }
-  
   /// 计算各个区域的位置
   void _calculateSectionOffsets() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final offsets = <double>[];
-      
+
       // 商品信息区域
       final productInfoContext = _productInfoKey.currentContext;
       if (productInfoContext != null) {
@@ -290,7 +240,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         final position = box.localToGlobal(Offset.zero);
         offsets.add(position.dy + _scrollController.offset);
       }
-      
+
       // 商品详情区域
       final productDetailContext = _productDetailKey.currentContext;
       if (productDetailContext != null) {
@@ -298,7 +248,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         final position = box.localToGlobal(Offset.zero);
         offsets.add(position.dy + _scrollController.offset);
       }
-      
+
       // 评价区域
       final productReviewContext = _productReviewKey.currentContext;
       if (productReviewContext != null) {
@@ -306,11 +256,9 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         final position = box.localToGlobal(Offset.zero);
         offsets.add(position.dy + _scrollController.offset);
       }
-      
+
       if (mounted) {
-        setState(() {
-          _sectionOffsets = offsets;
-        });
+        setState(() {});
       }
     });
   }
@@ -367,37 +315,23 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   SliverToBoxAdapter(child: _buildProductImages()),
                   // 商品信息区域（带 key）
                   SliverToBoxAdapter(
-                    child: Container(
-                      key: _productInfoKey,
-                      child: _buildProductInfo(themeColor),
-                    ),
+                    child: Container(key: _productInfoKey, child: _buildProductInfo(themeColor)),
                   ),
                   // 商品详情区域（带 key）
                   SliverToBoxAdapter(
-                    child: Container(
-                      key: _productDetailKey,
-                      child: _buildProductDetail(),
-                    ),
+                    child: Container(key: _productDetailKey, child: _buildProductDetail()),
                   ),
                   // 评价区域（带 key）
                   if (_replyCount > 0)
                     SliverToBoxAdapter(
-                      child: Container(
-                        key: _productReviewKey,
-                        child: _buildProductReviews(),
-                      ),
+                      child: Container(key: _productReviewKey, child: _buildProductReviews()),
                     ),
                 ],
               ),
-              // 顶部导航栏（带 Tab）
-              _buildTopNavBar(themeColor),
               // 返回和更多按钮
               _buildTopButtons(),
               // 客服浮动按钮
-              CustomerFloatButton(
-                productId: _productId,
-                visible: _productId > 0,
-              ),
+              CustomerFloatButton(productId: _productId, visible: _productId > 0),
             ],
           ),
           bottomNavigationBar: _buildBottomBar(themeColor),
@@ -406,61 +340,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     );
   }
 
-  /// 顶部导航栏（带 Tab）
-  Widget _buildTopNavBar(ThemeColorData themeColor) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      color: _showTopBar ? Colors.white : Colors.transparent,
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          height: 44,
-          child: _showTopBar && _navList.isNotEmpty
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _navList.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final title = entry.value;
-                    final isActive = _currentNavIndex == index;
-                    
-                    return GestureDetector(
-                      onTap: () => _scrollToSection(index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                                color: isActive ? themeColor.primary : const Color(0xFF666666),
-                              ),
-                            ),
-                            if (isActive) ...[
-                              const SizedBox(height: 2),
-                              Container(
-                                width: 20,
-                                height: 3,
-                                decoration: BoxDecoration(
-                                  color: themeColor.primary,
-                                  borderRadius: BorderRadius.circular(1.5),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                )
-              : const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
-  
   /// 返回和更多按钮
   Widget _buildTopButtons() {
     return SafeArea(
@@ -477,73 +356,87 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: _showTopBar
-                      ? Colors.white.withAlpha((0.9 * 255).round())
-                      : Colors.black.withAlpha((0.3 * 255).round()),
-                  borderRadius: BorderRadius.circular(16),
-                  border: _showTopBar 
-                      ? Border.all(color: const Color(0xFFE0E0E0), width: 0.5)
-                      : null,
+                  color: Colors.black.withValues(alpha: 0.35),
+                  shape: .circle,
                 ),
-                child: Icon(
-                  Icons.arrow_back_ios_new,
-                  size: 16,
-                  color: _showTopBar ? Colors.black : Colors.white,
-                ),
+                alignment: .center,
+                child: Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.white),
               ),
             ),
             const Spacer(),
-            // 更多按钮
-            PopupMenuButton<String>(
-              offset: const Offset(0, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              color: Colors.white,
-              elevation: 4,
-              padding: EdgeInsets.zero,
-              onSelected: (value) {
-                switch (value) {
-                  case 'home':
-                    _goHome();
-                    break;
-                  case 'search':
-                    Get.toNamed(AppRoutes.goodsSearch);
-                    break;
-                  case 'cart':
-                    Get.offAllNamed(AppRoutes.main, arguments: {'tab': 3});
-                    break;
-                  case 'collection':
-                    Get.toNamed(AppRoutes.userCollection);
-                    break;
-                  case 'user':
-                    Get.offAllNamed(AppRoutes.main, arguments: {'tab': 4});
-                    break;
-                }
+
+            ChatContextMenuWrapper(
+              backgroundColor: Colors.white,
+              borderRadius: .circular(8),
+              menuConstraints: BoxConstraints(maxWidth: 124),
+              spacing: 0,
+              horizontalMargin: 0,
+              widgetBuilder: (BuildContext context, void Function() showMenu) {
+                return GestureDetector(
+                  onTap: showMenu,
+                  behavior: .opaque,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      shape: .circle,
+                    ),
+                    child: Icon(CupertinoIcons.ellipsis, size: 18, color: Colors.white),
+                  ),
+                );
               },
-              itemBuilder: (context) => [
-                _buildPopupMenuItem('home', Icons.home_outlined, '首页'),
-                _buildPopupMenuItem('search', Icons.search, '搜索'),
-                _buildPopupMenuItem('cart', Icons.shopping_cart_outlined, '购物车'),
-                _buildPopupMenuItem('collection', Icons.favorite_border, '我的收藏'),
-                _buildPopupMenuItem('user', Icons.person_outline, '个人中心'),
-              ],
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _showTopBar
-                      ? Colors.white.withAlpha((0.9 * 255).round())
-                      : Colors.black.withAlpha((0.3 * 255).round()),
-                  borderRadius: BorderRadius.circular(16),
-                  border: _showTopBar 
-                      ? Border.all(color: const Color(0xFFE0E0E0), width: 0.5)
-                      : null,
-                ),
-                child: Icon(
-                  Icons.more_horiz,
-                  size: 18,
-                  color: _showTopBar ? Colors.black : Colors.white,
-                ),
-              ),
+              menuBuilder: (BuildContext context, void Function() hideMenu) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _contextMenuItem(
+                      icon: Icons.home_outlined,
+                      label: "首页",
+                      onTap: () {
+                        hideMenu();
+                        _goHome();
+                      },
+                    ),
+                    Divider(indent: 24, height: 1),
+                    _contextMenuItem(
+                      icon: Icons.search,
+                      label: "搜索",
+                      onTap: () {
+                        hideMenu();
+                        Get.toNamed(AppRoutes.goodsSearch);
+                      },
+                    ),
+                    Divider(indent: 24, height: 1),
+                    _contextMenuItem(
+                      icon: Icons.shopping_cart_outlined,
+                      label: "购物车",
+                      onTap: () {
+                        hideMenu();
+                        Get.offAllNamed(AppRoutes.main, arguments: {'tab': 3});
+                      },
+                    ),
+                    Divider(indent: 24, height: 1),
+                    _contextMenuItem(
+                      icon: Icons.favorite_border,
+                      label: "我的收藏",
+                      onTap: () {
+                        hideMenu();
+                        Get.toNamed(AppRoutes.userCollection);
+                      },
+                    ),
+                    Divider(indent: 24, height: 1),
+                    _contextMenuItem(
+                      icon: Icons.person_outline,
+                      label: "个人中心",
+                      onTap: () {
+                        hideMenu();
+                        Get.offAllNamed(AppRoutes.main, arguments: {'tab': 4});
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -551,85 +444,21 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     );
   }
 
-  PopupMenuItem<String> _buildPopupMenuItem(String value, IconData icon, String text) {
-    return PopupMenuItem<String>(
-      value: value,
-      height: 44,
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: const Color(0xFF666666)),
-          const SizedBox(width: 12),
-          Text(text, style: const TextStyle(fontSize: 14, color: Color(0xFF333333))),
-        ],
+  Widget _contextMenuItem({required IconData icon, required String label, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: .symmetric(horizontal: 6, vertical: 8),
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(icon, size: 20),
+            Expanded(
+              child: Text(label, style: TextStyle(fontSize: 13), textAlign: .start),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-  
-  /// 显示更多菜单（保留底部菜单备用）
-  void _showMoreMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return GetBuilder<AppController>(
-          builder: (controller) {
-            final themeColor = controller.themeColor;
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 标题
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '更多'.tr,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.close, size: 24, color: Color(0xFF999999)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    // 分享商品
-                    ListTile(
-                      leading: Icon(Icons.share, color: themeColor.primary),
-                      title: Text('分享商品'.tr),
-                      trailing: const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC)),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showShareDialog();
-                      },
-                    ),
-                    // 返回首页
-                    ListTile(
-                      leading: Icon(Icons.home, color: themeColor.primary),
-                      title: Text('返回首页'.tr),
-                      trailing: const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC)),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _goHome();
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 
@@ -672,6 +501,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     }
 
     return Stack(
+      alignment: .center,
       children: [
         ProductSwiper(
           images: images,
@@ -686,24 +516,18 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   /// 视频播放按钮
   Widget _buildVideoPlayButton(String videoLink) {
     return Positioned(
-      left: 15,
-      bottom: 50,
       child: GestureDetector(
         onTap: () => _playVideo(videoLink),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          width: 56,
+          height: 56,
+          alignment: .center,
           decoration: BoxDecoration(
-            color: Colors.black.withAlpha(150),
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.black.withValues(alpha: 0.3),
+            shape: .circle,
+            border: .all(color: Colors.white, width: 1.5),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.play_circle_outline, size: 20, color: Colors.white),
-              SizedBox(width: 4),
-              Text('播放视频', style: TextStyle(fontSize: 12, color: Colors.white)),
-            ],
-          ),
+          child: Icon(Icons.play_arrow, size: 34, color: Colors.white),
         ),
       ),
     );
@@ -760,10 +584,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   Widget _buildProductInfo(ThemeColorData themeColor) {
     final storeInfo = _storeInfo;
     final price = storeInfo.price;
-    final otPrice = storeInfo.otPrice;
     final storeName = storeInfo.storeName;
-    final sales = storeInfo.fsales > 0 ? storeInfo.fsales : storeInfo.sales;
-    final stock = storeInfo.stock;
     final unitName = storeInfo.unitName;
     final giveIntegral = storeInfo.giveIntegral;
     // VIP相关
@@ -794,7 +615,15 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const CouponTag(fontSize: 12),
+                    // const CouponTag(fontSize: 12),
+                    Text(
+                      '消费券',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: themeColor.price,
+                      ),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       price,
@@ -814,7 +643,9 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
@@ -853,14 +684,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
               // 分享按钮（与 uni-app 一致）
               GestureDetector(
                 onTap: _showShareDialog,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(
-                    Icons.open_in_new,
-                    size: 22,
-                    color: Color(0xFF666666),
-                  ),
-                ),
+                child: const Icon(Icons.open_in_new, size: 22, color: Color(0xFF666666)),
               ),
             ],
           ),
@@ -876,26 +700,16 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           ),
           // 限购信息
           if (limitType > 0) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: themeColor.primary.withAlpha(25),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '${limitType == 1 ? "单次限购" : "永久限购"}$limitNum$unitName',
-                style: TextStyle(fontSize: 12, color: themeColor.primary),
-              ),
+            const SizedBox(height: 4),
+            Text(
+              '${limitType == 1 ? "单次限购" : "永久限购"}$limitNum$unitName',
+              style: TextStyle(fontSize: 10, color: themeColor.primary),
             ),
           ],
           // 送消费券信息（与 uni-app 一致的位置）
           if (giveIntegral > 0) ...[
             const SizedBox(height: 12),
-            Text(
-              '送消费券: $giveIntegral',
-              style: TextStyle(fontSize: 12, color: themeColor.primary),
-            ),
+            Text('送消费券: $giveIntegral', style: TextStyle(fontSize: 12, color: themeColor.primary)),
           ],
           const SizedBox(height: 8),
           // SVIP开通入口（与 uni-app 一致的位置）
@@ -1215,19 +1029,19 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 15),
+          Container(
+            height: 12,
+            width: double.infinity,
+            decoration: BoxDecoration(color: Colors.grey.shade200),
+          ),
           // 产品介绍标题
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 15),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             alignment: Alignment.center,
             child: const Text(
               '产品介绍',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF333333),
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333)),
             ),
           ),
           if (_description.isEmpty)
@@ -1446,32 +1260,24 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         child: Row(
           children: [
             // 左侧图标组
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 首页
-                  _buildBottomIcon(Icons.home_outlined, '首页', _goHome),
-                  const SizedBox(width: 16),
-                  // 收藏
-                  _buildBottomIcon(
-                    isCollect ? Icons.favorite : Icons.favorite_border,
-                    '收藏',
-                    _toggleCollect,
-                    color: isCollect ? themeColor.primary : null,
-                  ),
-                  const SizedBox(width: 16),
-                  // 购物车（带数量角标）
-                  _buildCartIcon(themeColor),
-                ],
-              ),
+            Row(
+              spacing: 16,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 首页
+                _buildBottomIcon(Icons.home_outlined, '首页', _goHome),
+                // 收藏
+                _buildBottomIcon(
+                  isCollect ? Icons.favorite : Icons.favorite_border,
+                  '收藏',
+                  _toggleCollect,
+                  color: isCollect ? themeColor.primary : null,
+                ),
+                // 购物车（带数量角标）
+                _buildCartIcon(themeColor),
+              ],
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 20),
             // 加入购物车（根据 cartButton 字段决定是否显示）
             // 注意：库存不足时依然保持可点击状态（与uni-app一致）
             if (showCartButton)
@@ -1481,7 +1287,9 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   child: Container(
                     height: 40,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [themeColor.gradientStart, themeColor.gradientEnd]),
+                      gradient: LinearGradient(
+                        colors: [themeColor.gradientStart, themeColor.gradientEnd],
+                      ),
                       borderRadius: const BorderRadius.horizontal(
                         left: Radius.circular(20),
                         right: Radius.zero,
@@ -1509,7 +1317,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   child: Text(
                     isOutOfStock ? '已售罄' : '立即购买',
                     style: TextStyle(
-                      fontSize: 14, 
+                      fontSize: 14,
                       color: Colors.white,
                       fontWeight: showCartButton ? FontWeight.normal : FontWeight.bold,
                     ),
@@ -2125,11 +1933,10 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   }
 }
 
-
-
 /// 视频播放页面
 class _VideoPlayerPage extends StatefulWidget {
   final String videoUrl;
+
   const _VideoPlayerPage({required this.videoUrl});
 
   @override

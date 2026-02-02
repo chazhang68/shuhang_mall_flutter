@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:marquee/marquee.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
@@ -21,7 +22,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
-  final ScrollController _scrollController = ScrollController();
   final PublicProvider _publicProvider = PublicProvider();
 
   // 数据
@@ -43,19 +43,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   void initState() {
     super.initState();
     _loadIndexData();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 100) {
-      _loadMoreProducts();
-    }
   }
 
   Future<void> _loadIndexData() async {
@@ -147,11 +134,11 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final Size size = MediaQuery.sizeOf(context);
 
     return GetBuilder<AppController>(
       builder: (controller) {
         final themeColor = controller.themeColor;
-
         return Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
           body: _isLoading
@@ -165,9 +152,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                     failedText: '刷新失败',
                   ),
                   onRefresh: _onRefresh,
+                  onLoad: _loadMoreProducts,
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    controller: _scrollController,
                     slivers: [
                       // 顶部Logo
                       SliverToBoxAdapter(child: _buildHeader()),
@@ -176,7 +163,78 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                       SliverToBoxAdapter(child: _buildBanner()),
 
                       // 公告
-                      if (_notes.isNotEmpty) SliverToBoxAdapter(child: _buildNotice(themeColor)),
+                      if (_notes.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: Container(
+                            width: size.width,
+                            height: 32,
+                            margin: const EdgeInsets.symmetric(horizontal: 12),
+                            padding: .only(left: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            alignment: .center,
+                            child: Row(
+                              crossAxisAlignment: .center,
+                              children: [
+                                // 左侧公告图标和文字
+                                Image.asset(
+                                  'assets/images/icon_notice.png',
+                                  width: 24,
+                                  height: 24,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.campaign,
+                                      color: themeColor.primary,
+                                      size: 24,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  '公告',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF333333),
+                                    fontWeight: .bold,
+                                    fontStyle: .italic,
+                                  ),
+                                ),
+                                // 分隔线
+                                Container(
+                                  width: 1.5,
+                                  height: 16,
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  color: const Color(0xFFDDDDDD),
+                                ),
+                                // 公告内容 - 点击跳转详情
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: _goNotice,
+                                    child: Marquee(
+                                      text: _notes,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF666666),
+                                      ),
+                                      scrollAxis: Axis.horizontal,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      blankSpace: 100.0,
+                                      velocity: 100.0,
+                                      pauseAfterRound: Duration(seconds: 1),
+                                      startPadding: 0,
+                                      accelerationDuration: Duration(seconds: 1),
+                                      accelerationCurve: Curves.linear,
+                                      decelerationDuration: Duration(milliseconds: 500),
+                                      decelerationCurve: Curves.easeOut,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
                       // 搜索栏
                       SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
@@ -203,7 +261,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                   crossAxisSpacing: 8,
                                   // 宽高比调整：图片169px + 文字区域约70px = 239px
                                   // 宽度约170px，比例 170/239 ≈ 0.71
-                                  childAspectRatio: 0.72,
+                                  childAspectRatio: 0.68,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) => HomeProductCard(
@@ -345,49 +403,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     }
   }
 
-  /// 公告 - 对应uni-app的公告栏样式
-  Widget _buildNotice(ThemeColorData themeColor) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-      child: Row(
-        children: [
-          // 左侧公告图标和文字
-          Image.asset(
-            'assets/images/icon_notice.png',
-            width: 24,
-            height: 24,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.campaign, color: themeColor.primary, size: 24);
-            },
-          ),
-          const SizedBox(width: 4),
-          const Text('公告', style: TextStyle(fontSize: 13, color: Color(0xFF333333))),
-          // 分隔线
-          Container(
-            width: 1,
-            height: 13,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            color: const Color(0xFFDDDDDD),
-          ),
-          // 公告内容 - 点击跳转详情
-          Expanded(
-            child: GestureDetector(
-              onTap: _goNotice,
-              child: Text(
-                _notes,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// 搜索栏
   Widget _buildSearchBar(ThemeColorData themeColor) {
     return GestureDetector(
@@ -409,7 +424,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
             ),
             const SizedBox(width: 8),
             const Expanded(
-              child: Text('输入你想搜索的商品', style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 14)),
+              child: Text('输入你想搜索的商品', style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 13)),
             ),
             const Text('搜索', style: TextStyle(color: Color(0xFF444444), fontSize: 13)),
           ],
