@@ -14,6 +14,7 @@ import 'package:dio/dio.dart'
         ErrorInterceptorHandler;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:shuhang_mall_flutter/app/services/log_service.dart';
 import 'package:logger/logger.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 import 'package:shuhang_mall_flutter/app/utils/config.dart';
@@ -50,7 +51,7 @@ class ApiResponse<T> {
 class ApiProvider {
   static ApiProvider? _instance;
   late Dio _dio;
-  final Logger _logger = Logger();
+
 
   /// 需要跳转登录的状态码
   static const List<int> _loginRequiredCodes = [110002, 110003, 110004];
@@ -274,10 +275,10 @@ class ApiProvider {
         errorMsg = '请求取消';
       }
 
-      _logger.e('Request error: $errorMsg', error: e);
+      LogService.e('Request error: $errorMsg', error: e);
       return ApiResponse<T>(status: -1, msg: errorMsg);
     } catch (e) {
-      _logger.e('Unknown error', error: e);
+      LogService.e('Unknown error', error: e);
       return ApiResponse<T>(status: -1, msg: '未知错误');
     }
   }
@@ -301,7 +302,7 @@ class ApiProvider {
 
       return ApiResponse<T>.fromJson(responseData, fromJsonT);
     } catch (e) {
-      _logger.e('Upload error', error: e);
+      LogService.e('Upload error', error: e);
       return ApiResponse<T>(status: -1, msg: '上传失败');
     }
   }

@@ -25,6 +25,22 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = const [HomePage(), ShopPage(), TaskPage(), CartPage(), UserPage()];
 
   @override
+  void initState() {
+    super.initState();
+    // 处理 tab 参数
+    final args = Get.arguments;
+    if (args != null && args is Map && args['tab'] != null) {
+      final tabIndex = args['tab'] as int;
+      if (tabIndex >= 0 && tabIndex < _pages.length) {
+        _currentIndex = tabIndex;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _pageController.jumpToPage(tabIndex);
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();

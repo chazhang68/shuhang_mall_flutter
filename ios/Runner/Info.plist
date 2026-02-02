@@ -59,5 +59,24 @@
 	<string>保存广告图片到相册</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>保存广告图片到相册</string>
+	<!-- 微信SDK配置 -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>weixin</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wx277a269f3d736d67</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>weixin</string>
+		<string>weixinULAPI</string>
+	</array>
 </dict>
 </plist>

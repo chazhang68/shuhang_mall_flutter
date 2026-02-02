@@ -15,7 +15,7 @@ import 'package:shuhang_mall_flutter/app/data/providers/store_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
-import 'package:shuhang_mall_flutter/app/services/customer_service.dart';
+import 'package:shuhang_mall_flutter/app/services/wechat_service.dart';
 import 'package:shuhang_mall_flutter/widgets/widgets.dart';
 import 'package:shuhang_mall_flutter/widgets/coupon_tag.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -478,29 +478,65 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 height: 32,
                 decoration: BoxDecoration(
                   color: _showTopBar
-                      ? Colors.transparent
+                      ? Colors.white.withAlpha((0.9 * 255).round())
                       : Colors.black.withAlpha((0.3 * 255).round()),
                   borderRadius: BorderRadius.circular(16),
+                  border: _showTopBar 
+                      ? Border.all(color: const Color(0xFFE0E0E0), width: 0.5)
+                      : null,
                 ),
                 child: Icon(
                   Icons.arrow_back_ios_new,
-                  size: 18,
+                  size: 16,
                   color: _showTopBar ? Colors.black : Colors.white,
                 ),
               ),
             ),
             const Spacer(),
             // 更多按钮
-            GestureDetector(
-              onTap: _showMoreMenu,
+            PopupMenuButton<String>(
+              offset: const Offset(0, 40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              color: Colors.white,
+              elevation: 4,
+              padding: EdgeInsets.zero,
+              onSelected: (value) {
+                switch (value) {
+                  case 'home':
+                    _goHome();
+                    break;
+                  case 'search':
+                    Get.toNamed(AppRoutes.goodsSearch);
+                    break;
+                  case 'cart':
+                    Get.offAllNamed(AppRoutes.main, arguments: {'tab': 3});
+                    break;
+                  case 'collection':
+                    Get.toNamed(AppRoutes.userCollection);
+                    break;
+                  case 'user':
+                    Get.offAllNamed(AppRoutes.main, arguments: {'tab': 4});
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                _buildPopupMenuItem('home', Icons.home_outlined, '首页'),
+                _buildPopupMenuItem('search', Icons.search, '搜索'),
+                _buildPopupMenuItem('cart', Icons.shopping_cart_outlined, '购物车'),
+                _buildPopupMenuItem('collection', Icons.favorite_border, '我的收藏'),
+                _buildPopupMenuItem('user', Icons.person_outline, '个人中心'),
+              ],
               child: Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
                   color: _showTopBar
-                      ? Colors.transparent
+                      ? Colors.white.withAlpha((0.9 * 255).round())
                       : Colors.black.withAlpha((0.3 * 255).round()),
                   borderRadius: BorderRadius.circular(16),
+                  border: _showTopBar 
+                      ? Border.all(color: const Color(0xFFE0E0E0), width: 0.5)
+                      : null,
                 ),
                 child: Icon(
                   Icons.more_horiz,
@@ -514,8 +550,22 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
       ),
     );
   }
+
+  PopupMenuItem<String> _buildPopupMenuItem(String value, IconData icon, String text) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 44,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF666666)),
+          const SizedBox(width: 12),
+          Text(text, style: const TextStyle(fontSize: 14, color: Color(0xFF333333))),
+        ],
+      ),
+    );
+  }
   
-  /// 显示更多菜单
+  /// 显示更多菜单（保留底部菜单备用）
   void _showMoreMenu() {
     showModalBottomSheet(
       context: context,
@@ -806,7 +856,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   child: const Icon(
-                    Icons.share,
+                    Icons.open_in_new,
                     size: 22,
                     color: Color(0xFF666666),
                   ),
@@ -1087,71 +1137,73 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
               ),
             ),
           ],
-          const SizedBox(height: 15),
-          const Divider(height: 1),
-          const SizedBox(height: 15),
-          // 规格选择
-          GestureDetector(
-            onTap: _hasSpec ? _showSpecDialog : () => FlutterToastPro.showMessage('该商品无规格'.tr),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text('选择', style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _productAttr.isEmpty ? '该商品无规格' : '请选择规格',
-                        style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
-                  ],
-                ),
-                // SKU缩略图预览
-                if (_productValue.isNotEmpty && _productValue.length > 1) ...[
-                  const SizedBox(height: 10),
+          // 规格选择 - 只有有规格时才显示
+          if (_hasSpec) ...[
+            const SizedBox(height: 15),
+            const Divider(height: 1),
+            const SizedBox(height: 15),
+            GestureDetector(
+              onTap: _showSpecDialog,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
-                      const SizedBox(width: 42),
+                      const Text('选择', style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: Row(
-                          children: [
-                            ..._getSkuImages()
-                                .take(4)
-                                .map(
-                                  (img) => Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: CachedNetworkImage(
-                                        imageUrl: img,
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                        errorWidget: (context, url, error) => Container(
+                        child: Text(
+                          '请选择规格',
+                          style: const TextStyle(fontSize: 14, color: Color(0xFF333333)),
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
+                    ],
+                  ),
+                  // SKU缩略图预览
+                  if (_productValue.isNotEmpty && _productValue.length > 1) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const SizedBox(width: 42),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              ..._getSkuImages()
+                                  .take(4)
+                                  .map(
+                                    (img) => Container(
+                                      margin: const EdgeInsets.only(right: 8),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: CachedNetworkImage(
+                                          imageUrl: img,
                                           width: 40,
                                           height: 40,
-                                          color: const Color(0xFFEEEEEE),
+                                          fit: BoxFit.cover,
+                                          errorWidget: (context, url, error) => Container(
+                                            width: 40,
+                                            height: 40,
+                                            color: const Color(0xFFEEEEEE),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            Text(
-                              '共${_productValue.length}种规格可选',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
-                            ),
-                          ],
+                              Text(
+                                '共${_productValue.length}种规格可选',
+                                style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1164,6 +1216,20 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 15),
+          // 产品介绍标题
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            alignment: Alignment.center,
+            child: const Text(
+              '产品介绍',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+              ),
+            ),
+          ),
           if (_description.isEmpty)
             Container(
               height: 200,
@@ -1366,66 +1432,87 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     final isCollect = storeInfo.userCollect;
     final stock = storeInfo.stock;
     final isOutOfStock = stock <= 0;
+    final showCartButton = storeInfo.cartButton;
     final disabledColor = const Color(0xFFCCCCCC);
 
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
-            // 首页
-            _buildBottomIcon(Icons.home_outlined, '首页', _goHome),
-            const SizedBox(width: 15),
-            // 收藏
-            _buildBottomIcon(
-              isCollect ? Icons.favorite : Icons.favorite_border,
-              '收藏',
-              _toggleCollect,
-              color: isCollect ? themeColor.primary : null,
-            ),
-            const SizedBox(width: 15),
-            // 购物车（带数量角标）
-            _buildCartIcon(themeColor),
-            const Spacer(),
-            // 加入购物车
-            Expanded(
-              flex: 2,
-              child: GestureDetector(
-                onTap: isOutOfStock ? null : () => _showSpecDialog(mode: ProductSpecMode.addCart),
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: !isOutOfStock
-                        ? LinearGradient(colors: [themeColor.gradientStart, themeColor.gradientEnd])
-                        : null,
-                    color: isOutOfStock ? disabledColor : null,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(22)),
+            // 左侧图标组
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 首页
+                  _buildBottomIcon(Icons.home_outlined, '首页', _goHome),
+                  const SizedBox(width: 16),
+                  // 收藏
+                  _buildBottomIcon(
+                    isCollect ? Icons.favorite : Icons.favorite_border,
+                    '收藏',
+                    _toggleCollect,
+                    color: isCollect ? themeColor.primary : null,
                   ),
-                  alignment: Alignment.center,
-                  child: const Text('加入购物车', style: TextStyle(fontSize: 14, color: Colors.white)),
-                ),
+                  const SizedBox(width: 16),
+                  // 购物车（带数量角标）
+                  _buildCartIcon(themeColor),
+                ],
               ),
             ),
-            // 立即购买
+            const SizedBox(width: 10),
+            // 加入购物车（根据 cartButton 字段决定是否显示）
+            // 注意：库存不足时依然保持可点击状态（与uni-app一致）
+            if (showCartButton)
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _showSpecDialog(mode: ProductSpecMode.addCart),
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [themeColor.gradientStart, themeColor.gradientEnd]),
+                      borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(20),
+                        right: Radius.zero,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('加入购物车', style: TextStyle(fontSize: 14, color: Colors.white)),
+                  ),
+                ),
+              ),
+            // 立即购买/已售罄
             Expanded(
-              flex: 2,
               child: GestureDetector(
                 onTap: isOutOfStock ? null : () => _showSpecDialog(mode: ProductSpecMode.buyNow),
                 child: Container(
-                  height: 44,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: isOutOfStock ? disabledColor : themeColor.primary,
-                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(22)),
+                    borderRadius: BorderRadius.horizontal(
+                      left: showCartButton ? Radius.zero : const Radius.circular(20),
+                      right: const Radius.circular(20),
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     isOutOfStock ? '已售罄' : '立即购买',
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: Colors.white,
+                      fontWeight: showCartButton ? FontWeight.normal : FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -1548,90 +1635,98 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   /// 显示分享弹窗
   void _showShareDialog() {
     final storeName = _storeInfo.storeName;
+    final storeDesc = _storeInfo.description;
+    final smallImage = _storeInfo.image;
+    final shareUrl = 'https://test.shsd.top/pages/goods_details/index?id=$_productId';
 
     Get.bottomSheet(
-      GetBuilder<AppController>(
-        builder: (controller) {
-          final themeColor = controller.themeColor;
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 标题
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          '分享商品',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        GestureDetector(
-                          onTap: () => Get.back(),
-                          child: const Icon(Icons.close, size: 24, color: Color(0xFF999999)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // 分享选项
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // 复制链接
-                        _buildShareItem(
-                          icon: Icons.link,
-                          label: '复制链接',
-                          color: themeColor.primary,
-                          onTap: () {
-                            final shareUrl =
-                                'https://test.shsd.top/pages/goods_details/index?id=$_productId';
-                            Clipboard.setData(ClipboardData(text: shareUrl));
-                            Get.back();
-                            FlutterToastPro.showMessage('链接已复制到剪贴板');
-                          },
-                        ),
-                        // 分享
-                        _buildShareItem(
-                          icon: Icons.share,
-                          label: '分享',
-                          color: Colors.green,
-                          onTap: () {
-                            Get.back();
-                            final shareText =
-                                '$storeName\nhttps://test.shsd.top/pages/goods_details/index?id=$_productId';
-                            Clipboard.setData(ClipboardData(text: shareText));
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 分享选项
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 40),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    // 微信好友
+                    _buildShareItem(
+                      icon: Icons.wechat,
+                      label: '微信好友',
+                      color: const Color(0xFF07C160),
+                      onTap: () async {
+                        Get.back();
+                        FlutterToastPro.showMessage('正在打开微信...');
+                        try {
+                          final success = await WechatService().shareWebPageToSession(
+                            url: shareUrl,
+                            title: storeName,
+                            description: storeDesc,
+                            thumbnail: smallImage,
+                          );
+                          if (!success) {
+                            // 如果分享失败，复制到剪贴板作为备用方案
+                            Clipboard.setData(ClipboardData(text: '$storeName\n$shareUrl'));
                             FlutterToastPro.showMessage('分享内容已复制到剪贴板');
-                          },
-                        ),
-                        // 生成海报
-                        _buildShareItem(
-                          icon: Icons.image,
-                          label: '生成海报',
-                          color: Colors.orange,
-                          onTap: () {
-                            Get.back();
-                            _showPosterDialog();
-                          },
-                        ),
-                      ],
+                          }
+                        } catch (e) {
+                          debugPrint('分享异常: $e');
+                          Clipboard.setData(ClipboardData(text: '$storeName\n$shareUrl'));
+                          FlutterToastPro.showMessage('分享失败，内容已复制到剪贴板');
+                        }
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                    // 微信朋友圈
+                    _buildShareItem(
+                      icon: Icons.camera_alt,
+                      label: '微信朋友圈',
+                      color: const Color(0xFF07C160),
+                      onTap: () async {
+                        Get.back();
+                        FlutterToastPro.showMessage('正在打开微信...');
+                        try {
+                          final success = await WechatService().shareWebPageToTimeline(
+                            url: shareUrl,
+                            title: storeName,
+                            description: storeDesc,
+                            thumbnail: smallImage,
+                          );
+                          if (!success) {
+                            // 如果分享失败，复制到剪贴板作为备用方案
+                            Clipboard.setData(ClipboardData(text: '$storeName\n$shareUrl'));
+                            FlutterToastPro.showMessage('分享内容已复制到剪贴板');
+                          }
+                        } catch (e) {
+                          debugPrint('分享异常: $e');
+                          Clipboard.setData(ClipboardData(text: '$storeName\n$shareUrl'));
+                          FlutterToastPro.showMessage('分享失败，内容已复制到剪贴板');
+                        }
+                      },
+                    ),
+                    // 生成海报
+                    _buildShareItem(
+                      icon: Icons.image,
+                      label: '生成海报',
+                      color: const Color(0xFF1890FF),
+                      onTap: () {
+                        Get.back();
+                        _showPosterDialog();
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
       ),
       backgroundColor: Colors.transparent,
     );

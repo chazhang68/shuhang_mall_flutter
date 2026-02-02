@@ -87,9 +87,9 @@ class CartItem {
   final double costPrice;
   @JsonKey(fromJson: _numToInt)
   final int trueStock;
-  @JsonKey(fromJson: _numToDouble)
+  @JsonKey(name: 'truePrice', fromJson: _numToDouble)
   final double truePrice;
-  @JsonKey(fromJson: _numToDouble)
+  @JsonKey(name: 'sumPrice', fromJson: _numToDouble)
   final double sumPrice;
   final String? priceType;
   @JsonKey(fromJson: _numToInt)

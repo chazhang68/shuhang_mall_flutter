@@ -12,6 +12,9 @@ import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:shuhang_mall_flutter/app/services/wechat_service.dart';
+import 'package:shuhang_mall_flutter/app/services/log_service.dart';
+import 'package:shuhang_mall_flutter/app/utils/debug_logger.dart';
 
 /// 应用入口
 /// 对应原 main.js
@@ -19,8 +22,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
 
+  // 初始化日志服务
+  LogService.i('Application starting...');
+
   // 初始化缓存
   await Cache.init();
+  LogService.i('Cache initialized');
+
+  // 初始化微信SDK
+  WechatService().init();
+  LogService.i('WeChat service initialized');
 
   // 设置状态栏样式
   SystemChrome.setSystemUIOverlayStyle(
@@ -29,17 +40,24 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+  LogService.i('System UI overlay configured');
 
   // 设置屏幕方向
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  LogService.i('Screen orientation set');
 
+  LogService.i('Running MyApp...');
   runApp(const MyApp());
 
   // 配置 EasyLoading
   _configLoading();
+  LogService.i('EasyLoading configured');
+  
+  // 测试日志功能
+  DebugLogger.testLogging();
 }
 
 class MyApp extends StatelessWidget {

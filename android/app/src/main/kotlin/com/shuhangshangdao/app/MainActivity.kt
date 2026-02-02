@@ -1,4 +1,4 @@
-package com.shuhang.shuhang_mall_flutter
+package com.shuhangshangdao.app
 
 import io.flutter.embedding.android.FlutterActivity
 

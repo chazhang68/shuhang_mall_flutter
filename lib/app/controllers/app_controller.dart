@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/app/services/log_service.dart';
 
 /// 全局应用控制器
 /// 对应原 store/modules/app.js
@@ -131,6 +132,8 @@ class AppController extends GetxController {
     UserModel? userInfo,
     int? expiresTime,
   }) async {
+    LogService.i('User login initiated for UID: $uid');
+    
     _token.value = token;
     _uid.value = uid;
     _userInfo.value = userInfo;
@@ -145,11 +148,14 @@ class AppController extends GetxController {
       await Cache.setInt(CacheKey.expires, expiresTime);
     }
 
+    LogService.i('User login completed for UID: $uid');
     update();
   }
 
   /// 退出登录
   Future<void> logout() async {
+    LogService.i('User logout initiated for UID: ${_uid.value}');
+    
     _token.value = '';
     _uid.value = 0;
     _userInfo.value = null;
@@ -162,6 +168,7 @@ class AppController extends GetxController {
     await Cache.remove(CacheKey.expires);
     await Cache.remove(CacheKey.cartNum);
 
+    LogService.i('User logout completed');
     update();
   }
 

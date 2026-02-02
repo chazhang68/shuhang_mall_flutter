@@ -101,6 +101,7 @@ class ProductStoreInfo {
   final bool userCollect;
   final int virtualType;
   final String cateId;
+  final bool cartButton;
 
   const ProductStoreInfo({
     this.id = 0,
@@ -128,6 +129,7 @@ class ProductStoreInfo {
     this.userCollect = false,
     this.virtualType = 0,
     this.cateId = '',
+    this.cartButton = true,
   });
 
   factory ProductStoreInfo.empty() => const ProductStoreInfo();
@@ -166,6 +168,7 @@ class ProductStoreInfo {
       userCollect: _numToBool(json['userCollect'] ?? json['user_collect']),
       virtualType: _numToInt(json['virtual_type']),
       cateId: json['cate_id']?.toString() ?? '',
+      cartButton: json['cart_button'] != 0,
     );
   }
 
@@ -196,6 +199,7 @@ class ProductStoreInfo {
       userCollect: userCollect ?? this.userCollect,
       virtualType: virtualType,
       cateId: cateId,
+      cartButton: cartButton,
     );
   }
 

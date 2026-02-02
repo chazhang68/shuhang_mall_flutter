@@ -57,6 +57,9 @@ dependencies:
 
   # 日志
   logger: ^2.6.2
+  # 高级日志工具
+  talker: ^5.1.13
+  talker_logger: ^5.1.13
 
   # 时间格式化
   intl: ^0.20.2
@@ -104,6 +107,9 @@ dependencies:
 
   # 穿山甲广告SDK
   flutter_unionad: ^2.2.4
+
+  # 微信SDK（分享、登录、支付）
+  fluwx: ^5.7.5
 
 dev_dependencies:
   flutter_test:

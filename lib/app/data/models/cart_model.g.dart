@@ -79,8 +79,8 @@ CartItem _$CartItemFromJson(Map<String, dynamic> json) => CartItem(
       : _numToDouble(json['vip_true_price']),
   costPrice: json['cost_price'] == null ? 0 : _numToDouble(json['cost_price']),
   trueStock: json['true_stock'] == null ? 0 : _numToInt(json['true_stock']),
-  truePrice: json['true_price'] == null ? 0 : _numToDouble(json['true_price']),
-  sumPrice: json['sum_price'] == null ? 0 : _numToDouble(json['sum_price']),
+  truePrice: json['truePrice'] == null ? 0 : _numToDouble(json['truePrice']),
+  sumPrice: json['sumPrice'] == null ? 0 : _numToDouble(json['sumPrice']),
   priceType: json['price_type'] as String?,
   isValid: json['is_valid'] == null ? 0 : _numToInt(json['is_valid']),
 );
@@ -106,8 +106,8 @@ Map<String, dynamic> _$CartItemToJson(CartItem instance) => <String, dynamic>{
   'vip_true_price': instance.vipTruePrice,
   'cost_price': instance.costPrice,
   'true_stock': instance.trueStock,
-  'true_price': instance.truePrice,
-  'sum_price': instance.sumPrice,
+  'truePrice': instance.truePrice,
+  'sumPrice': instance.sumPrice,
   'price_type': instance.priceType,
   'is_valid': instance.isValid,
 };

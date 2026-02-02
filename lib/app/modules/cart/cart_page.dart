@@ -290,7 +290,8 @@ class _CartItemTile extends StatelessWidget {
     final imageUrl = item.productInfo?.attrInfo?.image ?? item.productInfo?.image ?? '';
     final name = item.productInfo?.storeName ?? '商品';
     final suk = item.productInfo?.attrInfo?.suk ?? '';
-    final price = item.truePrice;
+    // 使用 unitPrice 而不是 truePrice，与总价计算保持一致
+    final price = item.unitPrice;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -392,7 +393,7 @@ class _CartItemTile extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
-                                  price.toStringAsFixed(2),
+                                  _formatPrice(price),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     color: Color(0xFFFA281D),
@@ -604,7 +605,7 @@ class _CartBottomBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 2),
                   Text(
-                    totalPrice.toStringAsFixed(2),
+                    _formatPrice(totalPrice),
                     style: const TextStyle(
                       fontSize: 15,
                       color: Color(0xFFFA281D),
@@ -635,4 +636,12 @@ class _CartBottomBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 格式化价格显示（与uni-app一致，整数不显示小数点）
+String _formatPrice(double price) {
+  if (price == price.truncateToDouble()) {
+    return price.toInt().toString();
+  }
+  return price.toStringAsFixed(2);
 }
