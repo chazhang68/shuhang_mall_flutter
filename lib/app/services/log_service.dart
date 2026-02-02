@@ -111,4 +111,15 @@ class LogService {
       if (stackTrace != null) print('[STACKTRACE] $stackTrace');
     }
   }
+
+  /// 记录Navigator相关错误
+  static void navigatorError(String operation, {dynamic error, StackTrace? stackTrace}) {
+    if (kDebugMode) {
+      final logMsg = 'Navigator $operation failed: $error';
+      instance._logger?.e(logMsg, error: error, stackTrace: stackTrace);
+      print('[NAVIGATOR ERROR] $logMsg');
+      if (error != null) print('[ERROR DETAILS] $error');
+      if (stackTrace != null) print('[STACKTRACE] $stackTrace');
+    }
+  }
 }

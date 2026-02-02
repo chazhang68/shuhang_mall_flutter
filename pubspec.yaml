@@ -110,6 +110,7 @@ dependencies:
 
   # 微信SDK（分享、登录、支付）
   fluwx: ^5.7.5
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:

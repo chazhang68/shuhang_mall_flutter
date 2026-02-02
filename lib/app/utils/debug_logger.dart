@@ -14,4 +14,11 @@ class DebugLogger {
     LogService.error('TestTag', '这是一个测试错误');
     LogService.d('=== 日志功能测试完成 ===');
   }
+  
+  /// 记录用户信息获取相关的错误
+  static void logUserInfoError(String errorMessage, {StackTrace? stackTrace}) {
+    LogService.e('获取用户信息失败: $errorMessage', stackTrace: stackTrace);
+    LogService.w('这可能是由于并发导航操作导致的，请检查是否存在同时的导航请求');
+    LogService.i('建议使用NavigationService进行安全的导航操作');
+  }
 }

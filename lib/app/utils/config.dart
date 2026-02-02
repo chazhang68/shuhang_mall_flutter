@@ -10,8 +10,8 @@ class AppConfig {
   /// 完整 API 地址
   static String get apiUrl => '$httpRequestUrl$apiPrefix';
 
-  /// Token 请求头名称
-  static const String tokenName = 'Authori-zation';
+  /// Token 请求头名称 - 修复拼写错误
+  static const String tokenName = 'Authorization'; // 修正: Authori-zation -> Authorization
 
   /// 系统版本号
   static const int systemVersion = 107;
