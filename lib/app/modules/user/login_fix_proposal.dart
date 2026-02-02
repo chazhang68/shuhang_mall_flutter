@@ -1,8 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
+
 /// 登录获取用户信息失败的解决方案建议
 
 /// 问题诊断:
 /// 1. Token header名称可能存在拼写问题: 'Authori-zation' 应检查是否正确
-/// 2. Token格式可能不正确: 'Bearer $token' 
+/// 2. Token格式可能不正确: 'Bearer $token'
 /// 3. 登录成功到获取用户信息之间的时间间隔可能太短
 /// 4. 用户信息接口权限配置可能有问题
 
@@ -22,14 +27,14 @@ void debugLoginProcess() {
 Future<void> _handleLoginSuccessWithRetry(dynamic data) async {
   // 先保存基本登录信息
   await appController.login(token: token, uid: uid, expiresTime: expiresTime);
-  
+
   // 增加延迟确保token生效
   await Future.delayed(Duration(milliseconds: 100));
-  
+
   // 重试机制
   int retryCount = 0;
   const maxRetries = 3;
-  
+
   while (retryCount < maxRetries) {
     try {
       final userResponse = await _userProvider.getUserInfo();
@@ -75,8 +80,7 @@ void _showDetailedError(String errorType, dynamic details) {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('错误类型: $errorType'),
-        if (details != null) 
-          Text('详情: ${details.toString().substring(0, 100)}...'),
+        if (details != null) Text('详情: ${details.toString().substring(0, 100)}...'),
         SizedBox(height: 10),
         Text('请稍后重试或联系客服', style: TextStyle(fontSize: 12, color: Colors.grey)),
       ],
