@@ -9,6 +9,7 @@ import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
+import 'package:shuhang_mall_flutter/widgets/feed_ad_widget.dart';
 
 /// 首页
 /// 对应原 pages/index/index.vue
@@ -180,20 +181,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                       // 搜索栏
                       SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
 
-                      // 商品列表标题
-                      SliverToBoxAdapter(
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-                          child: const Text(
-                            '推荐商品',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                        ),
-                      ),
+                      // 广告位 - 对应uni-app的APP-PLUS广告组件
+                      SliverToBoxAdapter(child: _buildAdView()),
 
                       // 商品列表
                       _hotList.isEmpty
@@ -212,7 +201,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                   crossAxisCount: 2,
                                   mainAxisSpacing: 8,
                                   crossAxisSpacing: 8,
-                                  childAspectRatio: 0.65,
+                                  // 宽高比调整：图片169px + 文字区域约70px = 239px
+                                  // 宽度约170px，比例 170/239 ≈ 0.71
+                                  childAspectRatio: 0.72,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) => HomeProductCard(
@@ -250,6 +241,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   Widget _buildHeader() {
     return Container(
       color: Colors.white,
+      alignment: Alignment.centerLeft,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top,
         left: 8,
@@ -265,7 +257,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           return const SizedBox(
             width: 120,
             height: 48,
-            child: Center(
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Text(
                 '数航商道',
                 style: TextStyle(
@@ -352,33 +345,36 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     }
   }
 
-  /// 公告
+  /// 公告 - 对应uni-app的公告栏样式
   Widget _buildNotice(ThemeColorData themeColor) {
-    return GestureDetector(
-      onTap: _goNotice,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/icon_notice.png',
-              width: 24,
-              height: 24,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(Icons.campaign, color: themeColor.primary, size: 24);
-              },
-            ),
-            const SizedBox(width: 4),
-            const Text('公告', style: TextStyle(fontSize: 13, color: Color(0xFF333333))),
-            Container(
-              width: 1,
-              height: 13,
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              color: const Color(0xFFDDDDDD),
-            ),
-            Expanded(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        children: [
+          // 左侧公告图标和文字
+          Image.asset(
+            'assets/images/icon_notice.png',
+            width: 24,
+            height: 24,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.campaign, color: themeColor.primary, size: 24);
+            },
+          ),
+          const SizedBox(width: 4),
+          const Text('公告', style: TextStyle(fontSize: 13, color: Color(0xFF333333))),
+          // 分隔线
+          Container(
+            width: 1,
+            height: 13,
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            color: const Color(0xFFDDDDDD),
+          ),
+          // 公告内容 - 点击跳转详情
+          Expanded(
+            child: GestureDetector(
+              onTap: _goNotice,
               child: Text(
                 _notes,
                 style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
@@ -386,9 +382,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF999999), size: 20),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -421,5 +416,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         ),
       ),
     );
+  }
+
+  /// 广告位 - 穿山甲信息流广告
+  Widget _buildAdView() {
+    return const FeedAdWidget();
   }
 }

@@ -122,6 +122,7 @@ abstract class AppRoutes {
   // ==================== 客服 ====================
   static const String chat = '/chat';
   static const String serviceList = '/service/list';
+  static const String customerChat = '/customer/chat'; // 客服聊天页面
 
   // ==================== 实名认证 ====================
   static const String realName = '/real-name';

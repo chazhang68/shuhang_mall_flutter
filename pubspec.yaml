@@ -102,8 +102,8 @@ dependencies:
   media_kit_libs_video: ^1.0.7
   flutter_widget_from_html: ^0.17.1
 
-  # 穿山甲广告SDK（暂时禁用，存在兼容性问题）
-  # flutter_unionad: ^2.2.4
+  # 穿山甲广告SDK
+  flutter_unionad: ^2.2.4
 
 dev_dependencies:
   flutter_test:

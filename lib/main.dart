@@ -56,8 +56,8 @@ class MyApp extends StatelessWidget {
           title: '数航商道',
           debugShowCheckedModeBanner: false,
 
-          // 初始路由
-          initialRoute: AppRoutes.main,
+          // 初始路由 - 启动页（开屏广告）
+          initialRoute: AppRoutes.splash,
 
           // 路由配置
           getPages: AppPages.pages,

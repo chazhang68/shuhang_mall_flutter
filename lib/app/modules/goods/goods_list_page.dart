@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/store_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:shuhang_mall_flutter/widgets/widgets.dart';
@@ -17,12 +18,14 @@ class GoodsListPage extends StatefulWidget {
 
 class _GoodsListPageState extends State<GoodsListPage> {
   final ScrollController _scrollController = ScrollController();
+  final StoreProvider _storeProvider = StoreProvider();
 
   String? _keyword;
-  int _sortType = 0; // 0: 综合, 1: 销量, 2: 价格升, 3: 价格降
-  bool _isGrid = true;
+  int? _cateId;
   int _page = 1;
+  final int _limit = 10;
   bool _hasMore = true;
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _goodsList = [];
 
@@ -30,6 +33,7 @@ class _GoodsListPageState extends State<GoodsListPage> {
   void initState() {
     super.initState();
     _keyword = Get.parameters['keyword'];
+    _cateId = int.tryParse(Get.parameters['cid'] ?? '');
     _loadData();
   }
 
@@ -40,36 +44,70 @@ class _GoodsListPageState extends State<GoodsListPage> {
   }
 
   Future<void> _loadData({bool isRefresh = false}) async {
+    if (_isLoading) return;
+    
     if (isRefresh) {
       _page = 1;
       _hasMore = true;
-    }
-
-    // 模拟API请求
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (isRefresh) {
       _goodsList.clear();
     }
 
-    // 添加示例数据
-    final newItems = List.generate(10, (index) {
-      return {
-        'id': _page * 10 + index,
-        'store_name': '示例商品 ${_page * 10 + index}',
-        'image': '',
-        'price': '${99 + index * 10}.00',
-        'ot_price': '${199 + index * 10}.00',
-        'sales': 100 + index * 50,
-        'unit_name': '件',
-      };
-    });
+    if (!_hasMore) return;
 
-    setState(() {
-      _goodsList.addAll(newItems);
-      _page++;
-      _hasMore = newItems.length >= 10;
-    });
+    setState(() => _isLoading = true);
+
+    try {
+      // 构建请求参数
+      final params = <String, dynamic>{
+        'page': _page,
+        'limit': _limit,
+      };
+      
+      if (_keyword != null && _keyword!.isNotEmpty) {
+        params['keyword'] = _keyword;
+      }
+      if (_cateId != null) {
+        params['cid'] = _cateId;
+      }
+
+      // 调用API
+      final response = await _storeProvider.getProductList(params);
+
+      if (response.isSuccess && response.data != null) {
+        // 处理返回数据 - API可能返回List或包含list字段的Map
+        List<Map<String, dynamic>> newItems = [];
+        
+        if (response.data is List) {
+          // 直接是List的情况
+          for (var item in response.data) {
+            if (item is Map) {
+              newItems.add(Map<String, dynamic>.from(item));
+            }
+          }
+        } else if (response.data is Map) {
+          // Map情况，尝试获取list/data字段
+          final dataMap = Map<String, dynamic>.from(response.data as Map);
+          final listData = dataMap['list'] ?? dataMap['data'];
+          if (listData is List) {
+            for (var item in listData) {
+              if (item is Map) {
+                newItems.add(Map<String, dynamic>.from(item));
+              }
+            }
+          }
+        }
+
+        setState(() {
+          _goodsList.addAll(newItems);
+          _page++;
+          _hasMore = newItems.length >= _limit;
+        });
+      }
+    } catch (e) {
+      debugPrint('加载商品列表失败: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -80,41 +118,32 @@ class _GoodsListPageState extends State<GoodsListPage> {
 
         return Scaffold(
           appBar: _buildAppBar(themeColor),
-          body: Column(
-            children: [
-              // 排序栏
-              _buildSortBar(themeColor),
-              // 商品列表
-              Expanded(
-                child: EasyRefresh(
-                  header: const ClassicHeader(
-                    dragText: '下拉刷新',
-                    armedText: '松手刷新',
-                    processingText: '刷新中...',
-                    processedText: '刷新完成',
-                    failedText: '刷新失败',
-                  ),
-                  footer: const ClassicFooter(
-                    dragText: '上拉加载',
-                    armedText: '松手加载',
-                    processingText: '加载中...',
-                    processedText: '加载完成',
-                    failedText: '加载失败',
-                    noMoreText: '我也是有底线的',
-                  ),
-                  onRefresh: () => _loadData(isRefresh: true),
-                  onLoad: _hasMore ? () => _loadData() : null,
-                  child: _goodsList.isEmpty
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [EmptySearch(keyword: _keyword)],
-                        )
-                      : _isGrid
-                      ? _buildGridView()
-                      : _buildListView(),
-                ),
-              ),
-            ],
+          body: EasyRefresh(
+            header: const ClassicHeader(
+              dragText: '下拉刷新',
+              armedText: '松手刷新',
+              processingText: '刷新中...',
+              processedText: '刷新完成',
+              failedText: '刷新失败',
+            ),
+            footer: const ClassicFooter(
+              dragText: '上拉加载',
+              armedText: '松手加载',
+              processingText: '加载中...',
+              processedText: '加载完成',
+              failedText: '加载失败',
+              noMoreText: '没有更多内容啦~',
+            ),
+            onRefresh: () => _loadData(isRefresh: true),
+            onLoad: _hasMore ? () => _loadData() : null,
+            child: _goodsList.isEmpty && !_isLoading
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [EmptySearch(keyword: _keyword)],
+                  )
+                : _goodsList.isEmpty && _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildListView(),
           ),
         );
       },
@@ -149,132 +178,6 @@ class _GoodsListPageState extends State<GoodsListPage> {
     );
   }
 
-  Widget _buildSortBar(ThemeColorData themeColor) {
-    return Container(
-      height: 44,
-      color: Colors.white,
-      child: Row(
-        children: [
-          _buildSortItem('综合', 0, themeColor),
-          _buildSortItem('销量', 1, themeColor),
-          _buildPriceSortItem(themeColor),
-          const Spacer(),
-          // 切换布局
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isGrid = !_isGrid;
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Icon(
-                _isGrid ? Icons.view_list : Icons.grid_view,
-                size: 22,
-                color: const Color(0xFF666666),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSortItem(String label, int type, themeColor) {
-    final isActive = _sortType == type;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _sortType = type;
-        });
-        _loadData(isRefresh: true);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: isActive ? themeColor.primary : const Color(0xFF333333),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceSortItem(ThemeColorData themeColor) {
-    final isAsc = _sortType == 2;
-    final isDesc = _sortType == 3;
-    final isActive = isAsc || isDesc;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (_sortType == 2) {
-            _sortType = 3;
-          } else {
-            _sortType = 2;
-          }
-        });
-        _loadData(isRefresh: true);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        alignment: Alignment.center,
-        child: Row(
-          children: [
-            Text(
-              '价格',
-              style: TextStyle(
-                fontSize: 14,
-                color: isActive ? themeColor.primary : const Color(0xFF333333),
-              ),
-            ),
-            const SizedBox(width: 2),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_drop_up,
-                  size: 14,
-                  color: isAsc ? themeColor.primary : const Color(0xFFCCCCCC),
-                ),
-                Icon(
-                  Icons.arrow_drop_down,
-                  size: 14,
-                  color: isDesc ? themeColor.primary : const Color(0xFFCCCCCC),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGridView() {
-    return GridView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.65,
-      ),
-      itemCount: _goodsList.length,
-      itemBuilder: (context, index) {
-        return GoodsCard(
-          goods: _goodsList[index],
-          style: GoodsCardStyle.grid,
-          onTap: () => _goToDetail(_goodsList[index]),
-        );
-      },
-    );
-  }
-
   Widget _buildListView() {
     return ListView.builder(
       controller: _scrollController,
@@ -290,6 +193,7 @@ class _GoodsListPageState extends State<GoodsListPage> {
   }
 
   void _goToDetail(Map<String, dynamic> goods) {
-    Get.toNamed(AppRoutes.goodsDetail, parameters: {'id': '${goods['id']}'});
+    final id = goods['id'] ?? goods['product_id'] ?? 0;
+    Get.toNamed(AppRoutes.goodsDetail, arguments: {'id': id});
   }
 }

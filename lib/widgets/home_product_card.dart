@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
+import 'package:shuhang_mall_flutter/widgets/coupon_tag.dart';
 
 /// 通用商品卡片组件 - 适用于首页推荐与商城列表。
+/// 对应uni-app的首页商品列表样式
 class HomeProductCard extends StatelessWidget {
   /// 商品数据。
   final HomeHotProduct product;
@@ -22,7 +24,9 @@ class HomeProductCard extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // 商品图片 - 高度169px，与uni-app一致
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
               child: CachedNetworkImage(
@@ -42,56 +46,57 @@ class HomeProductCard extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            // 商品信息区域 - 对应uni-app的p-1样式（约10px）
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 商品名称 - font-size: 30rpx ≈ 15px
+                  Text(
+                    product.storeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  // 商品关键词
+                  if (product.keyword.isNotEmpty) ...[
+                    const SizedBox(height: 5),
                     Text(
-                      product.storeName,
+                      product.keyword,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
+                      style: const TextStyle(fontSize: 10, color: Color(0xFFE9AD00)),
                     ),
-                    if (product.keyword.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        product.keyword,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFFE9AD00)),
-                      ),
-                    ],
-                    const Spacer(),
-                    Row(
+                  ],
+                  // 价格区域 - margin-top: 15rpx ≈ 7.5px, padding: 10rpx ≈ 5px
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'assets/images/xiaofeiquan.png',
-                          width: 41,
-                          height: 15.5,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                        const SizedBox(width: 8),
+                        // 消费券票券样式标签
+                        const CouponTag(),
+                        const SizedBox(width: 12),
+                        // 价格 - font-size: 30rpx ≈ 15px
                         Text(
                           price,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFFFA281D),
-                            fontFamily: 'DIN Alternate',
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

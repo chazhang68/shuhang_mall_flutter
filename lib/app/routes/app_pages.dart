@@ -6,6 +6,9 @@ import 'package:shuhang_mall_flutter/app/modules/home/main_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/home_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 
+// Splash模块
+import 'package:shuhang_mall_flutter/app/modules/splash/splash_page.dart';
+
 // Task模块
 import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart' as task_ryz;
 import 'package:shuhang_mall_flutter/pages/task/pages/jifen_exchange_page.dart';
@@ -147,6 +150,13 @@ import 'package:shuhang_mall_flutter/app/modules/user_set/views/user_set_view.da
 /// 对应原 pages.json
 class AppPages {
   static final pages = [
+    // ==================== 启动页 ====================
+    GetPage(
+      name: AppRoutes.splash,
+      page: () => const SplashPage(),
+      transition: Transition.fadeIn,
+    ),
+
     // ==================== 主框架 ====================
     GetPage(name: AppRoutes.main, page: () => const MainPage(), transition: Transition.fadeIn),
 

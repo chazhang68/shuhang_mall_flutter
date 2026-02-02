@@ -119,7 +119,7 @@ class PublicProvider {
 
   /// 获取文章详情
   Future<ApiResponse> getArticleDetail(int id) async {
-    return await _api.get('article/info/$id', noAuth: true);
+    return await _api.get('article/details/$id', noAuth: true);
   }
 
   /// 获取热门搜索
@@ -165,5 +165,10 @@ class PublicProvider {
   /// 获取推广海报/Banner列表
   Future<ApiResponse> getBanner() async {
     return await _api.get('spread/banner', noAuth: true);
+  }
+
+  /// 获取客服类型配置
+  Future<ApiResponse> getCustomerType() async {
+    return await _api.get('get_customer_type', noAuth: true);
   }
 }

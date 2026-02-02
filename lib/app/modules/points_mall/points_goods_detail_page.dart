@@ -4,8 +4,8 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../data/providers/lottery_provider.dart';
-import '../../data/providers/store_provider.dart';
 import '../../theme/theme_colors.dart';
 import '../../../widgets/product_spec_dialog.dart';
 
@@ -18,17 +18,22 @@ class PointsGoodsDetailPage extends StatefulWidget {
 
 class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
   final PointsMallProvider _pointsMallProvider = PointsMallProvider();
-  final StoreProvider _storeProvider = StoreProvider();
   final ScrollController _scrollController = ScrollController();
 
   int _id = 0;
   Map<String, dynamic> _storeInfo = {};
   List<String> _images = [];
   String _description = '';
-  bool _userCollect = false;
   double _opacity = 0;
   List<Map<String, dynamic>> _productAttr = [];
   Map<String, dynamic> _productValue = {};
+  List<Map<String, dynamic>> _skuArr = [];
+  int _currentImageIndex = 0;
+  
+  // 规格选择相关 - 对应uni-app的attribute
+  Map<String, dynamic> _productSelect = {};
+  String _attrValue = ''; // 已选规格值
+  String _attrTxt = '请选择'; // 规格提示文本
 
   @override
   void initState() {
@@ -63,7 +68,6 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
         _storeInfo = response.data['storeInfo'] ?? response.data;
         _images = List<String>.from(_storeInfo['images'] ?? [_storeInfo['image'] ?? '']);
         _description = response.data['description'] ?? _storeInfo['description'] ?? '';
-        _userCollect = _storeInfo['userCollect'] ?? false;
         _productAttr =
             (response.data['productAttr'] as List?)
                 ?.whereType<Map>()
@@ -71,35 +75,95 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
                 .toList() ??
             [];
         _productValue = Map<String, dynamic>.from(response.data['productValue'] ?? {});
+        
+        // 构建SKU数组用于规格图片预览
+        _skuArr = [];
+        _productValue.forEach((key, value) {
+          if (value is Map) {
+            _skuArr.add({
+              ...Map<String, dynamic>.from(value),
+              'suk': key,
+            });
+          }
+        });
+        
+        // 默认选中第一个有库存的规格 - 对应uni-app的DefaultSelect
+        _defaultSelect();
       });
     }
   }
 
-  void _setCollect() async {
-    int productId = _storeInfo['product_id'] ?? _id;
-    if (_userCollect) {
-      final response = await _storeProvider.uncollectProduct(productId);
-      if (response.isSuccess) {
-        setState(() {
-          _userCollect = false;
-        });
-        FlutterToastPro.showMessage('取消收藏成功');
+  /// 默认选中规格 - 对应uni-app的DefaultSelect方法
+  void _defaultSelect() {
+    if (_productAttr.isEmpty) {
+      // 无规格商品，使用商品本身信息
+      _productSelect = {
+        'store_name': _storeInfo['title'],
+        'image': _storeInfo['image'],
+        'price': _storeInfo['price'],
+        'stock': _storeInfo['stock'],
+        'quota': _storeInfo['quota'],
+        'product_stock': _storeInfo['product_stock'],
+        'unique': _storeInfo['unique'] ?? '',
+        'cart_num': 1,
+      };
+      _attrValue = '';
+      _attrTxt = '请选择';
+      return;
+    }
+
+    // 找到第一个有库存的规格
+    String? selectedKey;
+    for (var entry in _productValue.entries) {
+      if (entry.value is Map) {
+        final sku = Map<String, dynamic>.from(entry.value as Map);
+        final quota = sku['quota'] ?? 0;
+        if (quota is int && quota > 0) {
+          selectedKey = entry.key;
+          break;
+        }
       }
+    }
+
+    if (selectedKey != null && _productValue[selectedKey] is Map) {
+      final sku = Map<String, dynamic>.from(_productValue[selectedKey] as Map);
+      _productSelect = {
+        'store_name': _storeInfo['title'],
+        'image': sku['image'] ?? _storeInfo['image'],
+        'price': sku['price'] ?? _storeInfo['price'],
+        'stock': sku['stock'] ?? 0,
+        'unique': sku['unique'] ?? selectedKey,
+        'quota': sku['quota'] ?? 0,
+        'quota_show': sku['quota_show'] ?? 0,
+        'product_stock': sku['product_stock'] ?? 0,
+        'cart_num': 1,
+      };
+      _attrValue = selectedKey;
+      _attrTxt = '已选择';
     } else {
-      final response = await _storeProvider.collectProduct(productId);
-      if (response.isSuccess) {
-        setState(() {
-          _userCollect = true;
-        });
-        FlutterToastPro.showMessage('收藏成功');
-      }
+      // 没有库存的情况
+      _productSelect = {
+        'store_name': _storeInfo['title'],
+        'image': _storeInfo['image'],
+        'price': _storeInfo['price'],
+        'stock': 0,
+        'quota': 0,
+        'product_stock': 0,
+        'unique': '',
+        'cart_num': 0,
+      };
+      _attrValue = '';
+      _attrTxt = '请选择';
     }
   }
 
   void _goExchange() {
-    int stock = _storeInfo['stock'] ?? 0;
-    if (stock <= 0) {
-      FlutterToastPro.showMessage('库存不足');
+    // 参考uni-app: attribute.productSelect.quota > 0 && attribute.productSelect.product_stock > 0
+    int quota = _productSelect['quota'] ?? 0;
+    int productStock = _productSelect['product_stock'] ?? 0;
+    
+    if (quota <= 0 || productStock <= 0) {
+      FlutterToastPro.showMessage('无法兑换');
       return;
     }
 
@@ -108,40 +172,12 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
       return;
     }
 
-    _showExchangeDialog();
-  }
-
-  void _showExchangeDialog({String unique = '', int quantity = 1}) {
-    int price = _storeInfo['price'] ?? 0;
-
-    Get.dialog(
-      AlertDialog(
-        title: const Text('确认兑换'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('商品：${_storeInfo['title'] ?? ''}'),
-            const SizedBox(height: 8),
-            Text(
-              '消耗：$price 消费券',
-              style: TextStyle(color: ThemeColors.red.primary, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('取消')),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back();
-              await _exchange(unique: unique, quantity: quantity);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: ThemeColors.red.primary),
-            child: const Text('确认'),
-          ),
-        ],
-      ),
-    );
+    // 没有规格时，直接跳转到订单页面
+    String unique = _productSelect['unique'] ?? '';
+    Get.toNamed('/points-order', parameters: {
+      'unique': unique,
+      'num': '1',
+    });
   }
 
   Future<void> _showSpecDialog() async {
@@ -161,20 +197,31 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
       final sku = result['sku'] as Map<String, dynamic>?;
       final quantity = result['quantity'] as int? ?? 1;
       final unique = sku?['unique']?.toString() ?? '';
-      _showExchangeDialog(unique: unique, quantity: quantity);
-    }
-  }
-
-  Future<void> _exchange({required String unique, required int quantity}) async {
-    final data = <String, dynamic>{'id': _id, 'num': quantity};
-    if (unique.isNotEmpty) {
-      data['unique'] = unique;
-    }
-    final response = await _pointsMallProvider.pointsExchange(data);
-    if (response.isSuccess) {
-      FlutterToastPro.showMessage('兑换成功');
-    } else {
-      FlutterToastPro.showMessage(response.msg);
+      
+      // 更新选中的规格 - 对应uni-app的ChangeAttr
+      if (sku != null) {
+        setState(() {
+          _productSelect = {
+            'store_name': _storeInfo['title'],
+            'image': sku['image'] ?? _storeInfo['image'],
+            'price': sku['price'] ?? _storeInfo['price'],
+            'stock': sku['stock'] ?? 0,
+            'unique': unique,
+            'quota': sku['quota'] ?? 0,
+            'quota_show': sku['quota_show'] ?? 0,
+            'product_stock': sku['product_stock'] ?? 0,
+            'cart_num': quantity,
+          };
+          _attrValue = sku['suk'] ?? unique;
+          _attrTxt = '已选择';
+        });
+      }
+      
+      // 跳转到积分订单页面，与uni-app一致
+      Get.toNamed('/points-order', parameters: {
+        'unique': unique,
+        'num': quantity.toString(),
+      });
     }
   }
 
@@ -187,39 +234,89 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
       );
     }
 
-    return SizedBox(
-      height: 375,
-      child: CarouselSlider(
-        items: _images.map((url) {
-          return CachedNetworkImage(
-            imageUrl: url,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(color: Colors.grey[200]),
-            errorWidget: (context, url, error) =>
-                Container(color: Colors.grey[200], child: const Icon(Icons.image)),
-          );
-        }).toList(),
-        options: CarouselOptions(
+    return Stack(
+      children: [
+        SizedBox(
           height: 375,
-          viewportFraction: 1.0,
-          enableInfiniteScroll: _images.length > 1,
-          autoPlay: _images.length > 1,
+          child: CarouselSlider(
+            items: _images.map((url) {
+              return CachedNetworkImage(
+                imageUrl: url,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(color: Colors.grey[200]),
+                errorWidget: (context, url, error) =>
+                    Container(color: Colors.grey[200], child: const Icon(Icons.image)),
+              );
+            }).toList(),
+            options: CarouselOptions(
+              height: 375,
+              viewportFraction: 1.0,
+              enableInfiniteScroll: _images.length > 1,
+              autoPlay: _images.length > 1,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _currentImageIndex = index;
+                });
+              },
+            ),
+          ),
         ),
-      ),
+        // 图片指示器
+        if (_images.length > 1)
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _images.asMap().entries.map((entry) {
+                return Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentImageIndex == entry.key
+                        ? ThemeColors.red.primary
+                        : Colors.white.withAlpha((0.5 * 255).round()),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildPriceInfo() {
+    final num = _storeInfo['num'] ?? 0; // 限购数量
+    final unitName = _storeInfo['unit_name'] ?? '件';
+    final productPrice = _storeInfo['product_price']; // 划线价
+    final quotaShow = _storeInfo['quota_show'] ?? _storeInfo['quota'] ?? 0; // 限量
+    final sales = _storeInfo['sales'] ?? 0; // 已兑换
+
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 价格行
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              Image.asset(
+                'assets/images/my-point.png',
+                width: 20,
+                height: 20,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  Icons.monetization_on,
+                  size: 20,
+                  color: ThemeColors.red.primary,
+                ),
+              ),
+              const SizedBox(width: 4),
               Text(
                 '${_storeInfo['price'] ?? 0}',
                 style: TextStyle(
@@ -229,31 +326,46 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
                 ),
               ),
               Text(' 消费券', style: TextStyle(fontSize: 16, color: ThemeColors.red.primary)),
-              const Spacer(),
-              Text(
-                '已兑换${_storeInfo['sales'] ?? 0}件',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
             ],
           ),
           const SizedBox(height: 12),
+          // 商品标题
           Text(
             _storeInfo['title'] ?? '',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          // 限购数量
+          if (num > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '最多可兑换: $num$unitName',
+                style: TextStyle(fontSize: 12, color: ThemeColors.red.primary),
+              ),
+            ),
+          const SizedBox(height: 12),
+          // 划线价、限量、已兑换
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: ThemeColors.red.primary.withAlpha((0.1 * 255).round()),
-                  borderRadius: BorderRadius.circular(4),
+              if (productPrice != null) ...[
+                Text(
+                  '划线价：¥$productPrice',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    decoration: TextDecoration.lineThrough,
+                  ),
                 ),
-                child: Text(
-                  '库存${_storeInfo['stock'] ?? 0}件',
-                  style: TextStyle(fontSize: 12, color: ThemeColors.red.primary),
-                ),
+                const SizedBox(width: 16),
+              ],
+              Text(
+                '限量: $quotaShow',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '已兑换: $sales',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -262,7 +374,97 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
     );
   }
 
+  /// 构建规格选择区域 - 对应uni-app的attribute区域
+  Widget _buildAttrSection() {
+    if (_productAttr.isEmpty) return const SizedBox.shrink();
+
+    return GestureDetector(
+      onTap: _showSpecDialog,
+      child: Container(
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(16),
+        color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '$_attrTxt：',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                Expanded(
+                  child: Text(
+                    _attrValue.isNotEmpty ? _attrValue : '请选择规格',
+                    style: const TextStyle(fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+              ],
+            ),
+            // SKU图片预览 - 对应uni-app的skuArr.length > 1时显示
+            if (_skuArr.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  children: [
+                    // 显示前4个SKU图片
+                    ..._skuArr.take(4).map((sku) {
+                      final image = sku['image'] ?? '';
+                      return Container(
+                        width: 50,
+                        height: 50,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: CachedNetworkImage(
+                            imageUrl: image,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(color: Colors.grey[200]),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.image, size: 20),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '共${_skuArr.length}种规格可选',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDescription() {
+    if (_description.isEmpty) return const SizedBox.shrink();
+
+    // 处理HTML内容，添加图片样式
+    String processedHtml = _description.replaceAll(
+      RegExp(r'<img'),
+      '<img style="max-width:100%;height:auto;display:block"',
+    );
+
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(16),
@@ -270,16 +472,22 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('商品详情', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('产品介绍', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          Text(_description, style: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.6)),
+          HtmlWidget(
+            processedHtml,
+            textStyle: TextStyle(fontSize: 14, color: Colors.grey[700], height: 1.6),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildBottomBar() {
-    int stock = _storeInfo['stock'] ?? 0;
+    // 参考uni-app: attribute.productSelect.quota > 0 && attribute.productSelect.product_stock > 0
+    int quota = _productSelect['quota'] ?? 0;
+    int productStock = _productSelect['product_stock'] ?? 0;
+    bool canExchange = quota > 0 && productStock > 0;
 
     return Container(
       padding: EdgeInsets.only(
@@ -313,32 +521,17 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
             ),
           ),
           const SizedBox(width: 24),
-          InkWell(
-            onTap: _setCollect,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _userCollect ? Icons.favorite : Icons.favorite_border,
-                  size: 24,
-                  color: _userCollect ? ThemeColors.red.primary : null,
-                ),
-                Text('收藏', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
           Expanded(
             child: ElevatedButton(
-              onPressed: stock > 0 ? _goExchange : null,
+              onPressed: canExchange ? _goExchange : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: stock > 0 ? ThemeColors.red.primary : Colors.grey[400],
+                backgroundColor: canExchange ? ThemeColors.red.primary : Colors.grey[400],
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
               ),
               child: Text(
-                stock > 0 ? '立即兑换' : '库存不足',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                canExchange ? '立即兑换' : '无法兑换',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ),
@@ -366,6 +559,7 @@ class _PointsGoodsDetailPageState extends State<PointsGoodsDetailPage> {
               slivers: [
                 SliverToBoxAdapter(child: _buildImageSwiper()),
                 SliverToBoxAdapter(child: _buildPriceInfo()),
+                SliverToBoxAdapter(child: _buildAttrSection()),
                 SliverToBoxAdapter(child: _buildDescription()),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],

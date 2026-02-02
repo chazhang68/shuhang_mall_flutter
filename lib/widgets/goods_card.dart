@@ -239,6 +239,9 @@ class GoodsCard extends StatelessWidget {
   String? _getActivityTag() {
     final activity = goods['activity'];
     if (activity == null) return null;
+    
+    // activity 可能是 Map 或其他类型，需要类型检查
+    if (activity is! Map) return null;
 
     final type = activity['type']?.toString();
     switch (type) {

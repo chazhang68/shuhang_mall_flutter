@@ -15,7 +15,9 @@ import 'package:shuhang_mall_flutter/app/data/providers/store_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/app/services/customer_service.dart';
 import 'package:shuhang_mall_flutter/widgets/widgets.dart';
+import 'package:shuhang_mall_flutter/widgets/coupon_tag.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -29,10 +31,10 @@ class GoodsDetailPage extends StatefulWidget {
 }
 
 class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   bool _showTopBar = false;
-  int _currentTabIndex = 0;
+  int _currentNavIndex = 0; // 当前高亮的导航索引
+  bool _isScrolling = false; // 是否正在滚动（防止滚动时切换导航）
 
   // 商品ID
   int _productId = 0;
@@ -40,6 +42,16 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   bool _isLoading = true;
   // 错误信息
   String? _errorMsg;
+  
+  // 各个区域的 GlobalKey，用于滚动定位
+  final GlobalKey _productInfoKey = GlobalKey();
+  final GlobalKey _productDetailKey = GlobalKey();
+  final GlobalKey _productReviewKey = GlobalKey();
+  
+  // 导航列表
+  List<String> _navList = [];
+  // 各个区域的位置信息
+  List<double> _sectionOffsets = [];
 
   final StoreProvider _storeProvider = StoreProvider();
   final OrderProvider _orderProvider = OrderProvider();
@@ -74,7 +86,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _scrollController.addListener(_onScroll);
 
     // 获取商品ID参数 - 支持两种传参方式
@@ -177,8 +188,19 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           _couponList = data.coupons;
           _activity = data.activity;
           _isLoading = false;
+          
+          // 构建导航列表（与 uni-app 一致）
+          _navList = ['商品'.tr, '详情'.tr];
+          if (_replyCount > 0) {
+            _navList.insert(1, '评价'.tr);
+          }
         });
         debugPrint('商品详情加载成功: ${data.storeInfo.storeName}');
+        
+        // 延迟计算区域位置
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _calculateSectionOffsets();
+        });
       } else {
         setState(() {
           _isLoading = false;
@@ -196,18 +218,101 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
 
   @override
   void dispose() {
-    _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    final showTopBar = _scrollController.offset > 200;
+    final offset = _scrollController.offset;
+    final showTopBar = offset > 200;
+    
     if (showTopBar != _showTopBar) {
       setState(() {
         _showTopBar = showTopBar;
       });
     }
+    
+    // 根据滚动位置自动高亮对应的导航
+    if (!_isScrolling && _sectionOffsets.isNotEmpty) {
+      _updateNavIndexByScroll(offset);
+    }
+  }
+  
+  /// 根据滚动位置更新导航索引
+  void _updateNavIndexByScroll(double offset) {
+    for (int i = 0; i < _sectionOffsets.length; i++) {
+      final sectionStart = _sectionOffsets[i];
+      final sectionEnd = i < _sectionOffsets.length - 1 
+          ? _sectionOffsets[i + 1] 
+          : double.infinity;
+      
+      if (offset >= sectionStart - 100 && offset < sectionEnd - 100) {
+        if (_currentNavIndex != i) {
+          setState(() {
+            _currentNavIndex = i;
+          });
+        }
+        break;
+      }
+    }
+  }
+  
+  /// 点击导航，滚动到对应区域
+  void _scrollToSection(int index) {
+    if (index >= _sectionOffsets.length) return;
+    
+    setState(() {
+      _isScrolling = true;
+      _currentNavIndex = index;
+    });
+    
+    final targetOffset = _sectionOffsets[index];
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    ).then((_) {
+      setState(() {
+        _isScrolling = false;
+      });
+    });
+  }
+  
+  /// 计算各个区域的位置
+  void _calculateSectionOffsets() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final offsets = <double>[];
+      
+      // 商品信息区域
+      final productInfoContext = _productInfoKey.currentContext;
+      if (productInfoContext != null) {
+        final RenderBox box = productInfoContext.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+        offsets.add(position.dy + _scrollController.offset);
+      }
+      
+      // 商品详情区域
+      final productDetailContext = _productDetailKey.currentContext;
+      if (productDetailContext != null) {
+        final RenderBox box = productDetailContext.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+        offsets.add(position.dy + _scrollController.offset);
+      }
+      
+      // 评价区域
+      final productReviewContext = _productReviewKey.currentContext;
+      if (productReviewContext != null) {
+        final RenderBox box = productReviewContext.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+        offsets.add(position.dy + _scrollController.offset);
+      }
+      
+      if (mounted) {
+        setState(() {
+          _sectionOffsets = offsets;
+        });
+      }
+    });
   }
 
   @override
@@ -260,27 +365,39 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 slivers: [
                   // 商品轮播图
                   SliverToBoxAdapter(child: _buildProductImages()),
-                  // 商品信息
-                  SliverToBoxAdapter(child: _buildProductInfo(themeColor)),
-                  // Tab切换
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _StickyTabBarDelegate(
-                      tabController: _tabController,
-                      themeColor: themeColor,
-                      onTabChanged: (index) {
-                        setState(() {
-                          _currentTabIndex = index;
-                        });
-                      },
+                  // 商品信息区域（带 key）
+                  SliverToBoxAdapter(
+                    child: Container(
+                      key: _productInfoKey,
+                      child: _buildProductInfo(themeColor),
                     ),
                   ),
-                  // Tab内容
-                  SliverToBoxAdapter(child: _buildTabContent(themeColor)),
+                  // 商品详情区域（带 key）
+                  SliverToBoxAdapter(
+                    child: Container(
+                      key: _productDetailKey,
+                      child: _buildProductDetail(),
+                    ),
+                  ),
+                  // 评价区域（带 key）
+                  if (_replyCount > 0)
+                    SliverToBoxAdapter(
+                      child: Container(
+                        key: _productReviewKey,
+                        child: _buildProductReviews(),
+                      ),
+                    ),
                 ],
               ),
-              // 顶部导航栏
-              _buildAppBar(themeColor),
+              // 顶部导航栏（带 Tab）
+              _buildTopNavBar(themeColor),
+              // 返回和更多按钮
+              _buildTopButtons(),
+              // 客服浮动按钮
+              CustomerFloatButton(
+                productId: _productId,
+                visible: _productId > 0,
+              ),
             ],
           ),
           bottomNavigationBar: _buildBottomBar(themeColor),
@@ -289,7 +406,8 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     );
   }
 
-  Widget _buildAppBar(ThemeColorData themeColor) {
+  /// 顶部导航栏（带 Tab）
+  Widget _buildTopNavBar(ThemeColorData themeColor) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       color: _showTopBar ? Colors.white : Colors.transparent,
@@ -297,52 +415,171 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         bottom: false,
         child: Container(
           height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              // 返回按钮
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _showTopBar
-                        ? Colors.transparent
-                        : Colors.black.withAlpha((0.3 * 255).round()),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 18,
-                    color: _showTopBar ? Colors.black : Colors.white,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              // 分享按钮
-              GestureDetector(
-                onTap: _showShareDialog,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _showTopBar
-                        ? Colors.transparent
-                        : Colors.black.withAlpha((0.3 * 255).round()),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.share,
-                    size: 18,
-                    color: _showTopBar ? Colors.black : Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          child: _showTopBar && _navList.isNotEmpty
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _navList.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final title = entry.value;
+                    final isActive = _currentNavIndex == index;
+                    
+                    return GestureDetector(
+                      onTap: () => _scrollToSection(index),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                color: isActive ? themeColor.primary : const Color(0xFF666666),
+                              ),
+                            ),
+                            if (isActive) ...[
+                              const SizedBox(height: 2),
+                              Container(
+                                width: 20,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  color: themeColor.primary,
+                                  borderRadius: BorderRadius.circular(1.5),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                )
+              : const SizedBox.shrink(),
         ),
       ),
+    );
+  }
+  
+  /// 返回和更多按钮
+  Widget _buildTopButtons() {
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            // 返回按钮
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _showTopBar
+                      ? Colors.transparent
+                      : Colors.black.withAlpha((0.3 * 255).round()),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 18,
+                  color: _showTopBar ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+            const Spacer(),
+            // 更多按钮
+            GestureDetector(
+              onTap: _showMoreMenu,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _showTopBar
+                      ? Colors.transparent
+                      : Colors.black.withAlpha((0.3 * 255).round()),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.more_horiz,
+                  size: 18,
+                  color: _showTopBar ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// 显示更多菜单
+  void _showMoreMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return GetBuilder<AppController>(
+          builder: (controller) {
+            final themeColor = controller.themeColor;
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 标题
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '更多'.tr,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(Icons.close, size: 24, color: Color(0xFF999999)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // 分享商品
+                    ListTile(
+                      leading: Icon(Icons.share, color: themeColor.primary),
+                      title: Text('分享商品'.tr),
+                      trailing: const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showShareDialog();
+                      },
+                    ),
+                    // 返回首页
+                    ListTile(
+                      leading: Icon(Icons.home, color: themeColor.primary),
+                      title: Text('返回首页'.tr),
+                      trailing: const Icon(Icons.chevron_right, color: Color(0xFFCCCCCC)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _goHome();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -499,58 +736,82 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 价格行
+          // 价格行（带分享按钮）- 与 uni-app 完全一致
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'swp',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: themeColor.price,
-                ),
-              ),
-              Text(
-                price,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: themeColor.price,
-                ),
-              ),
-              if (specType) Text('起', style: TextStyle(fontSize: 14, color: themeColor.price)),
-              // VIP价格
-              if (vipPriceValue > 0 && isVip) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'swp$vipPrice',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const CouponTag(fontSize: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      price,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: themeColor.price,
+                      ),
                     ),
+                    if (specType) ...[
+                      const SizedBox(width: 2),
+                      Text('起', style: TextStyle(fontSize: 14, color: themeColor.price)),
+                    ],
+                    // VIP价格
+                    if (vipPriceValue > 0 && isVip) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              '消费券',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              vipPrice,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Image.asset(
+                              'assets/images/svip.gif',
+                              width: 16,
+                              height: 16,
+                              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // 分享按钮（与 uni-app 一致）
+              GestureDetector(
+                onTap: _showShareDialog,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.share,
+                    size: 22,
+                    color: Color(0xFF666666),
                   ),
                 ),
-              ],
-              if (otPrice.isNotEmpty && otPrice != '0.00') ...[
-                const SizedBox(width: 8),
-                Text(
-                  'swp$otPrice',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF999999),
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -578,8 +839,16 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
               ),
             ),
           ],
+          // 送消费券信息（与 uni-app 一致的位置）
+          if (giveIntegral > 0) ...[
+            const SizedBox(height: 12),
+            Text(
+              '送消费券: $giveIntegral',
+              style: TextStyle(fontSize: 12, color: themeColor.primary),
+            ),
+          ],
           const SizedBox(height: 8),
-          // SVIP开通入口
+          // SVIP开通入口（与 uni-app 一致的位置）
           if (vipPriceValue > 0 && isVip && !_isMoneyLevel) ...[
             GestureDetector(
               onTap: () => Get.toNamed(AppRoutes.vipPaid),
@@ -607,25 +876,104 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
               ),
             ),
           ],
-          // 销量等信息
-          Row(
-            children: [
-              if (giveIntegral > 0) ...[
-                Text(
-                  '送消费券: $giveIntegral',
-                  style: TextStyle(fontSize: 12, color: themeColor.primary),
-                ),
-                const SizedBox(width: 20),
-              ],
-              Text(
-                '已售$sales$unitName',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+          // 预售信息（与 uni-app 一致的位置）
+          if (presale) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 20),
-              Text('库存$stock', style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
-            ],
-          ),
-          // 优惠券
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 16, color: Color(0xFFFF8800)),
+                      const SizedBox(width: 4),
+                      const Text(
+                        '预售活动时间：',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+                      ),
+                    ],
+                  ),
+                  if (presaleStartTime.isNotEmpty && presaleEndTime.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '$presaleStartTime ~ $presaleEndTime',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Text(
+                    '预售结束后 $presaleDay 天内发货',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF999999)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (vipPriceValue > 0 && isVip && !_isMoneyLevel) ...[
+            GestureDetector(
+              onTap: () => Get.toNamed(AppRoutes.vipPaid),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFFFF8E1), Color(0xFFFFECB3)]),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.card_membership, size: 18, color: Color(0xFFFF8800)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '开通"超级会员"立省${_calculateSavings()}元',
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF333333)),
+                      ),
+                    ),
+                    const Text('立即开通', style: TextStyle(fontSize: 12, color: Color(0xFFFF8800))),
+                    const Icon(Icons.chevron_right, size: 16, color: Color(0xFFFF8800)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          // 优惠券（与 uni-app 一致的位置）
+          if (_couponList.isNotEmpty) ...[
+            const SizedBox(height: 15),
+            GestureDetector(
+              onTap: _showCouponDialog,
+              child: Row(
+                children: [
+                  const Text('优惠券', style: TextStyle(fontSize: 14, color: Color(0xFF666666))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Row(
+                      children: _couponList.take(2).map((coupon) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: themeColor.primary.withAlpha((0.1 * 255).round()),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '满${coupon.useMinPrice}减${coupon.couponPrice}',
+                            style: TextStyle(fontSize: 12, color: themeColor.primary),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
+                ],
+              ),
+            ),
+          ],
+          // 优惠券（与 uni-app 一致的位置）
           if (_couponList.isNotEmpty) ...[
             const SizedBox(height: 15),
             GestureDetector(
@@ -809,19 +1157,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     );
   }
 
-  Widget _buildTabContent(ThemeColorData themeColor) {
-    switch (_currentTabIndex) {
-      case 0:
-        return _buildProductDetail();
-      case 1:
-        return _buildProductParams();
-      case 2:
-        return _buildProductReviews();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
   Widget _buildProductDetail() {
     return Container(
       color: Colors.white,
@@ -852,64 +1187,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                 return null;
               },
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductParams() {
-    // 从商品属性中提取规格参数
-    final storeInfo = _storeInfo;
-    final storeName = storeInfo.storeName;
-    final unitName = storeInfo.unitName;
-    final stock = storeInfo.stock.toString();
-    final sales = (storeInfo.fsales > 0 ? storeInfo.fsales : storeInfo.sales).toString();
-    final cateId = storeInfo.cateId;
-
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('规格参数', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 15),
-          if (storeName.isNotEmpty) _buildParamRow('商品名称', storeName),
-          if (unitName.isNotEmpty) _buildParamRow('计量单位', unitName),
-          _buildParamRow('库存', stock),
-          _buildParamRow('销量', sales),
-          if (cateId.isNotEmpty) _buildParamRow('分类ID', cateId),
-          // 显示商品规格属性
-          if (_productAttr.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            const Text(
-              '商品规格',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF666666)),
-            ),
-            const SizedBox(height: 10),
-            ..._productAttr.map((attr) => _buildParamRow(attr.attrName, attr.attrValues.join('、'))),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParamRow(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF5F5F5))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF999999))),
-          ),
-          Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF333333))),
-          ),
         ],
       ),
     );
@@ -1104,9 +1381,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
             // 首页
             _buildBottomIcon(Icons.home_outlined, '首页', _goHome),
             const SizedBox(width: 15),
-            // 客服
-            _buildBottomIcon(Icons.headset_mic_outlined, '客服', _goCustomerService),
-            const SizedBox(width: 15),
             // 收藏
             _buildBottomIcon(
               isCollect ? Icons.favorite : Icons.favorite_border,
@@ -1269,11 +1543,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
     } else if (type == '3') {
       Get.toNamed(AppRoutes.groupBuyDetail, arguments: {'id': id});
     }
-  }
-
-  /// 跳转客服
-  void _goCustomerService() {
-    Get.toNamed(AppRoutes.chat, arguments: {'productId': _productId});
   }
 
   /// 显示分享弹窗
@@ -1480,7 +1749,8 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('swp', style: TextStyle(fontSize: 12, color: themeColor.primary)),
+                    const CouponTag(fontSize: 10),
+                    const SizedBox(width: 2),
                     Text(
                       couponPrice,
                       style: TextStyle(
@@ -1626,7 +1896,8 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
                     // 价格
                     Row(
                       children: [
-                        Text('swp', style: TextStyle(fontSize: 12, color: Colors.red)),
+                        const CouponTag(fontSize: 10),
+                        const SizedBox(width: 4),
                         Text(
                           price,
                           style: TextStyle(
@@ -1759,48 +2030,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   }
 }
 
-class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabController tabController;
-  final dynamic themeColor;
-  final Function(int) onTabChanged;
 
-  _StickyTabBarDelegate({
-    required this.tabController,
-    required this.themeColor,
-    required this.onTabChanged,
-  });
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      child: TabBar(
-        controller: tabController,
-        labelColor: themeColor.primary,
-        unselectedLabelColor: const Color(0xFF666666),
-        indicatorColor: themeColor.primary,
-        indicatorSize: TabBarIndicatorSize.label,
-        onTap: onTabChanged,
-        tabs: const [
-          Tab(text: '商品详情'),
-          Tab(text: '规格参数'),
-          Tab(text: '用户评价'),
-        ],
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 48;
-
-  @override
-  double get minExtent => 48;
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
-  }
-}
 
 /// 视频播放页面
 class _VideoPlayerPage extends StatefulWidget {

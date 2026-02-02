@@ -632,4 +632,18 @@ class UserProvider {
   Future<ApiResponse> updatePhone({required String phone, required String captcha}) async {
     return await _api.post('update/binding', data: {'phone': phone, 'captcha': captcha});
   }
+
+  // ==================== 搜索历史 ====================
+
+  /// 获取搜索历史
+  /// 对应 api/api.js: searchList
+  Future<ApiResponse> getSearchHistory(Map<String, dynamic>? params) async {
+    return await _api.get('v2/user/search_list', queryParameters: params, noAuth: true);
+  }
+
+  /// 清空搜索历史
+  /// 对应 api/api.js: clearSearch
+  Future<ApiResponse> clearSearchHistory() async {
+    return await _api.get('v2/user/clean_search');
+  }
 }

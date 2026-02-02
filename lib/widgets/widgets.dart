@@ -10,3 +10,4 @@ export 'product_spec_dialog.dart';
 export 'address_picker.dart';
 export 'coupon_dialog.dart';
 export 'banner_swiper.dart';
+export 'customer_float_button.dart';

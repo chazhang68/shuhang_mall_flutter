@@ -30,7 +30,13 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   @override
   void initState() {
     super.initState();
-    _id = int.tryParse(Get.parameters['id'] ?? '') ?? 0;
+    // 支持 arguments 和 parameters 两种方式获取id
+    final args = Get.arguments;
+    if (args != null && args is Map && args['id'] != null) {
+      _id = args['id'] is int ? args['id'] : int.tryParse(args['id'].toString()) ?? 0;
+    } else {
+      _id = int.tryParse(Get.parameters['id'] ?? '') ?? 0;
+    }
 
     if (_id > 0) {
       _getArticleDetail();
@@ -233,28 +239,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
             // 关联商品
             _buildProductCard(),
-
-            // 分享按钮
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _shareArticle();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ThemeColors.red.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                  ),
-                  child: const Text(
-                    '和好友一起分享',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
 
             const SizedBox(height: 32),
           ],
