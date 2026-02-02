@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
@@ -28,6 +29,10 @@ class _LotteryPageState extends State<LotteryPage> with SingleTickerProviderStat
   int _currentIndex = 0;
   bool _isAnimating = false;
   int _winIndex = 0;
+  // 奖品位置映射表 (index => prizeIndex)
+  static const Map<int, int> _positionMap = {
+    0: 0, 1: 1, 2: 2, 3: 7, 5: 3, 6: 6, 7: 5, 8: 4
+  };
 
   @override
   void initState() {
@@ -243,35 +248,7 @@ class _LotteryPageState extends State<LotteryPage> with SingleTickerProviderStat
           }
 
           // 计算奖品位置
-          int prizeIndex;
-          switch (index) {
-            case 0:
-              prizeIndex = 0;
-              break;
-            case 1:
-              prizeIndex = 1;
-              break;
-            case 2:
-              prizeIndex = 2;
-              break;
-            case 5:
-              prizeIndex = 3;
-              break;
-            case 8:
-              prizeIndex = 4;
-              break;
-            case 7:
-              prizeIndex = 5;
-              break;
-            case 6:
-              prizeIndex = 6;
-              break;
-            case 3:
-              prizeIndex = 7;
-              break;
-            default:
-              prizeIndex = 0;
-          }
+          int prizeIndex = _positionMap[index] ?? 0;
 
           bool isHighlight = _currentIndex == prizeIndex && _isAnimating;
           Map<String, dynamic> prize = prizeIndex < _prize.length ? _prize[prizeIndex] : {};

@@ -15,6 +15,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:shuhang_mall_flutter/app/services/wechat_service.dart';
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
 import 'package:shuhang_mall_flutter/app/utils/debug_logger.dart';
+import 'package:shuhang_mall_flutter/app/services/navigation_service.dart';
 
 /// 应用入口
 /// 对应原 main.js
@@ -71,6 +72,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       child: FlutterToastProWrapper(
         child: GetMaterialApp(
+          navigatorKey: NavigationService.navigatorKey,
           title: '数航商道',
           debugShowCheckedModeBanner: false,
 

@@ -69,7 +69,11 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
                         : items.isEmpty
                             ? _CartEmptyView(
                                 themeColor: themeColor,
-                                onBrowse: () => Get.offAllNamed(AppRoutes.main),
+                                onBrowse: () {
+                                  Future.microtask(() {
+                                    Get.offAllNamed(AppRoutes.main);
+                                  });
+                                },
                               )
                             : RefreshIndicator(
                                 onRefresh: _store.loadCartList,
@@ -89,10 +93,14 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
                                       onIncrease: () => _store.changeCartNum(item, item.cartNum + 1),
                                       onTap: () {
                                         // 跳转到商品详情
-                                        Get.toNamed(
-                                          AppRoutes.goodsDetail,
-                                          arguments: {'id': item.productId},
-                                        );
+                                        if (item.productId > 0) {
+                                          Future.microtask(() {
+                                            Get.toNamed(
+                                              AppRoutes.goodsDetail,
+                                              arguments: {'id': item.productId},
+                                            );
+                                          });
+                                        }
                                       },
                                     );
                                   },
@@ -116,10 +124,12 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
                       onCheckout: () {
                         // 跳转到订单确认页
                         if (selectedIds.isNotEmpty) {
-                          Get.toNamed(
-                            AppRoutes.orderConfirm,
-                            arguments: {'cartId': selectedIds.join(',')},
-                          );
+                          Future.microtask(() {
+                            Get.toNamed(
+                              AppRoutes.orderConfirm,
+                              arguments: {'cartId': selectedIds.join(',')},
+                            );
+                          });
                         }
                       },
                     ),
