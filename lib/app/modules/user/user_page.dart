@@ -550,7 +550,7 @@ class _AccountCard extends StatelessWidget {
         child: Column(
           children: [
             GestureDetector(
-              onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
+              // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
               child: Container(
                 height: 40.h,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -601,20 +601,20 @@ class _AccountCard extends StatelessWidget {
               decoration: BoxDecoration(color: const Color(0xFF2E2721)),
               child: Row(
                 children: [
-                  _AccountItem(
+                  AccountItem(
                     label: '仓库积分',
                     value: isLogin ? (userInfo?.fudou ?? 0).toStringAsFixed(2) : '0.00',
-                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
+                    // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=0'),
                   ),
-                  _AccountItem(
+                  AccountItem(
                     label: '可用积分',
                     value: isLogin ? (userInfo?.fdKy ?? 0).toStringAsFixed(2) : '0.00',
-                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=1'),
+                    // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=1'),
                   ),
-                  _AccountItem(
+                  AccountItem(
                     label: 'SWP',
                     value: isLogin ? (userInfo?.balance ?? 0).toStringAsFixed(2) : '0.00',
-                    onTap: () => Get.toNamed('${AppRoutes.ryz}?index=2'),
+                    // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=2'),
                   ),
                 ],
               ),
@@ -626,12 +626,12 @@ class _AccountCard extends StatelessWidget {
   }
 }
 
-class _AccountItem extends StatelessWidget {
-  const _AccountItem({required this.label, required this.value, required this.onTap});
+class AccountItem extends StatelessWidget {
+  const AccountItem({super.key, required this.label, required this.value, this.onTap});
 
   final String label;
   final String value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
