@@ -34,7 +34,17 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   String _news = '0';
   int _noCoupon = 0;
   int _addressId = 0;
-  final int _shippingType = 1;
+  int _shippingType = 0;
+  int _bargainId = 0;
+  int _combinationId = 0;
+  int _discountId = 0;
+  int _seckillId = 0;
+  int _advanceId = 0;
+  int _storeId = 0;
+  String _from = '';
+  int _invoiceId = 0;
+  int _virtualType = 0;
+  String _payType = '';
   bool _isLoading = false;
   bool _isSubmitting = false;
   String _orderKey = '';
@@ -90,6 +100,15 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
         args['news']?.toString() ??
         '0';
     _noCoupon = _toInt(params['noCoupon'] ?? args['noCoupon']);
+    _shippingType = _toInt(params['shippingType'] ?? args['shippingType']);
+    _bargainId = _toInt(params['bargainId'] ?? args['bargainId']);
+    _combinationId = _toInt(params['combinationId'] ?? args['combinationId']);
+    _discountId = _toInt(params['discountId'] ?? args['discountId']);
+    _seckillId = _toInt(params['seckillId'] ?? args['seckillId']);
+    _advanceId = _toInt(params['advanceId'] ?? args['advanceId']);
+    _storeId = _toInt(params['storeId'] ?? args['storeId']);
+    _invoiceId = _toInt(params['invoiceId'] ?? args['invoiceId']);
+    _from = (params['from'] ?? args['from'] ?? '').toString();
   }
 
   Future<void> _loadInitialAddress() async {
@@ -168,6 +187,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
           final apiPostage = _toDouble(data['pay_postage']);
           _freight = apiPostage > 0 ? apiPostage : priceGroupPostage;
           _orderKey = data['orderKey']?.toString() ?? _orderKey;
+          _virtualType = _toInt(data['virtual_type'] ?? data['virtualType']);
         });
 
         await _loadCouponList();
@@ -288,7 +308,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   }
 
   Future<void> _submitOrder() async {
-    if (_selectedAddress == null) {
+    if (_virtualType == 0 && _selectedAddress == null) {
       FlutterToastPro.showMessage('请选择收货地址');
       return;
     }
@@ -299,22 +319,13 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
     }
 
     await _ensurePaymentMethods();
-    final hasEnabled = _paymentMethods.any((item) => item.enabled);
-    if (!hasEnabled) {
+    _payType = _payType.isNotEmpty ? _payType : _resolveDefaultPayType();
+    if (_payType.isEmpty) {
       FlutterToastPro.showMessage('暂无可用支付方式');
       return;
     }
 
-    await PaymentDialog.show(
-      paymentMethods: _paymentMethods,
-      totalPrice: _totalPrice,
-      orderId: '',
-      isCall: true,
-      onPay: (payType) {
-        Get.back();
-        _createOrder(payType);
-      },
-    );
+    _createOrder(_payType);
   }
 
   Future<void> _ensurePaymentMethods() async {
@@ -367,6 +378,13 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
     });
   }
 
+  String _resolveDefaultPayType() {
+    for (final method in _paymentMethods) {
+      if (method.enabled) return method.type;
+    }
+    return '';
+  }
+
   Future<void> _createOrder(String payType) async {
     if (_isSubmitting) return;
 
@@ -381,7 +399,8 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
       if (response.isSuccess) {
         final orderId = _extractOrderId(response.data);
         if (orderId.isNotEmpty) {
-          Get.offNamed(AppRoutes.cashier, parameters: {'order_id': orderId, 'from_type': 'order'});
+          Get.offNamed(AppRoutes.cashier, arguments: {'order_id': orderId, 'from_type': 'order'});
+          return;
         } else {
           FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '订单创建失败');
         }
@@ -407,10 +426,18 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
       'addressId': _addressId,
       'couponId': _couponId,
       'useIntegral': 0,
+      'bargainId': _bargainId,
+      'combinationId': _combinationId,
+      'discountId': _discountId,
+      'seckill_id': _seckillId,
+      'advanceId': _advanceId,
       'pinkId': _pinkId,
       'mark': _remark,
+      'store_id': _storeId,
+      'from': _from,
       'shipping_type': _shippingType + 1,
       'new': _news,
+      'invoice_id': _invoiceId,
       'payType': payType,
     };
   }

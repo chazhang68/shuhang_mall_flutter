@@ -31,17 +31,37 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   @override
   void initState() {
     super.initState();
-    orderId = Get.parameters['order_id'] ?? '';
+    final args = Get.arguments;
+    if (args is Map) {
+      orderId = args['order_id']?.toString() ?? '';
+      if (orderId.isEmpty) {
+        orderId = args['orderId']?.toString() ?? '';
+      }
+    }
+    if (orderId.isEmpty) {
+      orderId = Get.parameters['order_id'] ?? '';
+    }
+    if (orderId.isEmpty) {
+      orderId = Get.parameters['orderId'] ?? '';
+    }
     _loadOrderDetail();
   }
 
   Future<void> _loadOrderDetail() async {
     setState(() => isLoading = true);
+    if (orderId.isEmpty) {
+      FlutterToastPro.showMessage('缺少订单号');
+      setState(() => isLoading = false);
+      return;
+    }
     try {
       final response = await _orderProvider.getOrderDetail(orderId);
       if (!response.isSuccess) {
         FlutterToastPro.showMessage(response.msg);
         setState(() => isLoading = false);
+        if (response.status == 410294 || response.msg.contains('商品不存在')) {
+          Get.offNamed(AppRoutes.orderList);
+        }
         return;
       }
 
@@ -71,7 +91,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   void _goPayment() {
-    Get.toNamed(AppRoutes.cashier, parameters: {'order_id': orderId, 'from_type': 'order'});
+    final payOrderId = orderInfo?.orderId ?? orderId;
+    if (payOrderId.isEmpty) {
+      FlutterToastPro.showMessage('缺少订单号');
+      return;
+    }
+    Get.toNamed(AppRoutes.cashier, parameters: {'order_id': payOrderId, 'from_type': 'order'});
   }
 
   void _cancelOrder() {
@@ -94,11 +119,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _submitCancel() async {
+    final cancelOrderId = orderInfo?.orderId ?? orderId;
+    if (cancelOrderId.isEmpty) {
+      FlutterToastPro.showMessage('缺少订单号');
+      return;
+    }
     try {
-      final response = await _orderProvider.cancelOrder(orderId);
+      final response = await _orderProvider.cancelOrder(cancelOrderId);
       FlutterToastPro.showMessage(response.msg);
       if (response.isSuccess) {
-        _loadOrderDetail();
+        Get.back();
       }
     } catch (e) {
       FlutterToastPro.showMessage('取消失败');

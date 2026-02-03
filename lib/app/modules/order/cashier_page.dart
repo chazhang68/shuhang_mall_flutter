@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
@@ -27,6 +29,8 @@ class _CashierPageState extends State<CashierPage> {
   bool _offlinePostage = false;
   int _invalidTime = 0;
   double _nowMoney = 0;
+  int _countdownSeconds = 0;
+  Timer? _countdownTimer;
 
   // 支付方式
   List<PayMethod> _payMethods = [];
@@ -39,12 +43,30 @@ class _CashierPageState extends State<CashierPage> {
     super.initState();
     _orderId = Get.arguments?['order_id']?.toString() ?? '';
     if (_orderId.isEmpty) {
-      FlutterToastPro.showMessage( '请选择要支付的订单');
+      _orderId = Get.arguments?['orderId']?.toString() ?? '';
+    }
+    if (_orderId.isEmpty) {
+      _orderId = Get.parameters['order_id'] ?? '';
+    }
+    if (_orderId.isEmpty) {
+      _orderId = Get.parameters['orderId'] ?? '';
+    }
+    if (_orderId.isEmpty) {
+      FlutterToastPro.showMessage('请选择要支付的订单');
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     _initPayMethods();
     _loadBasicConfig();
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   void _initPayMethods() {
@@ -90,6 +112,15 @@ class _CashierPageState extends State<CashierPage> {
         title: '找微信好友支付',
         enabled: true,
       ),
+      PayMethod(
+        name: '消费券支付',
+        icon: Icons.card_giftcard,
+        iconColor: const Color(0xFFFF9900),
+        value: 'xfq',
+        title: '可用余额',
+        enabled: false,
+        balance: 0,
+      ),
     ];
   }
 
@@ -101,66 +132,145 @@ class _CashierPageState extends State<CashierPage> {
 
         setState(() {
           // 微信支付
-          _payMethods[0].enabled = (data['pay_weixin_open'] ?? 0) == 1;
+          _payMethods[0].enabled = _readBool(data['pay_weixin_open']);
           // 支付宝
-          _payMethods[1].enabled = (data['ali_pay_status'] ?? 0) == 1;
+          _payMethods[1].enabled = _readBool(data['ali_pay_status']);
           // 余额支付
-          _payMethods[2].enabled = (data['yue_pay_status'] ?? 0) == 1;
+          _payMethods[2].enabled = _readBool(data['yue_pay_status']);
           // 线下支付
-          _payMethods[3].enabled = (data['offline_pay_status'] ?? 0) == 1;
+          _payMethods[3].enabled = _readBool(data['offline_pay_status']);
           // 好友代付
-          _payMethods[4].enabled = (data['friend_pay_status'] ?? 0) == 1;
+          _payMethods[4].enabled = _readBool(data['friend_pay_status']);
+          // 消费券支付（在订单信息中根据 order_type 决定）
+          _payMethods[5].enabled = false;
         });
 
         await _loadCashierOrder();
       }
     } catch (e) {
-      FlutterToastPro.showMessage( '加载配置失败');
+      setState(() {
+        _isLoading = false;
+      });
+      FlutterToastPro.showMessage('加载配置失败');
     }
   }
 
   Future<void> _loadCashierOrder() async {
     try {
-      // 这里假设有getCashierOrder方法，实际可能需要用其他方法
-      // final response = await _orderProvider.getCashierOrder(_orderId, _fromType);
-      final response = await _orderProvider.getOrderDetail(_orderId);
+      final response = await _orderProvider.getOrderPayInfo(_orderId);
 
       if (response.isSuccess && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
+        final data = response.data ?? <String, dynamic>{};
 
         setState(() {
-          _payPrice = double.tryParse(data['pay_price']?.toString() ?? '0') ?? 0;
+          _payPrice = _readDouble(data['pay_price']);
           _payPriceShow = _payPrice;
-          _payPostage = double.tryParse(data['pay_postage']?.toString() ?? '0') ?? 0;
-          _offlinePostage = data['offline_postage'] == true;
-          _invalidTime = data['invalid_time'] ?? 0;
-          _nowMoney = double.tryParse(data['now_money']?.toString() ?? '0') ?? 0;
+          _payPostage = _readDouble(data['pay_postage']);
+          _offlinePostage = _readBool(data['offline_postage']);
+          _invalidTime = _readInt(data['invalid_time']);
+          if (_invalidTime <= 0) {
+            _invalidTime = _readInt(data['stop_time']);
+          }
+          _nowMoney = _readDouble(data['now_money']);
+
+          _syncPayMethodStatusFromOrder(data);
 
           // 更新余额显示
           _payMethods[2].balance = _nowMoney;
+          _payMethods[5].balance = _readDouble(data['integral']);
+          _payMethods[5].enabled = _readInt(data['order_type']) == 1;
+
+          _ensureAtLeastOnePayMethod();
 
           _isLoading = false;
 
-          // 选择第一个可用的支付方式
-          for (int i = 0; i < _payMethods.length; i++) {
-            if (_payMethods[i].enabled) {
-              _selectedIndex = i;
-              break;
-            }
-          }
+          _selectedIndex = _resolveDefaultPayIndex();
         });
+        _syncCountdown();
       } else {
         setState(() {
           _isLoading = false;
         });
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      FlutterToastPro.showMessage( '获取订单信息失败');
+      FlutterToastPro.showMessage('获取订单信息失败');
     }
+  }
+
+  double _readDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  bool _readBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final lower = value.toLowerCase();
+      return lower == '1' || lower == 'true';
+    }
+    return false;
+  }
+
+  void _syncPayMethodStatusFromOrder(Map<String, dynamic> data) {
+    final weixin = _readBool(data['pay_weixin_open']);
+    final alipay = _readBool(data['ali_pay_status']);
+    final yue = _readBool(data['yue_pay_status']);
+    final friend = _readBool(data['friend_pay_status']);
+    final offlineRaw = data['offlinePayStatus'] ?? data['offline_pay_status'];
+    final offline = _readBool(offlineRaw) || _readInt(offlineRaw) > 0;
+
+    _payMethods[0].enabled = weixin || _payMethods[0].enabled;
+    _payMethods[1].enabled = alipay || _payMethods[1].enabled;
+    _payMethods[2].enabled = yue || _payMethods[2].enabled;
+    _payMethods[3].enabled = offline || _payMethods[3].enabled;
+    _payMethods[4].enabled = friend || _payMethods[4].enabled;
+  }
+
+  void _ensureAtLeastOnePayMethod() {
+    final hasEnabled = _payMethods.any((item) => item.enabled);
+    if (!hasEnabled) {
+      _payMethods[2].enabled = true;
+    }
+  }
+
+  int _resolveDefaultPayIndex() {
+    for (int i = 0; i < _payMethods.length; i++) {
+      if (_payMethods[i].enabled) return i;
+    }
+    return 0;
+  }
+
+  void _syncCountdown() {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final raw = _invalidTime;
+    final remaining = raw > 1000000000 ? raw - now : raw;
+    setState(() {
+      _countdownSeconds = remaining > 0 ? remaining : 0;
+    });
+    _countdownTimer?.cancel();
+    if (_countdownSeconds <= 0) return;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_countdownSeconds <= 0) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _countdownSeconds -= 1;
+      });
+    });
   }
 
   void _onPayMethodSelected(int index) {
@@ -185,7 +295,7 @@ class _CashierPageState extends State<CashierPage> {
 
     // 余额支付检查
     if (method.value == 'yue' && _nowMoney < _payPriceShow) {
-      FlutterToastPro.showMessage( '余额不足');
+      FlutterToastPro.showMessage('余额不足');
       return;
     }
 
@@ -212,7 +322,7 @@ class _CashierPageState extends State<CashierPage> {
 
         switch (status) {
           case 'SUCCESS':
-            FlutterToastPro.showMessage( '支付成功');
+            FlutterToastPro.showMessage('支付成功');
             Get.offNamed(
               AppRoutes.orderPayStatus,
               arguments: {
@@ -224,17 +334,17 @@ class _CashierPageState extends State<CashierPage> {
             );
             break;
           case 'PAY_DEFICIENCY':
-            FlutterToastPro.showMessage( response.msg);
+            FlutterToastPro.showMessage(response.msg);
             break;
           default:
-            FlutterToastPro.showMessage( response.msg);
+            FlutterToastPro.showMessage(response.msg);
         }
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
       Get.back();
-      FlutterToastPro.showMessage( '支付失败');
+      FlutterToastPro.showMessage('支付失败');
     }
   }
 
@@ -259,20 +369,29 @@ class _CashierPageState extends State<CashierPage> {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
+  List<PayMethod> _visiblePayMethods() {
+    return _payMethods.where((item) => item.enabled).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('收银台', style: TextStyle(color: Colors.black)),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.black,
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 头部金额
                 _buildHeader(),
-                // 支付方式列表
+                const SizedBox(height: 18),
                 _buildPayMethods(),
                 const Spacer(),
-                // 底部按钮
                 _buildFooter(),
               ],
             ),
@@ -281,39 +400,33 @@ class _CashierPageState extends State<CashierPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 50, bottom: 40),
+      padding: const EdgeInsets.only(top: 18, bottom: 22),
       child: Column(
         children: [
-          // 金额
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'SWP',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFFE93323),
-                ),
-              ),
-              Text(
-                _payPriceShow.toStringAsFixed(2),
-                style: const TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFE93323),
-                ),
-              ),
-            ],
+          Text(
+            '消费券${_payPriceShow.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFE93323),
+            ),
           ),
-          const SizedBox(height: 10),
-          // 倒计时
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(8),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Text(
-              '支付剩余时间：${_formatCountdown(_invalidTime)}',
+              '支付剩余时间：${_formatCountdown(_countdownSeconds)}',
               style: const TextStyle(fontSize: 12, color: Color(0xFFE93323)),
             ),
           ),
@@ -323,21 +436,38 @@ class _CashierPageState extends State<CashierPage> {
   }
 
   Widget _buildPayMethods() {
+    final methods = _visiblePayMethods();
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.all(15),
+            padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 6),
             child: Text('支付方式', style: TextStyle(fontSize: 13, color: Color(0xFF666666))),
           ),
-          ...List.generate(_payMethods.length, (index) {
-            final method = _payMethods[index];
-            if (!method.enabled) return const SizedBox.shrink();
-
-            return _buildPayMethodItem(method, index);
+          ...methods.asMap().entries.map((entry) {
+            final method = entry.value;
+            final index = _payMethods.indexOf(method);
+            final isLast = entry.key == methods.length - 1;
+            return Column(
+              children: [
+                _buildPayMethodItem(method, index),
+                if (!isLast)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                  ),
+              ],
+            );
           }),
         ],
       ),
@@ -346,48 +476,39 @@ class _CashierPageState extends State<CashierPage> {
 
   Widget _buildPayMethodItem(PayMethod method, int index) {
     final isSelected = _selectedIndex == index;
+    final isVoucher = method.value == 'xfq';
+    final title = isVoucher ? '消费券支付' : method.name;
+    final balanceText = (method.balance ?? 0).toStringAsFixed(2);
+    final subtitle = isVoucher
+        ? '可用余额 消费券$balanceText'
+        : method.value == 'yue'
+        ? '可用余额 SWP$balanceText'
+        : method.title;
 
     return GestureDetector(
       onTap: () => _onPayMethodSelected(index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
-        ),
+        height: 66,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            // 图标
-            Icon(method.icon, size: 25, color: method.iconColor),
-            const SizedBox(width: 14),
+            _buildPayMethodIcon(method),
+            const SizedBox(width: 10),
             // 文字
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(method.name, style: const TextStyle(fontSize: 15, color: Color(0xFF333333))),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        method.title,
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF999999)),
-                      ),
-                      if (method.value == 'yue') ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          'SWP${method.balance?.toStringAsFixed(2) ?? '0.00'}',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFFFF9900)),
-                        ),
-                      ],
-                    ],
-                  ),
+                  Text(title, style: const TextStyle(fontSize: 15, color: Color(0xFF333333))),
+                  const SizedBox(height: 4),
+                  _buildPayMethodSubtitle(method, subtitle, balanceText),
                 ],
               ),
             ),
-            // 选中图标
             Icon(
               isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              size: 20,
+              size: 18,
               color: isSelected ? const Color(0xFFE93323) : const Color(0xFFCCCCCC),
             ),
           ],
@@ -396,34 +517,85 @@ class _CashierPageState extends State<CashierPage> {
     );
   }
 
+  Widget _buildPayMethodIcon(PayMethod method) {
+    if (method.value == 'yue' || method.value == 'xfq') {
+      return Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(color: Color(0xFFFF9900), shape: BoxShape.circle),
+        alignment: Alignment.center,
+        child: const Text(
+          '¥',
+          style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+    return Icon(method.icon, size: 26, color: method.iconColor);
+  }
+
+  Widget _buildPayMethodSubtitle(PayMethod method, String subtitle, String balanceText) {
+    if (method.value != 'yue' && method.value != 'xfq') {
+      return Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF999999)));
+    }
+
+    final prefix = method.value == 'yue' ? '可用余额 SWP' : '可用余额 消费券';
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: prefix,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF999999)),
+          ),
+          TextSpan(
+            text: balanceText,
+            style: const TextStyle(fontSize: 11, color: Color(0xFFFF9900)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFooter() {
     return Container(
       padding: EdgeInsets.only(
-        left: 15,
-        right: 15,
-        top: 15,
-        bottom: 15 + MediaQuery.of(context).padding.bottom,
+        left: 16,
+        right: 16,
+        top: 10,
+        bottom: 16 + MediaQuery.of(context).padding.bottom,
       ),
-      child: Column(
+      child: Stack(
         children: [
-          // 确认支付按钮
-          SizedBox(
-            width: double.infinity,
-            height: 45,
-            child: ElevatedButton(
-              onPressed: _confirmPay,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE93323),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)),
+          Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _confirmPay,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE93323),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    elevation: 0,
+                  ),
+                  child: const Text('确认支付', style: TextStyle(fontSize: 16, color: Colors.white)),
+                ),
               ),
-              child: const Text('确认支付', style: TextStyle(fontSize: 15, color: Colors.white)),
-            ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: _waitPay,
+                child: const Text('暂不支付', style: TextStyle(fontSize: 12, color: Color(0xFFAAAAAA))),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          // 暂不支付
-          GestureDetector(
-            onTap: _waitPay,
-            child: const Text('暂不支付', style: TextStyle(fontSize: 12, color: Color(0xFFAAAAAA))),
+          Positioned(
+            right: 6,
+            top: -8,
+            child: Image.asset(
+              'assets/images/hongbao_bg.png',
+              width: 48,
+              height: 48,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            ),
           ),
         ],
       ),
@@ -451,5 +623,3 @@ class PayMethod {
     this.balance,
   });
 }
-
-

@@ -26,14 +26,25 @@ class _PayStatusPageState extends State<PayStatusPage> {
   @override
   void initState() {
     super.initState();
-    orderId = Get.parameters['order_id'] ?? '';
-    status = int.tryParse(Get.parameters['status'] ?? '0') ?? 0;
-    msg = Get.parameters['msg'] ?? '';
+    final args = Get.arguments;
+    if (args is Map) {
+      orderId = args['order_id']?.toString() ?? '';
+      status = int.tryParse(args['status']?.toString() ?? '0') ?? 0;
+      msg = args['msg']?.toString() ?? '';
+    }
+    orderId = orderId.isNotEmpty ? orderId : (Get.parameters['order_id'] ?? '');
+    status = status != 0 ? status : (int.tryParse(Get.parameters['status'] ?? '0') ?? 0);
+    msg = msg.isNotEmpty ? msg : (Get.parameters['msg'] ?? '');
     _loadOrderPayInfo();
   }
 
   Future<void> _loadOrderPayInfo() async {
     setState(() => isLoading = true);
+
+    if (orderId.isEmpty) {
+      setState(() => isLoading = false);
+      return;
+    }
 
     try {
       final response = await _orderProvider.getOrderPayInfo(orderId);

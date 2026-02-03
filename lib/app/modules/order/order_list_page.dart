@@ -155,7 +155,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
             padding: const EdgeInsets.all(10),
             itemCount: orders.length,
             itemBuilder: (context, index) {
-              return _buildOrderCard(orders[index], themeColor);
+              return _buildOrderCard(orders[index], themeColor, index);
             },
           );
 
@@ -181,7 +181,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildOrderCard(OrderListItem order, themeColor) {
+  Widget _buildOrderCard(OrderListItem order, themeColor, int index) {
     final goods = order.cartInfo;
     final statusTitle = order.statusInfo.title;
 
@@ -240,7 +240,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
               ),
             ),
             // 操作按钮
-            _buildOrderActions(order, themeColor),
+            _buildOrderActions(order, themeColor, index),
           ],
         ),
       ),
@@ -305,7 +305,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     );
   }
 
-  Widget _buildOrderActions(OrderListItem order, themeColor) {
+  Widget _buildOrderActions(OrderListItem order, themeColor, int index) {
     final statusType = order.statusInfo.type == 0 ? order.status : order.statusInfo.type;
     final deliveryType = order.deliveryType;
     final actions = <Widget>[];
@@ -315,12 +315,12 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       case 9: // 线下付款未支付
         actions.add(
           _buildActionButton('取消订单', () {
-            _handleCancel(order);
+            _handleCancel(order, index);
           }, isOutline: true),
         );
         actions.add(
           _buildActionButton('去支付', () {
-            // 支付
+            _goPay(order);
           }, themeColor: themeColor),
         );
         break;
@@ -414,7 +414,16 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     Get.toNamed(AppRoutes.orderDetail, parameters: {'order_id': order.orderId});
   }
 
-  Future<void> _handleCancel(OrderListItem order) async {
+  void _goPay(OrderListItem order) {
+    final orderId = order.orderId;
+    if (orderId.isEmpty) {
+      FlutterToastPro.showMessage('订单号缺失');
+      return;
+    }
+    Get.toNamed(AppRoutes.cashier, parameters: {'order_id': orderId, 'from_type': 'order'});
+  }
+
+  Future<void> _handleCancel(OrderListItem order, int index) async {
     final orderId = order.orderId;
     if (orderId.isEmpty) {
       FlutterToastPro.showMessage('订单号缺失');
@@ -425,8 +434,12 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       final response = await _orderProvider.cancelOrder(orderId);
       FlutterToastPro.showMessage(response.msg);
       if (response.isSuccess) {
-        final index = _tabController.index;
-        _loadData(index, isRefresh: true);
+        final tabIndex = _tabController.index;
+        setState(() {
+          if (index >= 0 && index < (_orderData[tabIndex]?.length ?? 0)) {
+            _orderData[tabIndex]?.removeAt(index);
+          }
+        });
         _fetchOrderStatusData();
       }
     } catch (e) {

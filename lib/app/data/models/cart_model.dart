@@ -53,6 +53,7 @@ class CartItem {
   final int id;
   @JsonKey(fromJson: _numToInt)
   final int uid;
+  @JsonKey(fromJson: _numToString)
   final String? type;
   @JsonKey(fromJson: _numToInt)
   final int productId;
@@ -255,4 +256,9 @@ bool _numToBool(dynamic value) {
     return lower == '1' || lower == 'true';
   }
   return false;
+}
+
+String? _numToString(dynamic value) {
+  if (value == null) return null;
+  return value.toString();
 }
