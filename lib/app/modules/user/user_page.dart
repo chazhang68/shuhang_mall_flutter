@@ -139,7 +139,8 @@ class _UserPageState extends State<UserPage>
       const _ServiceMenuItem(
         icon: 'assets/images/tuandui3@2x.png',
         title: '我的好友',
-        route: AppRoutes.teams,
+        // route: AppRoutes.teams,
+        route: '',
         show: true,
       ),
       const _ServiceMenuItem(
@@ -862,7 +863,11 @@ class _ServiceSection extends StatelessWidget {
                     child: _ServiceItem(
                       icon: item.icon,
                       label: item.title,
-                      onTap: () => onTap(item.route, item.title),
+                      onTap: () {
+                        if (item.route.isNotEmpty) {
+                          onTap(item.route, item.title);
+                        }
+                      },
                     ),
                   );
                 }).toList(),
