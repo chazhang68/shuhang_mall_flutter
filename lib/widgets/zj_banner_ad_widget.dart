@@ -28,7 +28,6 @@ class ZJBannerAdWidget extends StatefulWidget {
 }
 
 class _ZJBannerAdWidgetState extends State<ZJBannerAdWidget> {
-  bool _isLoaded = false;
   bool _hasError = false;
 
   @override
@@ -58,7 +57,7 @@ class _ZJBannerAdWidgetState extends State<ZJBannerAdWidget> {
 
   void _handleAdEvent(ZJEvent ret) {
     if (ret.action == ZJEventAction.onAdShow) {
-      setState(() => _isLoaded = true);
+      // 广告已显示
       widget.onShow?.call();
     } else if (ret.action == ZJEventAction.onAdClick) {
       widget.onClick?.call();

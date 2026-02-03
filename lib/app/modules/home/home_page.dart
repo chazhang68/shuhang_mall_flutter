@@ -249,7 +249,11 @@ class _HomePageState extends State<HomePage>
                       SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
 
                       // 广告位 - 对应uni-app的APP-PLUS广告组件
-                      if (_showAd) SliverToBoxAdapter(child: _buildAdView()),
+                      if (_showAd)
+                        SliverToBoxAdapter(child: _buildAdView())
+                      else
+                        // 广告关闭后添加间距，避免商品列表紧贴搜索栏
+                        const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
                       // 商品列表
                       _hotList.isEmpty
@@ -473,23 +477,26 @@ class _HomePageState extends State<HomePage>
 
   /// 广告位 - ZJSDK信息流广告
   Widget _buildAdView() {
-    return ZJFeedAdWidget(
-      width: MediaQuery.of(context).size.width - 24,
-      height: 280,
-      videoSoundEnable: false, // 静音，与uni-app一致
-      onShow: () => debugPrint('信息流广告展示'),
-      onClose: () {
-        debugPrint('信息流广告关闭');
-        setState(() {
-          _showAd = false; // 广告关闭后隐藏
-        });
-      },
-      onError: (error) {
-        debugPrint('信息流广告错误: $error');
-        setState(() {
-          _showAd = false; // 广告加载失败也隐藏
-        });
-      },
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 12),
+      child: ZJFeedAdWidget(
+        width: MediaQuery.of(context).size.width - 24,
+        // 不传height参数，使用自适应高度
+        videoSoundEnable: false, // 静音，与uni-app一致
+        onShow: () => debugPrint('信息流广告展示'),
+        onClose: () {
+          debugPrint('信息流广告关闭');
+          setState(() {
+            _showAd = false; // 广告关闭后隐藏
+          });
+        },
+        onError: (error) {
+          debugPrint('信息流广告错误: $error');
+          setState(() {
+            _showAd = false; // 广告加载失败也隐藏
+          });
+        },
+      ),
     );
   }
 }

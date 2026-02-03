@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/services/customer_service.dart';
 import 'package:shuhang_mall_flutter/widgets/customer_float_button.dart';
 
 /// 客服功能测试页面
 /// 用于测试和演示客服功能
 class CustomerTestPage extends StatefulWidget {
-  const CustomerTestPage({Key? key}) : super(key: key);
+  const CustomerTestPage({super.key});
 
   @override
   State<CustomerTestPage> createState() => _CustomerTestPageState();
@@ -19,10 +18,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('客服功能测试'),
-        backgroundColor: Colors.red,
-      ),
+      appBar: AppBar(title: const Text('客服功能测试'), backgroundColor: Colors.red),
       body: Stack(
         children: [
           // 主要内容
@@ -108,10 +104,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
           children: [
             const Text(
               '功能测试',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -193,15 +186,16 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
           ],
         ),
       ),
@@ -218,10 +212,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
           children: [
             const Text(
               '浮动按钮控制',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             SwitchListTile(
@@ -240,10 +231,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
                 padding: const EdgeInsets.only(left: 16, top: 8),
                 child: Text(
                   '提示：浮动按钮可以拖动调整位置',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ),
           ],
@@ -262,10 +250,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
           children: [
             const Text(
               '客服类型说明',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -338,10 +323,7 @@ class _CustomerTestPageState extends State<CustomerTestPage> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ),

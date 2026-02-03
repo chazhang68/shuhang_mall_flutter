@@ -41,13 +41,19 @@ class _DebugLoginPageState extends State<DebugLoginPage> {
           children: [
             TextField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: '手机号', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: '手机号',
+                border: OutlineInputBorder(),
+              ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: '密码', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: '密码',
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 30),
@@ -56,11 +62,16 @@ class _DebugLoginPageState extends State<DebugLoginPage> {
               height: 50,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _debugLogin,
-                child: _isLoading ? const CircularProgressIndicator() : const Text('调试登录'),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('调试登录'),
               ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _testTokenHeader, child: const Text('测试Token Header')),
+            ElevatedButton(
+              onPressed: _testTokenHeader,
+              child: const Text('测试Token Header'),
+            ),
             const SizedBox(height: 20),
             ElevatedButton(onPressed: _clearCache, child: const Text('清空缓存')),
           ],
@@ -148,10 +159,12 @@ class _DebugLoginPageState extends State<DebugLoginPage> {
           Get.offAllNamed('/main');
         });
       } else {
-        _showError('获取用户信息失败: ${userResponse.msg}, status: ${userResponse.status}');
+        _showError(
+          '获取用户信息失败: ${userResponse.msg}, status: ${userResponse.status}',
+        );
       }
     } catch (e, stack) {
-      LogService.e('调试登录异常', e, stackTrace: stack);
+      LogService.e('调试登录异常', error: e, stackTrace: stack);
       _showError('登录异常: $e');
     } finally {
       setState(() => _isLoading = false);
@@ -189,7 +202,7 @@ class _DebugLoginPageState extends State<DebugLoginPage> {
       final response = await ApiProvider.instance.get('test', noAuth: true);
       LogService.i('测试API响应: ${response.status} - ${response.msg}');
     } catch (e) {
-      LogService.e('测试API调用失败', e);
+      LogService.e('测试API调用失败', error: e);
     }
   }
 
@@ -213,12 +226,12 @@ class _DebugLoginPageState extends State<DebugLoginPage> {
   }
 
   void _showSuccess(String message) {
-    FlutterToastPro.showMessage(message, type: 'success');
+    FlutterToastPro.showMessage(message);
     LogService.i('成功: $message');
   }
 
   void _showError(String message) {
-    FlutterToastPro.showMessage(message, type: 'error');
+    FlutterToastPro.showMessage(message);
     LogService.e('错误: $message');
   }
 

@@ -13,8 +13,12 @@ class CustomerFloatButton extends StatefulWidget {
   /// 是否显示
   final bool visible;
 
-  const CustomerFloatButton({Key? key, this.productId, this.initialTop, this.visible = true})
-    : super(key: key);
+  const CustomerFloatButton({
+    super.key,
+    this.productId,
+    this.initialTop,
+    this.visible = true,
+  });
 
   @override
   State<CustomerFloatButton> createState() => _CustomerFloatButtonState();
@@ -71,9 +75,18 @@ class _CustomerFloatButtonState extends State<CustomerFloatButton> {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.8),
             shape: .circle,
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6.0)],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 6.0,
+              ),
+            ],
           ),
-          child: const Icon(Icons.headset_mic_outlined, size: 24.0, color: Colors.black),
+          child: const Icon(
+            Icons.headset_mic_outlined,
+            size: 24.0,
+            color: Colors.black,
+          ),
         ),
       ),
     );

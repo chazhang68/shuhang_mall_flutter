@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:fluwx/fluwx.dart';
@@ -29,16 +28,13 @@ class WechatService {
       debugPrint('[WechatService] 开始初始化微信SDK...');
       debugPrint('[WechatService] AppID: $_appId');
       debugPrint('[WechatService] UniversalLink: $_universalLink');
-      
-      await _fluwx.registerApi(
-        appId: _appId,
-        universalLink: _universalLink,
-      );
+
+      await _fluwx.registerApi(appId: _appId, universalLink: _universalLink);
       _isInitialized = true;
       _isWxInstalled = await _fluwx.isWeChatInstalled;
       debugPrint('[WechatService] 微信SDK初始化成功');
       debugPrint('[WechatService] 微信已安装: $_isWxInstalled');
-      
+
       if (!_isWxInstalled) {
         debugPrint('[WechatService] 警告：未检测到微信安装');
       }
@@ -102,7 +98,7 @@ class WechatService {
     debugPrint('[WechatService] Thumbnail: $thumbnail');
     debugPrint('[WechatService] Scene: $scene');
     debugPrint('[WechatService] isInitialized: $_isInitialized');
-    
+
     if (!_isInitialized) {
       debugPrint('[WechatService] SDK未初始化，正在初始化...');
       await init();
@@ -128,7 +124,9 @@ class WechatService {
       if (thumbnail != null && thumbnail.isNotEmpty) {
         debugPrint('[WechatService] 开始下载缩略图...');
         thumbData = await _downloadImage(thumbnail);
-        debugPrint('[WechatService] 缩略图下载完成，大小: ${thumbData?.length ?? 0} bytes');
+        debugPrint(
+          '[WechatService] 缩略图下载完成，大小: ${thumbData?.length ?? 0} bytes',
+        );
       }
 
       debugPrint('[WechatService] 创建分享模型...');
@@ -139,12 +137,12 @@ class WechatService {
         scene: scene,
         thumbData: thumbData,
       );
-      
+
       debugPrint('[WechatService] 调用fluwx.share()...');
       final result = await _fluwx.share(model);
       debugPrint('[WechatService] 分享结果: $result');
       debugPrint('[WechatService] ========== 分享完成 ==========');
-      
+
       if (!result) {
         FlutterToastPro.showMessage('分享失败，请重试');
       }
@@ -152,7 +150,9 @@ class WechatService {
     } catch (e, stack) {
       debugPrint('[WechatService] 分享失败: $e');
       debugPrint('[WechatService] Stack: $stack');
-      FlutterToastPro.showMessage('分享出错: ${e.toString().substring(0, e.toString().length > 50 ? 50 : e.toString().length)}');
+      FlutterToastPro.showMessage(
+        '分享出错: ${e.toString().substring(0, e.toString().length > 50 ? 50 : e.toString().length)}',
+      );
       return false;
     }
   }

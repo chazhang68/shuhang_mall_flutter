@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 

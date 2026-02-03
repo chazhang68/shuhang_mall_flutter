@@ -67,7 +67,7 @@ class TaskController extends GetxController {
   /// 初始化广告
   Future<void> _initAd() async {
     try {
-      await _adManager.init();
+      await _adManager.start();
       _adManager.preloadRewardedVideoAd();
     } catch (e) {
       debugPrint('初始化广告失败: $e');
@@ -105,7 +105,11 @@ class TaskController extends GetxController {
       if (response.isSuccess && response.data != null) {
         final List<dynamic> dataList = response.data as List? ?? [];
         _seedList.assignAll(
-          dataList.map((item) => TaskSeedModel.fromJson(item as Map<String, dynamic>)).toList(),
+          dataList
+              .map(
+                (item) => TaskSeedModel.fromJson(item as Map<String, dynamic>),
+              )
+              .toList(),
         );
       }
     } catch (e) {
@@ -120,7 +124,11 @@ class TaskController extends GetxController {
       if (response.isSuccess && response.data != null) {
         final List<dynamic> dataList = response.data as List? ?? [];
         _plotList.assignAll(
-          dataList.map((item) => TaskPlotModel.fromJson(item as Map<String, dynamic>)).toList(),
+          dataList
+              .map(
+                (item) => TaskPlotModel.fromJson(item as Map<String, dynamic>),
+              )
+              .toList(),
         );
       }
     } catch (e) {
@@ -217,7 +225,10 @@ class TaskController extends GetxController {
     }
 
     try {
-      Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
 
       final response = await _userProvider.lingqu();
       Get.back();
@@ -282,7 +293,10 @@ class TaskController extends GetxController {
     }
 
     try {
-      Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
 
       final response = await _userProvider.exchangeTask({
         'task_id': _selectedSeed.value!.id,

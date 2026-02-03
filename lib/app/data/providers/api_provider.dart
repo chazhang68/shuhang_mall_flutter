@@ -15,7 +15,6 @@ import 'package:dio/dio.dart'
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
-import 'package:logger/logger.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 import 'package:shuhang_mall_flutter/app/utils/config.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
@@ -32,9 +31,14 @@ class ApiResponse<T> {
   /// 是否成功
   bool get isSuccess => status == 200;
 
-  factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(dynamic)? fromJsonT) {
+  factory ApiResponse.fromJson(
+    Map<String, dynamic> json,
+    T Function(dynamic)? fromJsonT,
+  ) {
     final statusRaw = json['status'];
-    final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+    final status = statusRaw is int
+        ? statusRaw
+        : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
 
     return ApiResponse(
       status: status,
@@ -51,7 +55,6 @@ class ApiResponse<T> {
 class ApiProvider {
   static ApiProvider? _instance;
   late Dio _dio;
-
 
   /// 需要跳转登录的状态码
   static const List<int> _loginRequiredCodes = [110002, 110003, 110004];
@@ -77,8 +80,14 @@ class ApiProvider {
   /// 初始化拦截器
   void _initInterceptors() {
     _dio.interceptors.addAll([
-      InterceptorsWrapper(onRequest: _onRequest, onResponse: _onResponse, onError: _onError),
-      TalkerDioLogger(settings: TalkerDioLoggerSettings(printRequestHeaders: true)),
+      InterceptorsWrapper(
+        onRequest: _onRequest,
+        onResponse: _onResponse,
+        onError: _onError,
+      ),
+      TalkerDioLogger(
+        settings: TalkerDioLoggerSettings(printRequestHeaders: true),
+      ),
     ]);
   }
 
@@ -232,11 +241,17 @@ class ApiProvider {
 
       // 不验证响应，直接返回
       if (noVerify) {
-        return ApiResponse<T>(status: 200, msg: 'success', data: responseData as T?);
+        return ApiResponse<T>(
+          status: 200,
+          msg: 'success',
+          data: responseData as T?,
+        );
       }
 
       final statusRaw = responseData['status'];
-      final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+      final status = statusRaw is int
+          ? statusRaw
+          : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
       final msg = responseData['msg']?.toString() ?? '';
 
       // 需要登录

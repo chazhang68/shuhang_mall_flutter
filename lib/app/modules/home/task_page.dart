@@ -108,16 +108,39 @@ class _TaskPageState extends State<TaskPage>
 
   Future<void> _getMyTask() async {
     try {
+      debugPrint('🌱 开始获取种植任务...');
       final response = await _userProvider.getNewMyTask();
+
+      debugPrint('📦 API 响应:');
+      debugPrint('  - isSuccess: ${response.isSuccess}');
+      debugPrint('  - msg: ${response.msg}');
+      debugPrint('  - data type: ${response.data.runtimeType}');
+      debugPrint('  - data: ${response.data}');
+
       if (response.isSuccess && response.data != null) {
+        final dataList = response.data as List? ?? [];
+        debugPrint('✅ 获取到 ${dataList.length} 个地块');
+
+        // 打印每个地块的详细信息
+        for (var i = 0; i < dataList.length; i++) {
+          final plot = dataList[i];
+          debugPrint('  地块 $i:');
+          debugPrint('    - fieldType: ${plot['fieldType']}');
+          debugPrint('    - right: ${plot['right']}');
+          debugPrint('    - plants: ${plot['plants']}');
+        }
+
         setState(() {
-          _plotList = List<Map<String, dynamic>>.from(
-            response.data as List? ?? [],
-          );
+          _plotList = List<Map<String, dynamic>>.from(dataList);
         });
+
+        debugPrint('🎉 地块列表更新完成，当前有 ${_plotList.length} 个地块');
+      } else {
+        debugPrint('❌ 获取失败: ${response.msg}');
       }
-    } catch (e) {
-      debugPrint('获取我的任务失败: $e');
+    } catch (e, stackTrace) {
+      debugPrint('💥 获取我的任务失败: $e');
+      debugPrint('堆栈: $stackTrace');
     }
   }
 
@@ -376,10 +399,13 @@ class _TaskPageState extends State<TaskPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(8, (index) {
               final isActive = index < _taskDoneCount;
-              return Icon(
-                Icons.water_drop,
-                size: 30,
-                color: isActive ? themeColor.primary : Colors.grey[300],
+              return Image.asset(
+                isActive
+                    ? 'assets/images/pot_progress_active.png'
+                    : 'assets/images/pot_progress_default.png',
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
               );
             }),
           ),
@@ -440,10 +466,10 @@ class _TaskPageState extends State<TaskPage>
 
   Widget _buildRightButtons(ThemeColorData themeColor) {
     final buttons = [
-      {'type': 'water', 'icon': Icons.water_drop, 'label': '浇水'},
-      {'type': 'seed', 'icon': Icons.grass, 'label': '播种'},
-      {'type': 'points', 'icon': Icons.stars, 'label': '积分'},
-      {'type': 'SWP', 'icon': Icons.account_balance_wallet, 'label': 'SWP'},
+      {'type': 'water', 'image': 'jiaoshui.png', 'label': '浇水'},
+      {'type': 'seed', 'image': 'bozhong.png', 'label': '播种'},
+      {'type': 'points', 'image': 'jifen.png', 'label': '积分'},
+      {'type': 'SWP', 'image': 'swp.png', 'label': 'SWP'},
     ];
 
     return Positioned(
@@ -457,30 +483,30 @@ class _TaskPageState extends State<TaskPage>
               margin: const EdgeInsets.only(bottom: 16),
               width: 50,
               height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha((0.1 * 255).round()),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    btn['icon'] as IconData,
-                    size: 24,
-                    color: themeColor.primary,
-                  ),
-                  Text(
-                    btn['label'] as String,
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                ],
+              child: Image.asset(
+                'assets/images/${btn['image']}',
+                width: 50,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha((0.1 * 255).round()),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        btn['label'] as String,
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           );
@@ -491,10 +517,26 @@ class _TaskPageState extends State<TaskPage>
 
   Widget _buildFarmArea(ThemeColorData themeColor) {
     if (_plotList.isEmpty) {
-      return const Center(
-        child: Text(
-          '暂无种植任务',
-          style: TextStyle(color: Colors.white70, fontSize: 16),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.agriculture,
+              size: 64,
+              color: Colors.white.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '暂无种植任务',
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '点击右侧"播种"按钮购买种子开始种植',
+              style: TextStyle(color: Colors.white60, fontSize: 14),
+            ),
+          ],
         ),
       );
     }
@@ -504,61 +546,92 @@ class _TaskPageState extends State<TaskPage>
       itemCount: _plotList.length,
       itemBuilder: (context, index) {
         final plot = _plotList[index];
-        return _buildPlotItem(plot, themeColor);
+        return _build3DPlotItem(plot, themeColor);
       },
     );
   }
 
-  Widget _buildPlotItem(Map<String, dynamic> plot, ThemeColorData themeColor) {
-    final progress = double.tryParse(plot['progress']?.toString() ?? '0') ?? 0;
-    final dkDay = plot['dk_day'] ?? 0;
-    final totalDay = plot['day'] ?? 1;
-    final score = plot['score'] ?? 0;
+  // 3D田块渲染（与uni-app一致）
+  Widget _build3DPlotItem(
+    Map<String, dynamic> plot,
+    ThemeColorData themeColor,
+  ) {
+    final plants = plot['plants'] as List? ?? [];
+    final fieldType = plot['fieldType'] ?? 1;
+    final rightIcon = plot['right'] ?? 0;
+
+    if (plants.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha((0.9 * 255).round()),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      margin: const EdgeInsets.only(bottom: 30),
+      height: 250, // 固定高度以容纳田块
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Text(
-            plot['name']?.toString() ?? '种植任务',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-
-          // 进度条
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress / 100,
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      themeColor.primary,
-                    ),
-                    minHeight: 8,
+          // 田块容器（居中）
+          Center(
+            child: SizedBox(
+              width: 250,
+              height: 250,
+              child: Stack(
+                children: [
+                  // 田块背景图
+                  Image.asset(
+                    'assets/images/$fieldType.png',
+                    width: 250,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('田块图片加载失败: $fieldType.png');
+                      return Container(
+                        width: 250,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.brown.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '田块 $fieldType',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ),
+
+                  // 植物层 - 使用绝对定位（与uni-app一致）
+                  Positioned.fill(
+                    child: Stack(
+                      children: plants.asMap().entries.map((entry) {
+                        final plantIndex = entry.key;
+                        final plant = entry.value;
+                        return _build3DPlantWidget(
+                          plant,
+                          fieldType,
+                          plantIndex,
+                          themeColor,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                '$dkDay/$totalDay天',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
+            ),
           ),
 
-          const SizedBox(height: 8),
-          Text(
-            '已领取 $score 积分',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          // 右侧指示牌（与uni-app一致）
+          Positioned(
+            right: -10,
+            top: 20,
+            child: Image.asset(
+              'assets/images/right_icon$rightIcon.png',
+              width: 60,
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         ],
       ),
@@ -751,5 +824,314 @@ class _TaskPageState extends State<TaskPage>
         ],
       ),
     );
+  }
+
+  // 3D植物组件（与uni-app一致）
+  Widget _build3DPlantWidget(
+    Map<String, dynamic> plant,
+    int fieldType,
+    int plantIndex,
+    ThemeColorData themeColor,
+  ) {
+    final plantType = plant['type'] ?? 0;
+    final progress = double.tryParse(plant['progress']?.toString() ?? '0') ?? 0;
+    final dkDay = plant['dk_day'] ?? 0;
+    final totalDay = plant['day'] ?? 1;
+    final score = plant['score'] ?? 0;
+
+    // 获取植物位置（与uni-app的getPlantPosition一致）
+    final position = _getPlantPosition(fieldType, plantIndex);
+    if (position == null) return const SizedBox.shrink();
+
+    return Positioned(
+      left: position['left']! * 250, // 转换百分比为像素
+      top: position['top']! * 250,
+      child: Transform.translate(
+        offset: const Offset(-20, -40), // 居中偏移（植物宽40，向上偏移40）
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 植物图标
+            Image.asset(
+              'assets/images/plant$plantType.png',
+              width: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.eco, color: Colors.white, size: 24),
+                );
+              },
+            ),
+
+            const SizedBox(height: 4),
+
+            // 进度信息卡片（与uni-app一致）
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 进度条
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0E0E0),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: progress / 100,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF7dd87d), Color(0xFF4eb84e)],
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$dkDay/$totalDay天',
+                        style: const TextStyle(
+                          fontSize: 8,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '已领取$score',
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 获取植物位置（与uni-app的fieldCenters配置一致）
+  Map<String, double>? _getPlantPosition(int fieldType, int plantIndex) {
+    // 田块中心位置配置（与uni-app完全一致）
+    final fieldCenters = <int, List<List<Map<String, double>?>>>{
+      1: [
+        [
+          {'x': 0.5, 'y': 0.5},
+        ],
+      ],
+      2: [
+        [
+          {'x': 0.33, 'y': 0.33},
+          {'x': 0.66, 'y': 0.66},
+        ],
+      ],
+      3: [
+        [
+          {'x': 0.33, 'y': 0.25},
+          {'x': 0.66, 'y': 0.5},
+        ],
+        [
+          null,
+          {'x': 0.33, 'y': 0.75},
+        ],
+      ],
+      4: [
+        [
+          {'x': 0.5, 'y': 0.25},
+          {'x': 0.75, 'y': 0.5},
+        ],
+        [
+          {'x': 0.25, 'y': 0.5},
+          {'x': 0.5, 'y': 0.75},
+        ],
+      ],
+      5: [
+        [
+          {'x': 0.4, 'y': 0.25},
+          {'x': 0.6, 'y': 0.5},
+          {'x': 0.8, 'y': 0.75},
+        ],
+        [
+          {'x': 0.2, 'y': 0.5},
+          {'x': 0.4, 'y': 0.75},
+          null,
+        ],
+      ],
+      6: [
+        [
+          {'x': 0.4, 'y': 0.2},
+          {'x': 0.6, 'y': 0.4},
+          {'x': 0.8, 'y': 0.6},
+        ],
+        [
+          {'x': 0.2, 'y': 0.4},
+          {'x': 0.4, 'y': 0.6},
+          {'x': 0.6, 'y': 0.8},
+        ],
+      ],
+      7: [
+        [
+          {'x': 0.4, 'y': 0.2},
+          {'x': 0.6, 'y': 0.4},
+          {'x': 0.8, 'y': 0.6},
+        ],
+        [
+          {'x': 0.2, 'y': 0.4},
+          {'x': 0.4, 'y': 0.6},
+          {'x': 0.6, 'y': 0.8},
+        ],
+        [
+          null,
+          {'x': 0.2, 'y': 0.8},
+          null,
+        ],
+      ],
+      8: [
+        [
+          {'x': 0.5, 'y': 0.2},
+          {'x': 0.667, 'y': 0.4},
+          {'x': 0.833, 'y': 0.6},
+        ],
+        [
+          {'x': 0.333, 'y': 0.4},
+          {'x': 0.5, 'y': 0.6},
+          {'x': 0.667, 'y': 0.8},
+        ],
+        [
+          {'x': 0.167, 'y': 0.6},
+          {'x': 0.333, 'y': 0.8},
+          null,
+        ],
+      ],
+      9: [
+        [
+          {'x': 0.5, 'y': 0.167},
+          {'x': 0.667, 'y': 0.333},
+          {'x': 0.833, 'y': 0.5},
+        ],
+        [
+          {'x': 0.333, 'y': 0.333},
+          {'x': 0.5, 'y': 0.5},
+          {'x': 0.667, 'y': 0.667},
+        ],
+        [
+          {'x': 0.167, 'y': 0.5},
+          {'x': 0.333, 'y': 0.667},
+          {'x': 0.5, 'y': 0.833},
+        ],
+      ],
+      10: [
+        [
+          {'x': 0.5, 'y': 0.143},
+          {'x': 0.667, 'y': 0.286},
+          {'x': 0.833, 'y': 0.429},
+        ],
+        [
+          {'x': 0.333, 'y': 0.286},
+          {'x': 0.5, 'y': 0.429},
+          {'x': 0.667, 'y': 0.571},
+        ],
+        [
+          {'x': 0.167, 'y': 0.429},
+          {'x': 0.333, 'y': 0.571},
+          {'x': 0.5, 'y': 0.714},
+          {'x': 0.667, 'y': 0.857},
+        ],
+      ],
+      11: [
+        [
+          {'x': 0.5, 'y': 0.143},
+          {'x': 0.667, 'y': 0.286},
+          {'x': 0.833, 'y': 0.429},
+        ],
+        [
+          {'x': 0.333, 'y': 0.286},
+          {'x': 0.5, 'y': 0.429},
+          {'x': 0.667, 'y': 0.571},
+        ],
+        [
+          {'x': 0.167, 'y': 0.429},
+          {'x': 0.333, 'y': 0.571},
+          {'x': 0.5, 'y': 0.714},
+          {'x': 0.667, 'y': 0.857},
+        ],
+        [
+          null,
+          null,
+          {'x': 0.333, 'y': 0.857},
+          null,
+        ],
+      ],
+      12: [
+        [
+          {'x': 0.5, 'y': 0.125},
+          {'x': 0.667, 'y': 0.25},
+          {'x': 0.833, 'y': 0.375},
+        ],
+        [
+          {'x': 0.333, 'y': 0.25},
+          {'x': 0.5, 'y': 0.375},
+          {'x': 0.667, 'y': 0.5},
+        ],
+        [
+          {'x': 0.167, 'y': 0.375},
+          {'x': 0.333, 'y': 0.5},
+          {'x': 0.5, 'y': 0.625},
+          {'x': 0.667, 'y': 0.75},
+        ],
+        [
+          null,
+          null,
+          {'x': 0.333, 'y': 0.75},
+          {'x': 0.5, 'y': 0.875},
+        ],
+      ],
+    };
+
+    final centers = fieldCenters[fieldType];
+    if (centers == null) return null;
+
+    // 遍历找到第plantIndex个有效位置
+    int count = 0;
+    for (final row in centers) {
+      for (final pos in row) {
+        if (pos != null) {
+          if (count == plantIndex) {
+            return {'left': pos['x']!, 'top': pos['y']!};
+          }
+          count++;
+        }
+      }
+    }
+
+    return null;
   }
 }

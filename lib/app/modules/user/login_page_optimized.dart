@@ -657,12 +657,12 @@ class _LoginPageState extends State<LoginPage> {
 
   /// 显示成功消息
   void _showSuccess(String message) {
-    FlutterToastPro.showMessage(message, type: 'success');
+    FlutterToastPro.showMessage(message);
   }
 
   /// 显示错误消息
   void _showError(String message) {
-    FlutterToastPro.showMessage(message, type: 'error');
+    FlutterToastPro.showMessage(message);
   }
 
   /// 处理API错误

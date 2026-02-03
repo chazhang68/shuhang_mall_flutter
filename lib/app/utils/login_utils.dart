@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 
 import '../data/providers/api_provider.dart';
@@ -9,19 +8,19 @@ import '../data/providers/api_provider.dart';
 /// 统一管理应用中的消息提示
 class ToastManager {
   static void showSuccess(String message) {
-    FlutterToastPro.showMessage(message, type: 'success');
+    FlutterToastPro.showMessage(message);
   }
 
   static void showError(String message) {
-    FlutterToastPro.showMessage(message, type: 'error');
+    FlutterToastPro.showMessage(message);
   }
 
   static void showWarning(String message) {
-    FlutterToastPro.showMessage(message, type: 'warning');
+    FlutterToastPro.showMessage(message);
   }
 
   static void showInfo(String message) {
-    FlutterToastPro.showMessage(message, type: 'info');
+    FlutterToastPro.showMessage(message);
   }
 }
 
@@ -202,6 +201,8 @@ class LoginStateManager {
 
       final loginData = loginResponse.data as Map<String, dynamic>? ?? {};
       final token = loginData['token']?.toString() ?? '';
+      // expiresTime 用于后续可能的token刷新逻辑
+      // ignore: unused_local_variable
       final expiresTime = loginData['expires_time'] ?? 0;
 
       if (token.isEmpty) {

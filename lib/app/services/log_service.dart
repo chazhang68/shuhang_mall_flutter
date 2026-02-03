@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:talker/talker.dart';
-import 'package:talker_logger/talker_logger.dart';
 
 class LogService {
   static LogService? _instance;
@@ -16,10 +15,10 @@ class LogService {
         lineLength: 120, // Width of the output
         colors: true, // Colorful log messages
         printEmojis: true, // Print an emoji for each log message
-        printTime: true, // Should each log print contain a timestamp
+        // printTime: true, // 已弃用，使用 dateTimeFormat 代替
       ),
     );
-    
+
     _talker = Talker();
   }
 
@@ -113,7 +112,11 @@ class LogService {
   }
 
   /// 记录Navigator相关错误
-  static void navigatorError(String operation, {dynamic error, StackTrace? stackTrace}) {
+  static void navigatorError(
+    String operation, {
+    dynamic error,
+    StackTrace? stackTrace,
+  }) {
     if (kDebugMode) {
       final logMsg = 'Navigator $operation failed: $error';
       instance._logger?.e(logMsg, error: error, stackTrace: stackTrace);
