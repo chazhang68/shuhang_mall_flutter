@@ -481,7 +481,7 @@ class _TaskPageState extends State<TaskPage>
       {'type': 'water', 'image': 'jiaoshui.png', 'label': '浇水'},
       {'type': 'seed', 'image': 'bozhong.png', 'label': '播种'},
       {'type': 'points', 'image': 'jifen.png', 'label': '积分'},
-      {'type': 'SWP', 'image': 'swp.png', 'label': 'SWP'},
+      {'type': 'SWP', 'image': 'xfq.png', 'label': '消费券'},
     ];
 
     return Positioned(
@@ -572,165 +572,190 @@ class _TaskPageState extends State<TaskPage>
     final fieldType = plot['fieldType'] ?? 1;
     final rightIcon = plot['right'] ?? 0;
 
+    // 计算田块宽度（与uni-app一致：500rpx ≈ 屏幕宽度的 2/3）
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fieldWidth = screenWidth * 0.67; // 500rpx / 750rpx ≈ 0.67
+
     // 即使没有植物也显示空田地
+    // 田块间距：在原有基础上增加10px
+    final plotGap = screenWidth * 0.02 + 10; // 原15rpx + 10px
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 30),
-      height: 250, // 固定高度以容纳田块
+      margin: EdgeInsets.only(bottom: plotGap), // 田块间距
+      // 不设置固定高度，让图片自适应高度，确保所有田块间距一致
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center, // 居中对齐
         children: [
           // 田块容器（居中）
-          Center(
-            child: SizedBox(
-              width: 250,
-              height: 250,
-              child: Stack(
-                children: [
-                  // 田块背景图
-                  Image.asset(
-                    'assets/images/$fieldType.png',
-                    width: 250,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      debugPrint('田块图片加载失败: $fieldType.png');
-                      return Container(
-                        width: 250,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.brown.withAlpha((0.5 * 255).round()),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '田块 $fieldType',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // 植物层 - 使用绝对定位（与uni-app一致）
-                  if (plants.isNotEmpty)
-                    Positioned.fill(
-                      child: Stack(
-                        children: plants.asMap().entries.map((entry) {
-                          final plantIndex = entry.key;
-                          final plant = entry.value;
-                          return _build3DPlantWidget(
-                            plant,
-                            fieldType,
-                            plantIndex,
-                            themeColor,
-                          );
-                        }).toList(),
+          SizedBox(
+            width: fieldWidth,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 田块背景图
+                Image.asset(
+                  'assets/images/$fieldType.png',
+                  width: fieldWidth,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    debugPrint('田块图片加载失败: $fieldType.png');
+                    return Container(
+                      width: fieldWidth,
+                      height: fieldWidth * 0.8,
+                      decoration: BoxDecoration(
+                        color: Colors.brown.withAlpha((0.5 * 255).round()),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-
-                  // 如果没有植物，显示提示
-                  if (plants.isEmpty)
-                    Positioned.fill(
                       child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha((0.3 * 255).round()),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            '空田地\n点击播种',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
+                        child: Text(
+                          '田块 $fieldType',
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
+                    );
+                  },
+                ),
+
+                // 植物层 - 使用绝对定位（与uni-app一致）
+                if (plants.isNotEmpty)
+                  Positioned.fill(
+                    child: Stack(
+                      children: plants.asMap().entries.map((entry) {
+                        final plantIndex = entry.key;
+                        final plant = entry.value;
+                        return _build3DPlantWidget(
+                          plant,
+                          fieldType,
+                          plantIndex,
+                          fieldWidth, // 传入田块宽度
+                          themeColor,
+                        );
+                      }).toList(),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
 
-          // 右侧指示牌（与uni-app一致）
-          if (rightIcon != 0)
-            Positioned(
-              right: -10,
-              top: 20,
-              child: Image.asset(
-                'assets/images/right_icon$rightIcon.png',
-                width: 60,
-                errorBuilder: (context, error, stackTrace) {
-                  return const SizedBox.shrink();
-                },
-              ),
+          // 右侧指示牌（与uni-app一致：120rpx ≈ 0.16 * 屏幕宽度）
+          // 修复：right 为 0 时也要显示
+          Positioned(
+            right: fieldWidth * -0.04, // -20rpx / 500rpx ≈ -0.04
+            top: fieldWidth * 0.04, // 20rpx / 500rpx ≈ 0.04
+            child: Image.asset(
+              'assets/images/right_icon$rightIcon.png',
+              width: fieldWidth * 0.24, // 120rpx / 500rpx = 0.24
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('指示牌图片加载失败: right_icon$rightIcon.png');
+                return const SizedBox.shrink();
+              },
             ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildShopPopup(ThemeColorData themeColor) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final popupWidth = screenWidth * 0.8; // 600rpx / 750rpx = 0.8
+
     return GestureDetector(
       onTap: () => setState(() => _showShopPopup = false),
       child: Container(
-        color: Colors.black54,
+        color: Colors.black.withOpacity(0.5),
         child: Center(
           child: GestureDetector(
-            onTap: () {},
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.85,
-              constraints: const BoxConstraints(maxHeight: 500),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+            onTap: () {}, // 阻止点击穿透
+            child: SizedBox(
+              width: popupWidth,
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  // 标题栏
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          '种子商店',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  // 背景图
+                  Image.asset(
+                    'assets/images/popup_bg.png',
+                    width: popupWidth,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // 如果背景图加载失败，使用纯色背景
+                      return Container(
+                        width: popupWidth,
+                        height: popupWidth * 1.2,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFFFF8C42), Color(0xFFFF6B35)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // 关闭按钮
+                  Positioned(
+                    right: -5,
+                    top: -5,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _showShopPopup = false),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '×',
+                            style: TextStyle(
+                              fontSize: 28,
+                              color: Color(0xFF999999),
+                              height: 1,
+                            ),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => setState(() => _showShopPopup = false),
-                          child: const Icon(Icons.close),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
 
-                  const Divider(height: 1),
-
-                  // 种子列表
-                  Flexible(
+                  // 内容区域（覆盖在背景图上）
+                  Positioned(
+                    top: popupWidth * 0.27, // 27%
+                    left: popupWidth * 0.05, // 5%
+                    right: popupWidth * 0.05, // 5%
+                    bottom: popupWidth * 0.07, // 7%
                     child: _seedList.isEmpty
-                        ? const Center(child: Text('暂无种子'))
+                        ? const Center(
+                            child: Text(
+                              '暂无种子',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          )
                         : GridView.builder(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.zero,
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
                                   childAspectRatio: 0.75,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: popupWidth * 0.027, // 16rpx
+                                  mainAxisSpacing: popupWidth * 0.027, // 16rpx
                                 ),
                             itemCount: _seedList.length,
                             itemBuilder: (context, index) {
                               return _buildSeedItem(
                                 _seedList[index],
-                                themeColor,
+                                popupWidth,
                               );
                             },
                           ),
@@ -744,52 +769,95 @@ class _TaskPageState extends State<TaskPage>
     );
   }
 
-  Widget _buildSeedItem(Map<String, dynamic> seed, ThemeColorData themeColor) {
+  Widget _buildSeedItem(Map<String, dynamic> seed, double popupWidth) {
+    final itemWidth = (popupWidth * 0.9 - popupWidth * 0.027) / 2;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(itemWidth * 0.08), // 16rpx / 200rpx ≈ 0.08
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFFFFFEF8), Color(0xFFFFF9E6)],
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(itemWidth * 0.08), // 16rpx
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // 种子名称
           Text(
             seed['name']?.toString() ?? '',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: itemWidth * 0.12, // 24rpx / 200rpx = 0.12
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF333333),
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
 
           // 种子图片
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.green[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.eco, color: Colors.green[600], size: 30),
+          Image.network(
+            seed['image']?.toString() ?? '',
+            width: itemWidth * 0.4, // 80rpx / 200rpx = 0.4
+            height: itemWidth * 0.4,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: itemWidth * 0.4,
+                height: itemWidth * 0.4,
+                decoration: BoxDecoration(
+                  color: Colors.green[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.eco,
+                  color: Colors.green[600],
+                  size: itemWidth * 0.2,
+                ),
+              );
+            },
           ),
 
-          const SizedBox(height: 8),
-
-          Text(
-            '预计获得${seed['output_num'] ?? 0}积分',
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          // 种子信息
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '预计获得${seed['output_num'] ?? 0}积分',
+                style: TextStyle(
+                  fontSize: itemWidth * 0.1, // 20rpx / 200rpx = 0.1
+                  color: const Color(0xFF666666),
+                  height: 1.3,
+                ),
+              ),
+              Text(
+                '活跃度：${seed['activity'] ?? 0}',
+                style: TextStyle(
+                  fontSize: itemWidth * 0.1,
+                  color: const Color(0xFF666666),
+                  height: 1.3,
+                ),
+              ),
+              Text(
+                '种子数量：${seed['count'] ?? 0}/${seed['limit'] ?? 0}个',
+                style: TextStyle(
+                  fontSize: itemWidth * 0.1,
+                  color: const Color(0xFF666666),
+                  height: 1.3,
+                ),
+              ),
+            ],
           ),
-          Text(
-            '活跃度：${seed['activity'] ?? 0}',
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          Text(
-            '种子数量：${seed['count'] ?? 0}/${seed['limit'] ?? 0}个',
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-
-          const Spacer(),
 
           // 购买按钮
           GestureDetector(
@@ -799,18 +867,25 @@ class _TaskPageState extends State<TaskPage>
             },
             child: Container(
               width: double.infinity,
-              height: 32,
+              height: itemWidth * 0.24, // 48rpx / 200rpx = 0.24
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green[400]!, Colors.green[600]!],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7DD87D), Color(0xFF4EB84E)],
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(itemWidth * 0.12), // 24rpx
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF44AA44).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Center(
                 child: Text(
                   '${seed['dh_num'] ?? 0}积分',
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: TextStyle(
+                    fontSize: itemWidth * 0.11, // 22rpx / 200rpx ≈ 0.11
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -864,6 +939,7 @@ class _TaskPageState extends State<TaskPage>
     Map<String, dynamic> plant,
     int fieldType,
     int plantIndex,
+    double fieldWidth, // 添加田块宽度参数
     ThemeColorData themeColor,
   ) {
     final plantType = plant['type'] ?? 0;
@@ -872,26 +948,29 @@ class _TaskPageState extends State<TaskPage>
     final totalDay = plant['day'] ?? 1;
     final score = plant['score'] ?? 0;
 
+    // 植物宽度：80rpx / 500rpx = 0.16
+    final plantWidth = fieldWidth * 0.16;
+
     // 获取植物位置（与uni-app的getPlantPosition一致）
     final position = _getPlantPosition(fieldType, plantIndex);
     if (position == null) return const SizedBox.shrink();
 
     return Positioned(
-      left: position['left']! * 250, // 转换百分比为像素
-      top: position['top']! * 250,
+      left: position['left']! * fieldWidth, // 转换百分比为像素
+      top: position['top']! * fieldWidth,
       child: Transform.translate(
-        offset: const Offset(-20, -40), // 居中偏移（植物宽40，向上偏移40）
+        offset: Offset(-plantWidth / 2, -plantWidth * 1.3), // 增加向上偏移，让植物位置更准确
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // 植物图标
             Image.asset(
               'assets/images/plant$plantType.png',
-              width: 40,
+              width: plantWidth,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  width: 40,
-                  height: 40,
+                  width: plantWidth,
+                  height: plantWidth,
                   decoration: BoxDecoration(
                     color: Colors.green,
                     borderRadius: BorderRadius.circular(20),
@@ -920,16 +999,18 @@ class _TaskPageState extends State<TaskPage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 进度条
+                  // 进度条（100rpx / 500rpx = 0.2）
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 50,
-                        height: 6,
+                        width: fieldWidth * 0.2, // 100rpx / 500rpx = 0.2
+                        height: fieldWidth * 0.024, // 12rpx / 500rpx ≈ 0.024
                         decoration: BoxDecoration(
                           color: const Color(0xFFE0E0E0),
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(
+                            fieldWidth * 0.012,
+                          ),
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
@@ -939,27 +1020,30 @@ class _TaskPageState extends State<TaskPage>
                               gradient: const LinearGradient(
                                 colors: [Color(0xFF7dd87d), Color(0xFF4eb84e)],
                               ),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(
+                                fieldWidth * 0.012,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: fieldWidth * 0.008),
                       Text(
                         '$dkDay/$totalDay天',
-                        style: const TextStyle(
-                          fontSize: 8,
-                          color: Color(0xFF333333),
+                        style: TextStyle(
+                          fontSize:
+                              fieldWidth * 0.02, // 10rpx / 500rpx = 0.02（放大文字）
+                          color: const Color(0xFF333333),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: fieldWidth * 0.004),
                   Text(
                     '已领取$score',
-                    style: const TextStyle(
-                      fontSize: 8,
-                      color: Color(0xFF666666),
+                    style: TextStyle(
+                      fontSize: fieldWidth * 0.032, // 16rpx / 500rpx = 0.032
+                      color: const Color(0xFF666666),
                     ),
                   ),
                 ],
