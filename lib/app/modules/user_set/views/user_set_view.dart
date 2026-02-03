@@ -12,23 +12,21 @@ class UserSetView extends GetView<UserSetController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text('设置'), centerTitle: true, elevation: 0),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            children: [
-              // 个人信息卡片
-              _buildUserInfoCard(),
-              const SizedBox(height: 10),
-              // 设置选项列表
-              _buildSettingsList(),
-              const SizedBox(height: 20),
-              // 退出登录按钮
-              _buildLogoutButton(),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            // 个人信息卡片
+            _buildUserInfoCard(),
+            const SizedBox(height: 10),
+            // 设置选项列表
+            _buildSettingsList(),
+            const SizedBox(height: 20),
+            // 退出登录按钮
+            _buildLogoutButton(),
+          ],
         ),
       ),
     );
@@ -37,13 +35,12 @@ class UserSetView extends GetView<UserSetController> {
   /// 个人信息卡片
   Widget _buildUserInfoCard() {
     return Container(
-      height: 75, // 150rpx
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: () => controller.goToUserInfo(),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
           child: Row(
             children: [
               Obx(
@@ -52,25 +49,25 @@ class UserSetView extends GetView<UserSetController> {
                       controller.userInfo?.avatar != null && controller.userInfo!.avatar.isNotEmpty
                       ? CachedNetworkImage(
                           imageUrl: controller.userInfo!.avatar,
-                          width: 60,
-                          height: 60,
+                          width: 36,
+                          height: 36,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
-                            width: 60,
-                            height: 60,
+                            width: 36,
+                            height: 36,
                             color: Colors.grey[300],
                             child: const Icon(Icons.person, size: 30),
                           ),
                           errorWidget: (context, url, error) => Container(
-                            width: 60,
-                            height: 60,
+                            width: 36,
+                            height: 36,
                             color: Colors.grey[300],
                             child: const Icon(Icons.person, size: 30),
                           ),
                         )
                       : Container(
-                          width: 60,
-                          height: 60,
+                          width: 36,
+                          height: 36,
                           color: Colors.grey[300],
                           child: const Icon(Icons.person, size: 30),
                         ),

@@ -18,7 +18,6 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
-  bool _showSplashAd = false;
 
   @override
   void initState() {
@@ -41,10 +40,6 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (mounted) {
-      setState(() {
-        _showSplashAd = true;
-      });
-
       // 使用原生方式加载开屏广告
       _loadNativeSplashAd();
     }
@@ -118,11 +113,7 @@ class _SplashPageState extends State<SplashPage> {
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(
-                        Icons.image,
-                        size: 60,
-                        color: Colors.grey,
-                      ),
+                      child: const Icon(Icons.image, size: 60, color: Colors.grey),
                     );
                   },
                 ),
@@ -136,10 +127,7 @@ class _SplashPageState extends State<SplashPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '优质商品，品质生活',
-                  style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
-                ),
+                const Text('优质商品，品质生活', style: TextStyle(fontSize: 14, color: Color(0xFF999999))),
               ],
             ),
           ),

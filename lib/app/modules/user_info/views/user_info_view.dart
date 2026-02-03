@@ -12,28 +12,21 @@ class UserInfoView extends GetView<UserInfoController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('个人信息'),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              // 头像部分
-              _buildAvatarItem(context),
-              const SizedBox(height: 10),
-              // 昵称和性别
-              _buildInfoList(context),
-              const SizedBox(height: 53), // 105rpx
-              // 保存按钮
-              _buildSaveButton(context),
-            ],
-          ),
+      appBar: AppBar(title: const Text('个人信息'), centerTitle: true, elevation: 0),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            // 头像部分
+            _buildAvatarItem(context),
+            const SizedBox(height: 10),
+            // 昵称和性别
+            _buildInfoList(context),
+            const SizedBox(height: 53), // 105rpx
+            // 保存按钮
+            _buildSaveButton(context),
+          ],
         ),
       ),
     );
@@ -42,53 +35,47 @@ class UserInfoView extends GetView<UserInfoController> {
   /// 头像项
   Widget _buildAvatarItem(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: InkWell(
         onTap: () => _showUploadDialog(context),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 '头像',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
               ),
               Row(
                 children: [
                   Obx(
                     () => ClipOval(
-                      child: controller.userInfo?.avatar != null &&
+                      child:
+                          controller.userInfo?.avatar != null &&
                               controller.userInfo!.avatar.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: controller.userInfo!.avatar,
-                              width: 50, // 100rpx
-                              height: 50,
+                              width: 36, // 100rpx
+                              height: 36,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                width: 50,
-                                height: 50,
+                                width: 36,
+                                height: 36,
                                 color: Colors.grey[300],
                                 child: const Icon(Icons.person, size: 25),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                width: 50,
-                                height: 50,
+                                width: 36,
+                                height: 36,
                                 color: Colors.grey[300],
                                 child: const Icon(Icons.person, size: 25),
                               ),
                             )
                           : Container(
-                              width: 50,
-                              height: 50,
+                              width: 36,
+                              height: 36,
                               color: Colors.grey[300],
                               child: const Icon(Icons.person, size: 25),
                             ),
@@ -108,10 +95,7 @@ class UserInfoView extends GetView<UserInfoController> {
   /// 信息列表（昵称、性别）
   Widget _buildInfoList(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
           // 昵称
@@ -143,7 +127,9 @@ class UserInfoView extends GetView<UserInfoController> {
                         border: InputBorder.none,
                         isDense: true,
                         counterText: '',
-                        contentPadding: EdgeInsets.zero,
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        contentPadding: EdgeInsets.symmetric(vertical: 4),
                       ),
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
                     ),
@@ -204,13 +190,7 @@ class UserInfoView extends GetView<UserInfoController> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           elevation: 0,
         ),
-        child: const Text(
-          '保存',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        child: const Text('保存', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
       ),
     );
   }
@@ -232,10 +212,7 @@ class UserInfoView extends GetView<UserInfoController> {
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('取消')),
           TextButton(
             onPressed: () {
               Get.back();
@@ -338,8 +315,7 @@ class UserInfoView extends GetView<UserInfoController> {
   /// 保存用户信息
   void _saveUserInfo() async {
     // 验证昵称
-    if (controller.userInfo?.nickname == null ||
-        controller.userInfo!.nickname.isEmpty) {
+    if (controller.userInfo?.nickname == null || controller.userInfo!.nickname.isEmpty) {
       EasyLoading.showToast('请输入姓名');
       return;
     }

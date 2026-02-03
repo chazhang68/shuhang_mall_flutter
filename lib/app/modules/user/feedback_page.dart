@@ -50,10 +50,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     EasyLoading.show(status: '提交中...');
 
     try {
-      final response = await _userProvider.suggest({
-        'text': content,
-        'phone': phone,
-      });
+      final response = await _userProvider.suggest({'text': content, 'phone': phone});
 
       EasyLoading.dismiss();
 
@@ -79,55 +76,32 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final themeColor = Get.find<AppController>().themeColor;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('意见反馈'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('意见反馈'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             // 问题描述输入框
             Container(
+              padding: .only(bottom: 6),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
               ),
-              child: Stack(
-                children: [
-                  TextField(
-                    controller: _contentController,
-                    maxLines: 6,
-                    maxLength: 150,
-                    decoration: const InputDecoration(
-                      hintText: '请输入你遇到的问题或建议(150字以内)',
-                      hintStyle: TextStyle(color: Color(0xFF999999), fontSize: 14),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(12),
-                      counterText: '',
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  Positioned(
-                    right: 12,
-                    bottom: 8,
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${_contentController.text.length}',
-                            style: TextStyle(color: themeColor.primary),
-                          ),
-                          const TextSpan(
-                            text: '/150',
-                            style: TextStyle(color: Color(0xFF999999)),
-                          ),
-                        ],
-                      ),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
+              child: TextField(
+                controller: _contentController,
+                maxLines: 6,
+                maxLength: 150,
+                decoration: const InputDecoration(
+                  hintText: '请输入你遇到的问题或建议(150字以内)',
+                  hintStyle: TextStyle(color: Color(0xFF999999), fontSize: 12),
+                  border: InputBorder.none,
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  contentPadding: EdgeInsets.all(12),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
             ),
 
@@ -138,53 +112,43 @@ class _FeedbackPageState extends State<FeedbackPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               child: TextField(
                 controller: _phoneController,
                 maxLength: 20,
                 decoration: const InputDecoration(
+                  isDense: true,
                   prefixIcon: Padding(
                     padding: EdgeInsets.only(left: 12, right: 8),
-                    child: Text(
-                      '联系方式',
-                      style: TextStyle(
-                        color: Color(0xFF333333),
-                        fontSize: 14,
-                      ),
-                    ),
+                    child: Text('联系方式', style: TextStyle(color: Color(0xFF333333), fontSize: 14)),
                   ),
                   prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
                   hintText: '请输入联系方式',
                   hintStyle: TextStyle(color: Color(0xFF999999), fontSize: 14),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   counterText: '',
                 ),
               ),
             ),
 
-            const SizedBox(height: 40),
+            const SizedBox(height: 28),
 
             // 提交按钮
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 48,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submitFeedback,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: themeColor.primary,
+                  backgroundColor: themeColor.primary.withValues(alpha: 0.8),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(
-                  _isLoading ? '提交中...' : '保存',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(_isLoading ? '提交中...' : '保存'),
               ),
             ),
           ],

@@ -192,14 +192,9 @@ class _RealNamePageState extends State<RealNamePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF5F5F5),
         title: const Text('实名认证'),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () => Get.toNamed(AppRoutes.manualReview),
-            child: const Text('人工审核'),
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -300,7 +295,7 @@ class _RealNameFormView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           _FormCard(
@@ -325,12 +320,14 @@ class _RealNameFormView extends StatelessWidget {
                 hintText: '请输入正确的手机号',
                 keyboardType: TextInputType.phone,
               ),
+              const Divider(height: 1),
+              const SizedBox(height: 24),
+              _PrimaryActionButton(
+                label: isSubmitting ? '提交中...' : '提交认证',
+                onPressed: isSubmitting ? null : onSubmit,
+              ),
+              const SizedBox(height: 24),
             ],
-          ),
-          const SizedBox(height: 24),
-          _PrimaryActionButton(
-            label: isSubmitting ? '提交中...' : '提交认证',
-            onPressed: isSubmitting ? null : onSubmit,
           ),
         ],
       ),
@@ -346,13 +343,8 @@ class _FormCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(children: children),
     );
   }
@@ -374,7 +366,7 @@ class _LabeledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           SizedBox(
@@ -385,7 +377,12 @@ class _LabeledField extends StatelessWidget {
             child: TextField(
               controller: controller,
               keyboardType: keyboardType,
-              decoration: InputDecoration(hintText: hintText, border: InputBorder.none),
+              decoration: InputDecoration(
+                hintText: hintText,
+                border: InputBorder.none,
+                filled: true,
+                fillColor: Colors.transparent,
+              ),
             ),
           ),
         ],
@@ -449,10 +446,11 @@ class _PrimaryActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 48,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         ),
         child: Text(label, style: const TextStyle(fontSize: 16)),

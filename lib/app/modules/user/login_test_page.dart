@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
@@ -187,10 +186,7 @@ class _LoginTestPageState extends State<LoginTestPage> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              '开始测试登录',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                          : const Text('开始测试登录', style: TextStyle(fontSize: 16)),
                     ),
                   ),
                 ],
@@ -200,10 +196,7 @@ class _LoginTestPageState extends State<LoginTestPage> {
             const SizedBox(height: 20),
 
             // 日志输出区域
-            const Text(
-              '测试日志:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('测试日志:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Expanded(
               child: Container(
