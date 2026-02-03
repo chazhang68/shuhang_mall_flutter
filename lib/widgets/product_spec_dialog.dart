@@ -331,11 +331,18 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
 
   void _handleConfirm() {
     if (_selectedSku == null) {
-      FlutterToastPro.showMessage( '请选择规格'.tr);
+      FlutterToastPro.showMessage('请选择规格'.tr);
       return;
     }
 
-    final result = {'sku': _selectedSku, 'quantity': _quantity, 'attrs': _selectedAttrs};
+    final unique = _selectedSku?['unique']?.toString() ?? '';
+    final result = {
+      'sku': _selectedSku,
+      'quantity': _quantity,
+      'cart_num': _quantity,
+      'unique': unique,
+      'attrs': _selectedAttrs,
+    };
 
     if (widget.onConfirm != null) {
       widget.onConfirm?.call(_selectedSku!, _quantity);
@@ -429,5 +436,3 @@ class QuantitySelector extends StatelessWidget {
     );
   }
 }
-
-

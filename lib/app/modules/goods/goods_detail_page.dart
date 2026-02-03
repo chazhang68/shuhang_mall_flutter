@@ -1900,13 +1900,20 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   Future<void> _addToCart(Map<String, dynamic> specResult, {bool isNew = false}) async {
     if (_productInfo == null) return;
     final productId = _storeInfo.id;
+    final quantity = _toInt(specResult['cart_num'] ?? specResult['quantity']) ?? 1;
+    final uniqueId = _readUniqueId(specResult);
+
+    if (_hasSpec && uniqueId.isEmpty) {
+      FlutterToastPro.showMessage('请选择规格');
+      return;
+    }
 
     try {
       final response = await _orderProvider.addCart({
         'productId': productId,
-        'cartNum': specResult['cart_num'] ?? 1,
+        'cartNum': quantity <= 0 ? 1 : quantity,
         'new': isNew ? 1 : 0,
-        'uniqueId': specResult['unique'] ?? '',
+        'uniqueId': uniqueId,
         'virtual_type': _storeInfo.virtualType,
       });
 
@@ -1914,13 +1921,18 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
         await _refreshCartState();
         if (isNew) {
           // 立即购买 - 跳转到订单确认页
-          final cartId = response.data?.cartId;
-          Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartId, 'new': 1});
+          final cartIdValue = response.data?.cartIdValue ?? '';
+          if (cartIdValue.isEmpty) {
+            FlutterToastPro.showMessage('加入购物车失败，请稍后重试');
+            return;
+          }
+          Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartIdValue, 'new': 1});
         } else {
           FlutterToastPro.showMessage('已加入购物车');
         }
       } else {
-        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '加入购物车失败');
+        final msg = response.msg.isNotEmpty ? response.msg : '加入购物车失败(${response.status})';
+        FlutterToastPro.showMessage(msg);
       }
     } catch (e) {
       FlutterToastPro.showMessage('网络请求失败');
@@ -1930,6 +1942,29 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   Future<void> _refreshCartState() async {
     await CartStore.instance.loadCartList();
     await _getCartCount();
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  String _readUniqueId(Map<String, dynamic> specResult) {
+    final direct = specResult['unique'] ?? specResult['uniqueId'] ?? specResult['unique_id'];
+    if (direct != null && direct.toString().isNotEmpty) {
+      return direct.toString();
+    }
+
+    final sku = specResult['sku'];
+    if (sku is Map) {
+      final map = Map<String, dynamic>.from(sku);
+      final fromSku = map['unique'] ?? map['uniqueId'] ?? map['unique_id'] ?? map['suk'];
+      if (fromSku != null && fromSku.toString().isNotEmpty) {
+        return fromSku.toString();
+      }
+    }
+
+    return '';
   }
 }
 

@@ -31,7 +31,7 @@ class OrderProvider {
     return await _api.post<CartAddResponseModel>(
       'cart/add',
       data: data,
-      fromJsonT: (json) => CartAddResponseModel.fromJson(json as Map<String, dynamic>),
+      fromJsonT: (json) => CartAddResponseModel.fromDynamic(json),
     );
   }
 
@@ -68,6 +68,11 @@ class OrderProvider {
   /// 创建订单
   Future<ApiResponse> createOrder(Map<String, dynamic> data) async {
     return await _api.post('order/create', data: data);
+  }
+
+  /// 创建订单（带 key）
+  Future<ApiResponse> createOrderWithKey(String key, Map<String, dynamic> data) async {
+    return await _api.post('order/create/$key', data: data);
   }
 
   /// 获取当前金额可用优惠券

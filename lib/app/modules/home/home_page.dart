@@ -21,8 +21,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with AutomaticKeepAliveClientMixin {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   final PublicProvider _publicProvider = PublicProvider();
 
   // 数据
@@ -156,7 +155,6 @@ class _HomePageState extends State<HomePage>
                   onRefresh: _onRefresh,
                   onLoad: _loadMoreProducts,
                   child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       // 顶部Logo
                       SliverToBoxAdapter(child: _buildHeader()),
@@ -165,8 +163,9 @@ class _HomePageState extends State<HomePage>
                       SliverToBoxAdapter(child: _buildBanner()),
 
                       // 公告
-                      if (_notes.isNotEmpty)
-                        SliverToBoxAdapter(
+                      SliverToBoxAdapter(
+                        child: Visibility(
+                          visible: _notes.isNotEmpty,
                           child: Container(
                             width: size.width,
                             height: 32,
@@ -207,9 +206,7 @@ class _HomePageState extends State<HomePage>
                                 Container(
                                   width: 1.5,
                                   height: 16,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
                                   color: const Color(0xFFDDDDDD),
                                 ),
                                 // 公告内容 - 点击跳转详情
@@ -223,19 +220,14 @@ class _HomePageState extends State<HomePage>
                                         color: Color(0xFF666666),
                                       ),
                                       scrollAxis: Axis.horizontal,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
                                       blankSpace: 100.0,
                                       velocity: 100.0,
                                       pauseAfterRound: Duration(seconds: 1),
                                       startPadding: 0,
-                                      accelerationDuration: Duration(
-                                        seconds: 1,
-                                      ),
+                                      accelerationDuration: Duration(seconds: 1),
                                       accelerationCurve: Curves.linear,
-                                      decelerationDuration: Duration(
-                                        milliseconds: 500,
-                                      ),
+                                      decelerationDuration: Duration(milliseconds: 500),
                                       decelerationCurve: Curves.easeOut,
                                     ),
                                   ),
@@ -244,16 +236,15 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                         ),
+                      ),
+
+                      // 广告位 - 对应uni-app的APP-PLUS广告组件
+                      SliverToBoxAdapter(
+                        child: Visibility(visible: !_showAd, child: _buildAdView()),
+                      ),
 
                       // 搜索栏
                       SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
-
-                      // 广告位 - 对应uni-app的APP-PLUS广告组件
-                      if (_showAd)
-                        SliverToBoxAdapter(child: _buildAdView())
-                      else
-                        // 广告关闭后添加间距，避免商品列表紧贴搜索栏
-                        const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
                       // 商品列表
                       _hotList.isEmpty
@@ -261,32 +252,25 @@ class _HomePageState extends State<HomePage>
                               child: Center(
                                 child: Padding(
                                   padding: EdgeInsets.all(40),
-                                  child: Text(
-                                    '暂无商品',
-                                    style: TextStyle(color: Color(0xFF999999)),
-                                  ),
+                                  child: Text('暂无商品', style: TextStyle(color: Color(0xFF999999))),
                                 ),
                               ),
                             )
                           : SliverPadding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               sliver: SliverGrid(
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      mainAxisSpacing: 8,
-                                      crossAxisSpacing: 8,
-                                      // 宽高比调整：图片169px + 文字区域约70px = 239px
-                                      // 宽度约170px，比例 170/239 ≈ 0.71
-                                      childAspectRatio: 0.68,
-                                    ),
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                  // 宽高比调整：图片169px + 文字区域约70px = 239px
+                                  // 宽度约170px，比例 170/239 ≈ 0.71
+                                  childAspectRatio: 0.68,
+                                ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) => HomeProductCard(
                                     product: _hotList[index],
-                                    onTap: () =>
-                                        _goGoodsDetail(_hotList[index].id),
+                                    onTap: () => _goGoodsDetail(_hotList[index].id),
                                   ),
                                   childCount: _hotList.length,
                                 ),
@@ -299,13 +283,8 @@ class _HomePageState extends State<HomePage>
                           padding: const EdgeInsets.all(20),
                           alignment: Alignment.center,
                           child: Text(
-                            _loadEnd
-                                ? '我也是有底线的'
-                                : (_loadingMore ? '加载中...' : ''),
-                            style: const TextStyle(
-                              color: Color(0xFF999999),
-                              fontSize: 12,
-                            ),
+                            _loadEnd ? '我也是有底线的' : (_loadingMore ? '加载中...' : ''),
+                            style: const TextStyle(color: Color(0xFF999999), fontSize: 12),
                           ),
                         ),
                       ),
@@ -363,10 +342,7 @@ class _HomePageState extends State<HomePage>
       return Container(
         margin: const EdgeInsets.all(12),
         height: 188,
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
         child: const Center(
           child: Text('暂无轮播图', style: TextStyle(color: Color(0xFF999999))),
         ),
@@ -404,16 +380,11 @@ class _HomePageState extends State<HomePage>
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.grey,
-                  ),
+                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
                 ),
               ),
             ),
@@ -441,13 +412,10 @@ class _HomePageState extends State<HomePage>
     return GestureDetector(
       onTap: _goSearch,
       child: Container(
-        margin: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(35),
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35)),
         child: Row(
           children: [
             Image.asset(
@@ -460,15 +428,9 @@ class _HomePageState extends State<HomePage>
             ),
             const SizedBox(width: 8),
             const Expanded(
-              child: Text(
-                '输入你想搜索的商品',
-                style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 13),
-              ),
+              child: Text('输入你想搜索的商品', style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 13)),
             ),
-            const Text(
-              '搜索',
-              style: TextStyle(color: Color(0xFF444444), fontSize: 13),
-            ),
+            const Text('搜索', style: TextStyle(color: Color(0xFF444444), fontSize: 13)),
           ],
         ),
       ),
@@ -477,7 +439,7 @@ class _HomePageState extends State<HomePage>
 
   /// 广告位 - ZJSDK信息流广告
   Widget _buildAdView() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: ZJFeedAdWidget(
         width: MediaQuery.of(context).size.width - 24,

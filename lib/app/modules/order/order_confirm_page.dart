@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/models/address_model.dart';
-import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/order_provider.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
@@ -22,11 +22,11 @@ class OrderConfirmPage extends StatefulWidget {
 class _OrderConfirmPageState extends State<OrderConfirmPage> {
   final UserProvider _userProvider = UserProvider();
   final OrderProvider _orderProvider = OrderProvider();
+  final PublicProvider _publicProvider = PublicProvider();
 
   AddressItem? _selectedAddress;
   Map<String, dynamic>? _selectedCoupon;
   String _remark = '';
-  int _payType = 0; // 0: 在线支付
 
   String? _cartId;
   int _pinkId = 0;
@@ -36,13 +36,16 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   int _addressId = 0;
   final int _shippingType = 1;
   bool _isLoading = false;
+  bool _isSubmitting = false;
   String _orderKey = '';
+  bool _hasWarnedNoCartId = false;
 
-  final List<CartItem> _orderItems = <CartItem>[];
+  final List<_OrderConfirmItemData> _orderItems = <_OrderConfirmItemData>[];
   final List<Map<String, dynamic>> _couponList = <Map<String, dynamic>>[];
 
   double _goodsTotal = 0;
   double _freight = 0;
+  final List<PaymentMethod> _paymentMethods = <PaymentMethod>[];
 
   double get _couponDiscount {
     return _selectedCoupon?['coupon_price']?.toDouble() ?? 0.0;
@@ -62,12 +65,31 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
 
   void _bindParams() {
     final params = Get.parameters;
-    _cartId = params['cartId'];
-    _addressId = _toInt(params['addressId']);
-    _pinkId = _toInt(params['pinkId']);
-    _couponId = _toInt(params['couponId']);
-    _news = params['new'] ?? params['news'] ?? '0';
-    _noCoupon = _toInt(params['noCoupon']);
+    final args = Get.arguments is Map
+        ? Map<String, dynamic>.from(Get.arguments)
+        : <String, dynamic>{};
+    _cartId = _normalizeCartId(
+      params['cartId'] ??
+          params['cart_id'] ??
+          params['cartIds'] ??
+          params['cart_ids'] ??
+          params['id'] ??
+          args['cartId'] ??
+          args['cart_id'] ??
+          args['cartIds'] ??
+          args['cart_ids'] ??
+          args['id'],
+    );
+    _addressId = _toInt(params['addressId'] ?? args['addressId']);
+    _pinkId = _toInt(params['pinkId'] ?? args['pinkId']);
+    _couponId = _toInt(params['couponId'] ?? args['couponId']);
+    _news =
+        params['new'] ??
+        params['news'] ??
+        args['new']?.toString() ??
+        args['news']?.toString() ??
+        '0';
+    _noCoupon = _toInt(params['noCoupon'] ?? args['noCoupon']);
   }
 
   Future<void> _loadInitialAddress() async {
@@ -82,7 +104,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   Future<void> _loadDefaultAddress() async {
     try {
       final response = await _userProvider.getAddressDefault();
-      if (response.isSuccess && response.data != null) {
+      if (response.isSuccess && response.data != null && response.msg != 'empty') {
         setState(() {
           _selectedAddress = AddressItem.fromJson(response.data as Map<String, dynamic>);
           _addressId = _selectedAddress?.id ?? _addressId;
@@ -110,7 +132,13 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
   }
 
   Future<void> _loadOrderConfirm() async {
-    if (_cartId == null || _cartId!.isEmpty) return;
+    if (_cartId == null || _cartId!.isEmpty) {
+      if (!_hasWarnedNoCartId) {
+        _hasWarnedNoCartId = true;
+        FlutterToastPro.showMessage('请先选择要购买的商品');
+      }
+      return;
+    }
 
     try {
       setState(() {
@@ -121,20 +149,24 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
         'cartId': _cartId,
         'new': _news,
         'addressId': _addressId,
-        'shipping_type': _shippingType,
+        'shipping_type': _shippingType + 1,
       });
 
       if (response.isSuccess && response.data is Map<String, dynamic>) {
         final data = response.data as Map<String, dynamic>;
         final cartInfo = _parseCartInfo(data['cartInfo'] ?? data['cart_info']);
+        final priceGroup = data['priceGroup'] ?? data['price_group'];
+        final priceGroupPostage = priceGroup is Map
+            ? _toDouble(priceGroup['storePostage'] ?? priceGroup['store_postage'])
+            : 0.0;
 
         setState(() {
           _orderItems
             ..clear()
             ..addAll(cartInfo);
-          final apiTotal = _toDouble(data['total_price']);
-          _goodsTotal = apiTotal > 0 ? apiTotal : _calcGoodsTotal(cartInfo);
-          _freight = _toDouble(data['pay_postage']);
+          _goodsTotal = _calcGoodsTotalFromItems(cartInfo);
+          final apiPostage = _toDouble(data['pay_postage']);
+          _freight = apiPostage > 0 ? apiPostage : priceGroupPostage;
           _orderKey = data['orderKey']?.toString() ?? _orderKey;
         });
 
@@ -193,38 +225,44 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
       builder: (controller) {
         final themeColor = controller.themeColor;
 
+        final goodsCount = _orderItems.fold<int>(0, (sum, item) => sum + item.quantity);
+
         return Scaffold(
-          appBar: AppBar(title: const Text('确认订单')),
+          backgroundColor: const Color(0xFFF5F5F5),
+          appBar: AppBar(title: const Text('提交订单'), backgroundColor: const Color(0xFFF5F5F5)),
           body: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // 收货地址
-                      _buildAddressSection(themeColor),
+                      _OrderConfirmAddressSection(
+                        themeColor: themeColor,
+                        selectedAddress: _selectedAddress,
+                        onTap: _openAddressList,
+                      ),
+
+                      _OrderConfirmGoodsSection(
+                        isLoading: _isLoading,
+                        items: _orderItems,
+                        goodsCount: goodsCount,
+                      ),
                       const SizedBox(height: 10),
-                      // 商品列表
-                      _buildGoodsSection(),
-                      const SizedBox(height: 10),
-                      // 优惠券
-                      _buildCouponSection(themeColor),
-                      const SizedBox(height: 10),
-                      // 订单备注
-                      _buildRemarkSection(),
-                      const SizedBox(height: 10),
-                      // 支付方式
-                      _buildPayTypeSection(themeColor),
-                      const SizedBox(height: 10),
-                      // 价格明细
-                      _buildPriceDetail(themeColor),
+                      _OrderConfirmPriceSection(
+                        goodsTotal: _goodsTotal,
+                        freight: _freight,
+                        themeColor: themeColor,
+                      ),
                       const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
-              // 底部结算栏
-              _buildBottomBar(themeColor),
+              _OrderConfirmBottomBar(
+                themeColor: themeColor,
+                totalPrice: _totalPrice,
+                onSubmit: _submitOrder,
+              ),
             ],
           ),
         );
@@ -232,360 +270,182 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
     );
   }
 
-  Widget _buildAddressSection(ThemeColorData themeColor) {
-    return GestureDetector(
-      onTap: () async {
-        final result = await Get.toNamed(
-          AppRoutes.userAddressList,
-          parameters: {
-            'cartId': ?_cartId,
-            'pinkId': _pinkId.toString(),
-            'couponId': _couponId.toString(),
-            'new': _news,
-            'noCoupon': _noCoupon.toString(),
-          },
-        );
-
-        if (result is int) {
-          await _loadAddressDetail(result);
-        }
+  Future<void> _openAddressList() async {
+    final result = await Get.toNamed(
+      AppRoutes.userAddressList,
+      parameters: {
+        'cartId': _cartId ?? '',
+        'pinkId': _pinkId.toString(),
+        'couponId': _couponId.toString(),
+        'new': _news,
+        'noCoupon': _noCoupon.toString(),
       },
-      child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(15),
-        child: _selectedAddress == null
-            ? Row(
-                children: [
-                  Icon(Icons.add_location_alt_outlined, color: themeColor.primary),
-                  const SizedBox(width: 10),
-                  Text('请选择收货地址', style: TextStyle(color: themeColor.primary, fontSize: 14)),
-                  const Spacer(),
-                  const Icon(Icons.chevron_right, color: Color(0xFF999999)),
-                ],
-              )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.location_on_outlined, color: Color(0xFF333333), size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              _selectedAddress!.realName,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              _selectedAddress!.phone,
-                              style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${_selectedAddress!.province}${_selectedAddress!.city}'
-                          '${_selectedAddress!.district}${_selectedAddress!.detail}',
-                          style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Color(0xFF999999)),
-                ],
-              ),
-      ),
     );
+
+    if (result is int) {
+      await _loadAddressDetail(result);
+    }
   }
 
-  Widget _buildGoodsSection() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          // 店铺信息
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFF5F5F5))),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.store, size: 18, color: Color(0xFF333333)),
-                SizedBox(width: 8),
-                Text('官方自营店', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          // 商品列表
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            ..._orderItems.map(_buildGoodsItem),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGoodsItem(CartItem item) {
-    final productInfo = item.productInfo;
-    final image = productInfo?.attrInfo?.image ?? productInfo?.image ?? '';
-    final name = productInfo?.storeName ?? '';
-    final spec = productInfo?.attrInfo?.suk ?? '';
-    final price = item.unitPrice;
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 商品图片
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: image.isNotEmpty
-                ? CachedImage(imageUrl: image, width: 80, height: 80, borderRadius: 8)
-                : const Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
-          ),
-          const SizedBox(width: 12),
-          // 商品信息
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 6),
-                Text(spec, style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '¥${price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFE93323),
-                      ),
-                    ),
-                    Text(
-                      'x${item.cartNum}',
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF999999)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCouponSection(ThemeColorData themeColor) {
-    return GestureDetector(
-      onTap: () async {
-        final result = await CouponDialog.show(
-          couponList: _couponList,
-          selectedId: _selectedCoupon?['id'],
-        );
-        if (result != null) {
-          setState(() {
-            _selectedCoupon = result;
-            _couponId = result['id'] ?? 0;
-          });
-        }
-      },
-      child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(15),
-        child: Row(
-          children: [
-            const Text('优惠券', style: TextStyle(fontSize: 14)),
-            const Spacer(),
-            Text(
-              _selectedCoupon != null && _selectedCoupon!['coupon_price'] > 0
-                  ? '-¥${_selectedCoupon!['coupon_price']}'
-                  : '暂无可用',
-              style: TextStyle(
-                fontSize: 14,
-                color: _selectedCoupon != null ? themeColor.primary : const Color(0xFF999999),
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, color: Color(0xFF999999), size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRemarkSection() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(15),
-      child: Row(
-        children: [
-          const Text('订单备注', style: TextStyle(fontSize: 14)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: TextField(
-              onChanged: (value) {
-                _remark = value;
-              },
-              decoration: const InputDecoration(
-                hintText: '选填，可填写您的特殊需求',
-                hintStyle: TextStyle(fontSize: 13, color: Color(0xFF999999)),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
-              style: const TextStyle(fontSize: 13),
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPayTypeSection(ThemeColorData themeColor) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('支付方式', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _buildPayTypeItem(0, '在线支付', Icons.payment, themeColor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPayTypeItem(int type, String label, IconData icon, themeColor) {
-    final isSelected = _payType == type;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _payType = type;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: const Color(0xFF666666)),
-            const SizedBox(width: 10),
-            Text(label, style: const TextStyle(fontSize: 14)),
-            const Spacer(),
-            Icon(
-              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: isSelected ? themeColor.primary : const Color(0xFFCCCCCC),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceDetail(ThemeColorData themeColor) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        children: [
-          _buildPriceRow('商品总价', '¥${_goodsTotal.toStringAsFixed(2)}'),
-          if (_couponDiscount > 0)
-            _buildPriceRow(
-              '优惠券',
-              '-¥${_couponDiscount.toStringAsFixed(2)}',
-              valueColor: themeColor.primary,
-            ),
-          _buildPriceRow('运费', _freight > 0 ? '¥${_freight.toStringAsFixed(2)}' : '免运费'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriceRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF666666))),
-          Text(value, style: TextStyle(fontSize: 13, color: valueColor ?? const Color(0xFF333333))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(ThemeColorData themeColor) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            const Text('合计: ', style: TextStyle(fontSize: 14)),
-            Text(
-              '¥${_totalPrice.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: themeColor.price),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: _submitOrder,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                decoration: BoxDecoration(
-                  color: themeColor.primary,
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: const Text('提交订单', style: TextStyle(fontSize: 15, color: Colors.white)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitOrder() {
+  Future<void> _submitOrder() async {
     if (_selectedAddress == null) {
       FlutterToastPro.showMessage('请选择收货地址');
       return;
     }
 
-    // 提交订单逻辑
-    Get.toNamed(AppRoutes.orderPayStatus, parameters: {'order_id': '123456', 'remark': _remark});
+    if (_orderKey.isEmpty) {
+      FlutterToastPro.showMessage('订单信息未准备好');
+      return;
+    }
+
+    await _ensurePaymentMethods();
+    final hasEnabled = _paymentMethods.any((item) => item.enabled);
+    if (!hasEnabled) {
+      FlutterToastPro.showMessage('暂无可用支付方式');
+      return;
+    }
+
+    await PaymentDialog.show(
+      paymentMethods: _paymentMethods,
+      totalPrice: _totalPrice,
+      orderId: '',
+      isCall: true,
+      onPay: (payType) {
+        Get.back();
+        _createOrder(payType);
+      },
+    );
+  }
+
+  Future<void> _ensurePaymentMethods() async {
+    if (_paymentMethods.isNotEmpty) return;
+
+    double balance = 0;
+    try {
+      final userResponse = await _userProvider.getUserInfo();
+      if (userResponse.isSuccess && userResponse.data != null) {
+        balance = userResponse.data!.balance;
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取用户余额失败');
+    }
+
+    bool weixinEnabled = true;
+    bool alipayEnabled = true;
+    bool yueEnabled = true;
+    bool offlineEnabled = true;
+    bool friendEnabled = true;
+
+    try {
+      final configResponse = await _publicProvider.getShopConfig();
+      if (configResponse.isSuccess && configResponse.data is Map) {
+        final map = Map<String, dynamic>.from(configResponse.data as Map);
+        weixinEnabled = _readConfigFlag(map, ['pay_weixin_open', 'pay_weixin', 'weixin_open']);
+        alipayEnabled = _readConfigFlag(map, ['ali_pay_status', 'pay_alipay', 'alipay_open']);
+        yueEnabled = _readConfigFlag(map, ['yue_pay_status', 'pay_yue', 'yue_open']);
+        offlineEnabled = _readConfigFlag(map, [
+          'offline_pay_status',
+          'pay_offline',
+          'offline_open',
+        ]);
+        friendEnabled = _readConfigFlag(map, ['friend_pay_status', 'pay_friend', 'friend_open']);
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('获取支付配置失败');
+    }
+
+    setState(() {
+      _paymentMethods
+        ..clear()
+        ..addAll([
+          PaymentMethod.weixin(enabled: weixinEnabled),
+          PaymentMethod.alipay(enabled: alipayEnabled),
+          PaymentMethod.yue(userBalance: balance, enabled: yueEnabled),
+          PaymentMethod.offline(enabled: offlineEnabled),
+          PaymentMethod.friend(enabled: friendEnabled),
+        ]);
+    });
+  }
+
+  Future<void> _createOrder(String payType) async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final payload = _buildOrderCreatePayload(payType);
+      final response = await _orderProvider.createOrderWithKey(_orderKey, payload);
+
+      if (response.isSuccess) {
+        final orderId = _extractOrderId(response.data);
+        if (orderId.isNotEmpty) {
+          Get.offNamed(AppRoutes.cashier, parameters: {'order_id': orderId, 'from_type': 'order'});
+        } else {
+          FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '订单创建失败');
+        }
+      } else {
+        FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '订单创建失败');
+      }
+    } catch (e) {
+      FlutterToastPro.showMessage('提交订单失败: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  Map<String, dynamic> _buildOrderCreatePayload(String payType) {
+    return {
+      'custom_form': <dynamic>[],
+      'real_name': _selectedAddress?.realName ?? '',
+      'phone': _selectedAddress?.phone ?? '',
+      'addressId': _addressId,
+      'couponId': _couponId,
+      'useIntegral': 0,
+      'pinkId': _pinkId,
+      'mark': _remark,
+      'shipping_type': _shippingType + 1,
+      'new': _news,
+      'payType': payType,
+    };
+  }
+
+  String _extractOrderId(dynamic data) {
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      final result = map['result'];
+      if (result is Map) {
+        final id = result['orderId'] ?? result['order_id'] ?? result['orderId'];
+        if (id != null) return id.toString();
+      }
+      final id = map['orderId'] ?? map['order_id'] ?? map['orderId'];
+      if (id != null) return id.toString();
+    }
+    return '';
   }
 
   int _toInt(dynamic value) {
     if (value is int) return value;
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String? _normalizeCartId(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      final items = value.map((item) => item.toString()).where((item) => item.isNotEmpty).toList();
+      if (items.isEmpty) return null;
+      return items.join(',');
+    }
+    final text = value.toString();
+    if (text.isEmpty || text == '0' || text.toLowerCase() == 'null') {
+      return null;
+    }
+    return text;
   }
 
   double _toDouble(dynamic value) {
@@ -594,19 +454,451 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  List<CartItem> _parseCartInfo(dynamic value) {
-    if (value is! List) return <CartItem>[];
-    return value
-        .whereType<Map>()
-        .map((item) => CartItem.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+  bool _readConfigFlag(Map<String, dynamic> map, List<String> keys, {bool defaultValue = true}) {
+    for (final key in keys) {
+      if (!map.containsKey(key)) continue;
+      final value = map[key];
+      if (value is bool) return value;
+      return _toInt(value) == 1;
+    }
+    return defaultValue;
   }
 
-  double _calcGoodsTotal(List<CartItem> items) {
+  List<_OrderConfirmItemData> _parseCartInfo(dynamic value) {
+    final rawList = _extractCartInfoRaw(value);
+    return rawList.map(_parseOrderItemData).toList();
+  }
+
+  List<Map<String, dynamic>> _extractCartInfoRaw(dynamic value) {
+    if (value is List) {
+      return value.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+    }
+    if (value is Map) {
+      final map = Map<String, dynamic>.from(value);
+      final list = map['valid'] ?? map['cartInfo'] ?? map['cart_info'];
+      if (list is List) {
+        return list.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+    }
+    return <Map<String, dynamic>>[];
+  }
+
+  _OrderConfirmItemData _parseOrderItemData(Map<String, dynamic> raw) {
+    final productInfo = _asMap(raw['productInfo'] ?? raw['product_info']);
+    final cartInfo = _asMap(raw['cart_info']);
+    final info = productInfo.isNotEmpty ? productInfo : cartInfo;
+    final attrInfo = _asMap(info['attrInfo'] ?? info['attr_info']);
+
+    final name = _readString(info, ['store_name', 'storeName']) ?? '';
+    final image = _readString(attrInfo, ['image']) ?? _readString(info, ['image']) ?? '';
+    final spec = _readString(attrInfo, ['suk']) ?? '默认';
+    final quantity = _readInt(raw, ['cart_num', 'cartNum']) ?? 0;
+    final price =
+        _readDouble(attrInfo, ['price']) ??
+        _readDouble(info, ['price']) ??
+        _readDouble(raw, ['price', 'true_price', 'truePrice']) ??
+        0.0;
+
+    return _OrderConfirmItemData(
+      name: name,
+      image: image,
+      spec: spec,
+      price: price,
+      quantity: quantity,
+    );
+  }
+
+  double _calcGoodsTotalFromItems(List<_OrderConfirmItemData> items) {
     double total = 0;
     for (final item in items) {
-      total += item.unitPrice * item.cartNum;
+      total += item.price * item.quantity;
     }
     return total;
+  }
+
+  Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return <String, dynamic>{};
+  }
+
+  String? _readString(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      if (value != null && value.toString().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
+  }
+
+  int? _readInt(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      final parsed = _toInt(value);
+      if (parsed > 0) return parsed;
+    }
+    return null;
+  }
+
+  double? _readDouble(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final value = map[key];
+      final parsed = _toDouble(value);
+      if (parsed > 0) return parsed;
+    }
+    return null;
+  }
+}
+
+String _formatVoucher(double value, {bool showDecimal = true}) {
+  if (!showDecimal) {
+    return '消费券${value.toStringAsFixed(0)}';
+  }
+  return '消费券${value.toStringAsFixed(2)}';
+}
+
+class _OrderConfirmAddressSection extends StatelessWidget {
+  const _OrderConfirmAddressSection({
+    required this.themeColor,
+    required this.selectedAddress,
+    required this.onTap,
+  });
+
+  final ThemeColorData themeColor;
+  final AddressItem? selectedAddress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
+            child: selectedAddress == null
+                ? Row(
+                    children: [
+                      const Text(
+                        '设置收货地址',
+                        style: TextStyle(color: Color(0xFF333333), fontSize: 14),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.chevron_right, color: Color(0xFF999999)),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  selectedAddress!.realName,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF282828),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  selectedAddress!.phone,
+                                  style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${selectedAddress!.province}'
+                              '${selectedAddress!.city}'
+                              '${selectedAddress!.district}'
+                              '${selectedAddress!.detail}',
+                              style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: Color(0xFF999999)),
+                    ],
+                  ),
+          ),
+          Image.asset(
+            'assets/images/line.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 1.5,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderConfirmGoodsSection extends StatelessWidget {
+  const _OrderConfirmGoodsSection({
+    required this.isLoading,
+    required this.items,
+    required this.goodsCount,
+  });
+
+  final bool isLoading;
+  final List<_OrderConfirmItemData> items;
+  final int goodsCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '共$goodsCount件商品',
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF282828)),
+                ),
+              ],
+            ),
+          ),
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            ...items.map((item) => _OrderConfirmGoodsItem(item: item)),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderConfirmGoodsItem extends StatelessWidget {
+  const _OrderConfirmGoodsItem({required this.item});
+
+  final _OrderConfirmItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = item.image;
+    final name = item.name;
+    final spec = item.spec;
+    final price = item.price;
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: image.isNotEmpty
+                ? CachedImage(imageUrl: image, width: 80, height: 80, borderRadius: 6)
+                : const Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF282828)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'x${item.quantity}',
+                      style: const TextStyle(fontSize: 14, color: Color(0xFF999999)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(spec, style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
+                const SizedBox(height: 8),
+                Text(
+                  _formatVoucher(price),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE93323),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderConfirmPriceSection extends StatelessWidget {
+  const _OrderConfirmPriceSection({
+    required this.goodsTotal,
+    required this.freight,
+    required this.themeColor,
+  });
+
+  final double goodsTotal;
+  final double freight;
+  final ThemeColorData themeColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        children: [
+          _OrderConfirmPriceRow(
+            label: '商品总价',
+            value: _formatVoucher(goodsTotal),
+            valueColor: const Color(0xFF333333),
+            isBold: true,
+          ),
+          const SizedBox(height: 10),
+          _OrderConfirmPriceRow(
+            label: '运费',
+            value: freight > 0 ? _formatVoucher(freight) : '免运费',
+            valueColor: const Color(0xFF000000),
+          ),
+          const Divider(height: 24, color: Color(0xFFF0F0F0)),
+          _OrderConfirmPriceRow(
+            label: '商品总价',
+            value: _formatVoucher(goodsTotal),
+            valueColor: themeColor.primary,
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderConfirmPriceRow extends StatelessWidget {
+  const _OrderConfirmPriceRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.isBold = false,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF666666))),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+            color: valueColor ?? const Color(0xFF333333),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderConfirmItemData {
+  const _OrderConfirmItemData({
+    required this.name,
+    required this.image,
+    required this.spec,
+    required this.price,
+    required this.quantity,
+  });
+
+  final String name;
+  final String image;
+  final String spec;
+  final double price;
+  final int quantity;
+}
+
+class _OrderConfirmBottomBar extends StatelessWidget {
+  const _OrderConfirmBottomBar({
+    required this.themeColor,
+    required this.totalPrice,
+    required this.onSubmit,
+  });
+
+  final ThemeColorData themeColor;
+  final double totalPrice;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            const Text('合计:', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              _formatVoucher(totalPrice, showDecimal: false),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: themeColor.primary,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: onSubmit,
+              child: Container(
+                width: 120,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: themeColor.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text('提交订单', style: TextStyle(fontSize: 14, color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

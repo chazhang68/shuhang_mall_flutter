@@ -14,6 +14,7 @@ class UserAddressView extends GetView<UserAddressController> {
       appBar: AppBar(
         title: Text(controller.addressId != null ? '修改地址' : '添加地址'),
         centerTitle: true,
+        backgroundColor: const Color(0xFFF5F5F5),
       ),
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -52,7 +53,7 @@ class UserAddressView extends GetView<UserAddressController> {
                 Container(
                   color: Colors.white,
                   height: 45,
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: InkWell(
                     onTap: controller.toggleDefaultAddress,
                     child: Row(
@@ -61,6 +62,7 @@ class UserAddressView extends GetView<UserAddressController> {
                           () => Checkbox(
                             value: controller.isDefault,
                             onChanged: (_) => controller.toggleDefaultAddress(),
+                            shape: CircleBorder(),
                           ),
                         ),
                         const Text(
@@ -86,23 +88,6 @@ class UserAddressView extends GetView<UserAddressController> {
                     child: const Text('立即保存', style: TextStyle(fontSize: 16)),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: 345,
-                  height: 43,
-                  child: OutlinedButton(
-                    onPressed: null,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: theme.primaryColor),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                    ),
-                    child: Text(
-                      '导入微信地址',
-                      style: TextStyle(color: theme.primaryColor, fontSize: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -119,7 +104,7 @@ class UserAddressView extends GetView<UserAddressController> {
     int maxLines = 1,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
       ),
@@ -138,8 +123,11 @@ class UserAddressView extends GetView<UserAddressController> {
                 hintText: hint,
                 hintStyle: const TextStyle(fontSize: 15, color: Color(0xFFCCCCCC)),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
                 isDense: true,
+                filled: true,
+                fillColor: Colors.transparent,
+                focusedBorder: InputBorder.none,
               ),
               style: const TextStyle(fontSize: 15),
             ),
@@ -179,7 +167,7 @@ class UserAddressView extends GetView<UserAddressController> {
                       ),
                     ),
                   ),
-                  Icon(AppIcons.location, size: 20, color: theme.primaryColor),
+                  Icon(CupertinoIcons.location_solid, size: 20, color: theme.primaryColor),
                 ],
               ),
             ),

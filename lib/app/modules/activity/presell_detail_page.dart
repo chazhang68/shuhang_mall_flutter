@@ -160,8 +160,12 @@ class _PresellDetailPageState extends State<PresellDetailPage> {
     });
 
     if (response.isSuccess) {
-      final cartId = response.data?.cartId ?? 0;
-      Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartId, 'new': 1});
+      final cartIdValue = response.data?.cartIdValue ?? '';
+      if (cartIdValue.isNotEmpty) {
+        Get.toNamed(AppRoutes.orderConfirm, arguments: {'cartId': cartIdValue, 'new': 1});
+      } else {
+        FlutterToastPro.showMessage('提交失败');
+      }
     } else {
       FlutterToastPro.showMessage(response.msg.isNotEmpty ? response.msg : '提交失败');
     }
