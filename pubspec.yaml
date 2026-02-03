@@ -105,8 +105,9 @@ dependencies:
   media_kit_libs_video: ^1.0.7
   flutter_widget_from_html: ^0.17.1
 
-  # 穿山甲广告SDK
-  flutter_unionad: ^2.2.5
+  # ZJSDK 广告SDK (Android + iOS)
+  zjsdk_android: ^2.5.61
+  zjsdk_flutter: ^0.2.5
 
   # 微信SDK（分享、登录、支付）
   fluwx: ^5.7.5

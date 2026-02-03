@@ -16,6 +16,7 @@ import 'package:shuhang_mall_flutter/app/services/wechat_service.dart';
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
 import 'package:shuhang_mall_flutter/app/utils/debug_logger.dart';
 import 'package:shuhang_mall_flutter/app/services/navigation_service.dart';
+import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
 
 /// 应用入口
 /// 对应原 main.js
@@ -33,6 +34,10 @@ void main() async {
   // 初始化微信SDK
   WechatService().init();
   LogService.i('WeChat service initialized');
+
+  // 初始化广告SDK（不启动，等待用户同意隐私政策）
+  await AdManager.instance.initWithoutStart();
+  LogService.i('Ad SDK initialized (not started)');
 
   // 设置状态栏样式
   SystemChrome.setSystemUIOverlayStyle(
@@ -56,7 +61,7 @@ void main() async {
   // 配置 EasyLoading
   _configLoading();
   LogService.i('EasyLoading configured');
-  
+
   // 测试日志功能
   DebugLogger.testLogging();
 }

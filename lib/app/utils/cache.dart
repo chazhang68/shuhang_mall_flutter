@@ -92,10 +92,7 @@ class Cache {
     required Duration expire,
   }) async {
     final expireTime = DateTime.now().add(expire).millisecondsSinceEpoch;
-    final data = {
-      'value': value,
-      'expire': expireTime,
-    };
+    final data = {'value': value, 'expire': expireTime};
     return await prefs.setString(key, jsonEncode(data));
   }
 
@@ -107,13 +104,13 @@ class Cache {
     try {
       final data = jsonDecode(dataStr) as Map<String, dynamic>;
       final expireTime = data['expire'] as int;
-      
+
       if (DateTime.now().millisecondsSinceEpoch > expireTime) {
         // 已过期，删除缓存
         remove(key);
         return null;
       }
-      
+
       return data['value'];
     } catch (e) {
       return null;
@@ -151,18 +148,18 @@ class CacheKey {
   static const String expires = 'EXPIRES_TIME';
   static const String spread = 'SPREAD';
   static const String loginType = 'LOGIN_TYPE';
-  
+
   // 设置相关
   static const String viewColor = 'VIEW_COLOR';
   static const String colorStatus = 'COLOR_STATUS';
   static const String locale = 'LOCALE';
   static const String langVersion = 'LANG_VERSION';
   static const String localeJson = 'LOCALE_JSON';
-  
+
   // 购物车
   static const String cartNum = 'CART_NUM';
   static const String footerAddCart = 'FOOTER_ADDCART';
-  
+
   // 其他
   static const String copyRight = 'COPY_RIGHT';
   static const String mpVersionIsNew = 'MP_VERSION_ISNEW';
@@ -170,4 +167,8 @@ class CacheKey {
   static const String storeInfo = 'STORE_INFO';
   static const String snsapiKey = 'SNSAPI_KEY';
   static const String backUrl = 'BACK_URL'; // 登录后返回的URL
+
+  // 记住账号
+  static const String rememberedAccount = 'REMEMBERED_ACCOUNT'; // 记住的账号
+  static const String rememberAccount = 'REMEMBER_ACCOUNT'; // 是否记住账号
 }

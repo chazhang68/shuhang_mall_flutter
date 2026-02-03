@@ -68,7 +68,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadLogo() async {
     try {
-      final response = await ApiProvider.instance.get('wechat/get_logo', noAuth: true);
+      final response = await ApiProvider.instance.get(
+        'wechat/get_logo',
+        noAuth: true,
+      );
       if (response.isSuccess && response.data != null) {
         final data = response.data as Map<String, dynamic>;
         setState(() {
@@ -117,17 +120,29 @@ class _LoginPageState extends State<LoginPage> {
                 fit: BoxFit.cover,
                 placeholder: (context, url) =>
                     Container(color: Colors.grey[200], width: 120, height: 120),
-                errorWidget: (context, url, error) =>
-                    Image.asset(AppImages.logo, width: 120, height: 120, fit: BoxFit.cover),
+                errorWidget: (context, url, error) => Image.asset(
+                  AppImages.logo,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
               )
-            : Image.asset(AppImages.logo, width: 120, height: 120, fit: BoxFit.cover),
+            : Image.asset(
+                AppImages.logo,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
       ),
     );
   }
 
   Widget _buildForm() {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           _buildInputField(
@@ -165,7 +180,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: Text(
                   _canSendCode ? '获取验证码' : '${_countdown}s',
                   style: TextStyle(
-                    color: _canSendCode ? Theme.of(context).primaryColor : Colors.grey,
+                    color: _canSendCode
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey,
                     fontSize: 14,
                   ),
                 ),
@@ -198,7 +215,10 @@ class _LoginPageState extends State<LoginPage> {
               alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: () => Get.toNamed('/user/retrieve-password'),
-                child: const Text('忘记密码', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                child: const Text(
+                  '忘记密码',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
               ),
             ),
         ],
@@ -217,7 +237,10 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
@@ -229,7 +252,10 @@ class _LoginPageState extends State<LoginPage> {
           prefixIcon: Icon(prefixIcon, color: Colors.grey, size: 22),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
           counterText: '',
         ),
       ),
@@ -245,13 +271,18 @@ class _LoginPageState extends State<LoginPage> {
         onPressed: _isLoading ? null : _submit,
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).primaryColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
         ),
         child: _isLoading
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
               )
             : Text(
                 buttonText,
@@ -272,24 +303,37 @@ class _LoginPageState extends State<LoginPage> {
         if (_currentTab == 0)
           TextButton(
             onPressed: () => setState(() => _currentTab = 1),
-            child: Text('快速登录', style: TextStyle(color: Theme.of(context).primaryColor)),
+            child: Text(
+              '快速登录',
+              style: TextStyle(color: Theme.of(context).primaryColor),
+            ),
           ),
         if (_currentTab == 1)
           TextButton(
             onPressed: () => setState(() => _currentTab = 0),
-            child: Text('账号登录', style: TextStyle(color: Theme.of(context).primaryColor)),
+            child: Text(
+              '账号登录',
+              style: TextStyle(color: Theme.of(context).primaryColor),
+            ),
           ),
-        if (_currentTab == 2) const Text('已有账号', style: TextStyle(color: Colors.grey)),
+        if (_currentTab == 2)
+          const Text('已有账号', style: TextStyle(color: Colors.grey)),
         const Text(' | ', style: TextStyle(color: Colors.grey)),
         if (_currentTab != 2)
           TextButton(
             onPressed: () => setState(() => _currentTab = 2),
-            child: Text('注册', style: TextStyle(color: Theme.of(context).primaryColor)),
+            child: Text(
+              '注册',
+              style: TextStyle(color: Theme.of(context).primaryColor),
+            ),
           ),
         if (_currentTab == 2)
           TextButton(
             onPressed: () => setState(() => _currentTab = 0),
-            child: Text('去登录', style: TextStyle(color: Theme.of(context).primaryColor)),
+            child: Text(
+              '去登录',
+              style: TextStyle(color: Theme.of(context).primaryColor),
+            ),
           ),
       ],
     );
@@ -304,12 +348,18 @@ class _LoginPageState extends State<LoginPage> {
           onChanged: (value) => setState(() => _protocol = value ?? false),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        const Text('已阅读并同意 ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        const Text(
+          '已阅读并同意 ',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
+        ),
         GestureDetector(
           onTap: () => Get.toNamed('/user/privacy?type=4'),
           child: Text(
             '《用户协议》',
-            style: TextStyle(fontSize: 12, color: Theme.of(context).primaryColor),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).primaryColor,
+            ),
           ),
         ),
         const Text(' 与 ', style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -317,7 +367,10 @@ class _LoginPageState extends State<LoginPage> {
           onTap: () => Get.toNamed('/user/privacy?type=3'),
           child: Text(
             '《隐私协议》',
-            style: TextStyle(fontSize: 12, color: Theme.of(context).primaryColor),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).primaryColor,
+            ),
           ),
         ),
       ],
@@ -327,7 +380,7 @@ class _LoginPageState extends State<LoginPage> {
   /// 发送验证码 - 增强错误处理
   Future<void> _sendCode() async {
     String phone = _accountController.text.trim();
-    
+
     // 输入验证
     if (phone.isEmpty) {
       _showError('请填写手机号码');
@@ -347,7 +400,7 @@ class _LoginPageState extends State<LoginPage> {
         phone: phone,
         type: _currentTab == 2 ? 'register' : 'login',
       );
-      
+
       if (response.isSuccess) {
         _showSuccess(response.msg.isEmpty ? '验证码已发送' : response.msg);
         _startCountdown();
@@ -415,7 +468,10 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      final response = await _userProvider.loginH5(account: account, password: password);
+      final response = await _userProvider.loginH5(
+        account: account,
+        password: password,
+      );
       if (response.isSuccess) {
         await _handleLoginSuccess(response.data);
       } else {
@@ -437,7 +493,10 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      final response = await _userProvider.loginMobile(phone: phone, captcha: captcha);
+      final response = await _userProvider.loginMobile(
+        phone: phone,
+        captcha: captcha,
+      );
       if (response.isSuccess) {
         await _handleLoginSuccess(response.data);
       } else {
@@ -520,7 +579,9 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final Map<String, dynamic> loginData = data is Map<String, dynamic> ? data : {};
+    final Map<String, dynamic> loginData = data is Map<String, dynamic>
+        ? data
+        : {};
     final String token = loginData['token']?.toString() ?? '';
     final int expiresTime = loginData['expires_time'] ?? 0;
 
@@ -533,15 +594,15 @@ class _LoginPageState extends State<LoginPage> {
       // 先保存 token
       final appController = Get.find<AppController>();
       await appController.login(token: token, uid: 0, expiresTime: expiresTime);
-      
+
       // 短暂延迟确保token生效
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // 获取用户信息
       final userResponse = await _userProvider.getUserInfo();
       if (userResponse.isSuccess && userResponse.data != null) {
         final uid = userResponse.data?.uid ?? 0;
-        
+
         // 保存完整用户信息
         await appController.login(
           token: token,
@@ -549,7 +610,7 @@ class _LoginPageState extends State<LoginPage> {
           userInfo: userResponse.data,
           expiresTime: expiresTime,
         );
-        
+
         _showSuccess('登录成功');
         _navigateAfterLogin();
       } else {
@@ -568,11 +629,13 @@ class _LoginPageState extends State<LoginPage> {
   void _navigateAfterLogin() {
     String backUrl = Cache.getString(CacheKey.backUrl) ?? '';
     Cache.remove(CacheKey.backUrl);
-    
+
     debugPrint('准备跳转，backUrl: $backUrl');
-    
-    // 使用 WidgetsBinding 确保在当前帧完成后再导航
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    // 使用 Future.delayed 确保在当前帧和所有回调完成后再导航
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+
       debugPrint('开始执行跳转');
       if (backUrl.isEmpty || backUrl.contains('/login')) {
         debugPrint('跳转到主页');
@@ -605,7 +668,7 @@ class _LoginPageState extends State<LoginPage> {
   /// 处理API错误
   void _handleApiError(ApiResponse response) {
     String message = response.msg;
-    
+
     // 根据不同错误码提供更友好的提示
     switch (response.status) {
       case 110002:
@@ -633,7 +696,7 @@ class _LoginPageState extends State<LoginPage> {
           message = '操作失败';
         }
     }
-    
+
     _showError(message);
   }
 }
