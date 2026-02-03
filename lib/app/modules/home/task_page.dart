@@ -5,6 +5,7 @@ import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 
 /// 任务页面
 /// 对应原 pages/task/task.vue
@@ -109,10 +110,13 @@ class _TaskPageState extends State<TaskPage>
   Future<void> _getMyTask() async {
     try {
       debugPrint('🌱 开始获取种植任务...');
+      debugPrint('📍 API 端点: task/new_my_tasks');
+
       final response = await _userProvider.getNewMyTask();
 
       debugPrint('📦 API 响应:');
       debugPrint('  - isSuccess: ${response.isSuccess}');
+      debugPrint('  - status: ${response.status}');
       debugPrint('  - msg: ${response.msg}');
       debugPrint('  - data type: ${response.data.runtimeType}');
       debugPrint('  - data: ${response.data}');
@@ -137,6 +141,14 @@ class _TaskPageState extends State<TaskPage>
         debugPrint('🎉 地块列表更新完成，当前有 ${_plotList.length} 个地块');
       } else {
         debugPrint('❌ 获取失败: ${response.msg}');
+        debugPrint('   状态码: ${response.status}');
+
+        // 如果是空数据，显示提示
+        if (response.isSuccess &&
+            (response.data == null ||
+                (response.data as List?)?.isEmpty == true)) {
+          debugPrint('ℹ️ 用户还没有田地，需要先购买种子并播种');
+        }
       }
     } catch (e, stackTrace) {
       debugPrint('💥 获取我的任务失败: $e');
@@ -176,7 +188,7 @@ class _TaskPageState extends State<TaskPage>
     if (_userInfo['is_sign'] != true) {
       FlutterToastPro.showMessage('请先实名认证哦');
       await Future.delayed(const Duration(seconds: 1));
-      Get.toNamed('/pages/sign/sign');
+      Get.toNamed(AppRoutes.realName); // 修复：使用正确的路由
       return;
     }
 
@@ -560,10 +572,7 @@ class _TaskPageState extends State<TaskPage>
     final fieldType = plot['fieldType'] ?? 1;
     final rightIcon = plot['right'] ?? 0;
 
-    if (plants.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    // 即使没有植物也显示空田地
     return Container(
       margin: const EdgeInsets.only(bottom: 30),
       height: 250, // 固定高度以容纳田块
@@ -588,7 +597,7 @@ class _TaskPageState extends State<TaskPage>
                         width: 250,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.brown.withOpacity(0.5),
+                          color: Colors.brown.withAlpha((0.5 * 255).round()),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -602,37 +611,61 @@ class _TaskPageState extends State<TaskPage>
                   ),
 
                   // 植物层 - 使用绝对定位（与uni-app一致）
-                  Positioned.fill(
-                    child: Stack(
-                      children: plants.asMap().entries.map((entry) {
-                        final plantIndex = entry.key;
-                        final plant = entry.value;
-                        return _build3DPlantWidget(
-                          plant,
-                          fieldType,
-                          plantIndex,
-                          themeColor,
-                        );
-                      }).toList(),
+                  if (plants.isNotEmpty)
+                    Positioned.fill(
+                      child: Stack(
+                        children: plants.asMap().entries.map((entry) {
+                          final plantIndex = entry.key;
+                          final plant = entry.value;
+                          return _build3DPlantWidget(
+                            plant,
+                            fieldType,
+                            plantIndex,
+                            themeColor,
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
+
+                  // 如果没有植物，显示提示
+                  if (plants.isEmpty)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha((0.3 * 255).round()),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            '空田地\n点击播种',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
 
           // 右侧指示牌（与uni-app一致）
-          Positioned(
-            right: -10,
-            top: 20,
-            child: Image.asset(
-              'assets/images/right_icon$rightIcon.png',
-              width: 60,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox.shrink();
-              },
+          if (rightIcon != 0)
+            Positioned(
+              right: -10,
+              top: 20,
+              child: Image.asset(
+                'assets/images/right_icon$rightIcon.png',
+                width: 60,
+                errorBuilder: (context, error, stackTrace) {
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

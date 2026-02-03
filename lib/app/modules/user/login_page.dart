@@ -694,18 +694,21 @@ class _LoginPageState extends State<LoginPage> {
   void _navigateAfterLogin(String backUrl) {
     debugPrint('准备跳转，backUrl: $backUrl');
 
-    // 使用 Future.delayed 确保在当前帧和所有回调完成后再导航
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (!mounted) return;
+    // 使用 WidgetsBinding 确保在所有帧回调完成后再导航
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 再次延迟确保所有状态更新完成
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
 
-      debugPrint('开始执行跳转');
-      if (backUrl.isEmpty || backUrl.contains('/login')) {
-        debugPrint('跳转到主页');
-        Get.offAllNamed(AppRoutes.main);
-        return;
-      }
-      debugPrint('跳转到: $backUrl');
-      Get.offAllNamed(backUrl);
+        debugPrint('开始执行跳转');
+        if (backUrl.isEmpty || backUrl.contains('/login')) {
+          debugPrint('跳转到主页');
+          Get.offAllNamed(AppRoutes.main);
+          return;
+        }
+        debugPrint('跳转到: $backUrl');
+        Get.offAllNamed(backUrl);
+      });
     });
   }
 }
