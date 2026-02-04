@@ -29,7 +29,6 @@ class _CashierPageState extends State<CashierPage> {
   double _payPostage = 0;
   bool _offlinePostage = false;
   int _invalidTime = 0;
-  double _nowMoney = 0;
   int _countdownSeconds = 0;
   Timer? _countdownTimer;
 
@@ -100,7 +99,6 @@ class _CashierPageState extends State<CashierPage> {
           if (_invalidTime <= 0) {
             _invalidTime = _readInt(data['stop_time']);
           }
-          _nowMoney = _readDouble(data['now_money']);
 
           // 更新消费券余额显示
           _payMethods[0].balance = _readDouble(data['integral']);

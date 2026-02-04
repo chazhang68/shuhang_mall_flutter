@@ -131,8 +131,8 @@ import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_
 import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_list_view.dart';
 
 // User Account Safe模块
-import 'package:shuhang_mall_flutter/app/modules/user_account_safe/bindings/user_account_safe_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_account_safe/views/user_account_safe_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_account_safe/user_account_safe_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_account_safe/user_account_safe_view.dart';
 
 // Update Login Password模块
 import 'package:shuhang_mall_flutter/app/modules/update_login_pwd/update_login_pwd_binding.dart';

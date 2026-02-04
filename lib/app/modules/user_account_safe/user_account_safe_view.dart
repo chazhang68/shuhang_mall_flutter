@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_icons.dart';
-import '../controllers/user_account_safe_controller.dart';
+import 'user_account_safe_controller.dart';
 
 class UserAccountSafeView extends GetView<UserAccountSafeController> {
   const UserAccountSafeView({super.key});

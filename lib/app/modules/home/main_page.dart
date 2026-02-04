@@ -20,7 +20,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _currentIndex = 0;
   int _bottomIndex = 0;
   final PageController _pageController = PageController();
 
@@ -34,7 +33,6 @@ class _MainPageState extends State<MainPage> {
     if (args != null && args is Map && args['tab'] != null) {
       final tabIndex = args['tab'] as int;
       if (tabIndex >= 0 && tabIndex < _pages.length) {
-        _currentIndex = tabIndex;
         if (tabIndex != 2) {
           _bottomIndex = tabIndex > 2 ? tabIndex - 1 : tabIndex;
         }
@@ -53,7 +51,6 @@ class _MainPageState extends State<MainPage> {
 
   void _onPageChanged(int index) {
     setState(() {
-      _currentIndex = index;
       if (index != 2) {
         _bottomIndex = index > 2 ? index - 1 : index;
       }
