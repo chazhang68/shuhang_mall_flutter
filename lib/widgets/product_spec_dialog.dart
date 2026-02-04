@@ -57,10 +57,37 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
     super.initState();
     _selectedAttrs = {};
     _quantity = widget.initialQuantity;
-    _initDefaultSelection();
+    final limitMax = _limitMax;
+    if (limitMax > 0 && _quantity > limitMax) {
+      _quantity = limitMax;
+    }
+    if (widget.skus.isEmpty) {
+      _selectedSku = widget.product;
+    } else {
+      _initDefaultSelection();
+    }
+  }
+
+  int get _limitMax {
+    final limitType = _readInt(widget.product['limit_type']);
+    final limitNum = _readInt(widget.product['limit_num']);
+    if (limitType > 0 && limitNum > 0) {
+      return limitNum;
+    }
+    return 0;
+  }
+
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   void _initDefaultSelection() {
+    if (widget.attrs.isEmpty) {
+      _updateSelectedSku();
+      return;
+    }
     // 初始化默认选中第一个可选规格
     for (var attr in widget.attrs) {
       final attrName = attr['attr_name'] ?? '';
@@ -73,6 +100,10 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
   }
 
   void _updateSelectedSku() {
+    if (widget.skus.isEmpty) {
+      _selectedSku = widget.product;
+      return;
+    }
     // 根据选中的规格找到对应的SKU
     final attrKey = _selectedAttrs.values.join(',');
     for (var sku in widget.skus) {
@@ -172,7 +203,7 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
                 const SizedBox(height: 8),
                 // 已选规格
                 Text(
-                  '已选: ${_selectedAttrs.values.join(' ')}',
+                  _selectedAttrs.isEmpty ? '已选: 默认' : '已选: ${_selectedAttrs.values.join(' ')}',
                   style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
                 ),
               ],
@@ -263,6 +294,9 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
   Widget _buildQuantitySection() {
     final stock = _selectedSku?['stock'] ?? widget.product['stock'] ?? 999;
     final maxStock = stock is int ? stock : int.tryParse('$stock') ?? 999;
+    final limitMax = _limitMax;
+    final maxAllowed = limitMax > 0 ? limitMax : maxStock;
+    final max = maxAllowed < maxStock ? maxAllowed : maxStock;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +313,7 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
             QuantitySelector(
               value: _quantity,
               min: 1,
-              max: maxStock,
+              max: max,
               onChange: (value) {
                 setState(() {
                   _quantity = value;
@@ -330,7 +364,7 @@ class _ProductSpecDialogState extends State<ProductSpecDialog> {
   }
 
   void _handleConfirm() {
-    if (_selectedSku == null) {
+    if (_selectedSku == null && widget.skus.isNotEmpty) {
       FlutterToastPro.showMessage('请选择规格'.tr);
       return;
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address_list/bindings/user_address_list_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address_list/views/user_address_list_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_list_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_list_view.dart';
 
 /// 收货地址列表页
 /// 对应原 pages/users/user_address_list/index.vue

@@ -26,7 +26,7 @@ class _OrderConfirmPageState extends State<OrderConfirmPage> {
 
   AddressItem? _selectedAddress;
   Map<String, dynamic>? _selectedCoupon;
-  String _remark = '';
+  final String _remark = '';
 
   String? _cartId;
   int _pinkId = 0;
@@ -639,7 +639,11 @@ class _OrderConfirmAddressSection extends StatelessWidget {
                                 const SizedBox(width: 10),
                                 Text(
                                   selectedAddress!.phone,
-                                  style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF666666),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -654,7 +658,7 @@ class _OrderConfirmAddressSection extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right, color: Color(0xFF999999)),
+                      const Icon(Icons.chevron_right, color: Color.fromARGB(255, 0, 0, 0)),
                     ],
                   ),
           ),
@@ -732,20 +736,23 @@ class _OrderConfirmGoodsItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(6),
             ),
             child: image.isNotEmpty
-                ? CachedImage(imageUrl: image, width: 80, height: 80, borderRadius: 6)
+                ? CachedImage(imageUrl: image, width: 72, height: 72, borderRadius: 6)
                 : const Icon(Icons.shopping_bag, size: 40, color: Colors.grey),
           ),
           const SizedBox(width: 12),
-          Expanded(
+          SizedBox(
+            height: 72,
+            width: MediaQuery.of(context).size.width - 72 - 12 - 30,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -765,16 +772,12 @@ class _OrderConfirmGoodsItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+
                 Text(spec, style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
-                const SizedBox(height: 8),
+
                 Text(
                   _formatVoucher(price),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFE93323),
-                  ),
+                  style: const TextStyle(fontSize: 12.5, color: Color(0xFFE93323)),
                 ),
               ],
             ),
@@ -806,21 +809,25 @@ class _OrderConfirmPriceSection extends StatelessWidget {
           _OrderConfirmPriceRow(
             label: '商品总价',
             value: _formatVoucher(goodsTotal),
-            valueColor: const Color(0xFF333333),
+            valueColor: const Color(0xFF000000),
             isBold: true,
+            fontSize: 14,
           ),
           const SizedBox(height: 10),
           _OrderConfirmPriceRow(
             label: '运费',
             value: freight > 0 ? _formatVoucher(freight) : '免运费',
             valueColor: const Color(0xFF000000),
+            fontSize: 12,
+            isBold: true,
           ),
           const Divider(height: 24, color: Color(0xFFF0F0F0)),
           _OrderConfirmPriceRow(
             label: '商品总价',
             value: _formatVoucher(goodsTotal),
-            valueColor: themeColor.primary,
+            valueColor: const Color(0xFF000000),
             isBold: true,
+            fontSize: 16,
           ),
         ],
       ),
@@ -834,23 +841,25 @@ class _OrderConfirmPriceRow extends StatelessWidget {
     required this.value,
     this.valueColor,
     this.isBold = false,
+    this.fontSize,
   });
 
   final String label;
   final String value;
   final Color? valueColor;
   final bool isBold;
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF666666))),
+        Text(label, style: const TextStyle(fontSize: 13, color: Color.fromARGB(255, 32, 32, 32))),
         Text(
           value,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: fontSize ?? 14,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
             color: valueColor ?? const Color(0xFF333333),
           ),
@@ -904,7 +913,7 @@ class _OrderConfirmBottomBar extends StatelessWidget {
             Text(
               _formatVoucher(totalPrice, showDecimal: false),
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: themeColor.primary,
               ),
@@ -914,13 +923,16 @@ class _OrderConfirmBottomBar extends StatelessWidget {
               onTap: onSubmit,
               child: Container(
                 width: 120,
-                height: 40,
+                height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: themeColor.primary,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('提交订单', style: TextStyle(fontSize: 14, color: Colors.white)),
+                child: const Text(
+                  '提交订单',
+                  style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w400),
+                ),
               ),
             ),
           ],

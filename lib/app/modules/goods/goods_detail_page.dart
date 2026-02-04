@@ -1037,7 +1037,7 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
           // 产品介绍标题
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             alignment: Alignment.center,
             child: const Text(
               '产品介绍',
@@ -1862,16 +1862,6 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
   }
 
   void _showSpecDialog({ProductSpecMode mode = ProductSpecMode.addCart}) async {
-    if (!_hasSpec) {
-      final defaultUnique = _productValue.values.isNotEmpty
-          ? _productValue.values.first.unique
-          : '';
-      await _addToCart({
-        'cart_num': 1,
-        'unique': defaultUnique,
-      }, isNew: mode == ProductSpecMode.buyNow);
-      return;
-    }
     // 转换商品规格数据
     final List<Map<String, dynamic>> skuList = [];
     _productValue.forEach((key, value) {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import '../../../data/models/address_model.dart';
-import '../../../data/models/city_model.dart';
-import '../../../data/providers/public_provider.dart';
-import '../../../data/providers/user_provider.dart';
-import '../../../routes/app_routes.dart';
+import '../../data/models/address_model.dart';
+import '../../data/models/city_model.dart';
+import '../../data/providers/public_provider.dart';
+import '../../data/providers/user_provider.dart';
+import '../../routes/app_routes.dart';
 
 class UserAddressController extends GetxController {
   final UserProvider _userProvider = UserProvider();

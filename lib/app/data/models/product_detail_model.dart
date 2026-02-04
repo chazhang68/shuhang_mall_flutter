@@ -204,7 +204,15 @@ class ProductStoreInfo {
   }
 
   Map<String, dynamic> toSpecMap() {
-    return {'id': id, 'store_name': storeName, 'image': image, 'price': price, 'stock': stock};
+    return {
+      'id': id,
+      'store_name': storeName,
+      'image': image,
+      'price': price,
+      'stock': stock,
+      'limit_type': limitType,
+      'limit_num': limitNum,
+    };
   }
 }
 

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../../data/providers/user_provider.dart';
-import '../../../data/models/user_model.dart';
-import '../../../routes/app_routes.dart';
-import '../../../controllers/app_controller.dart';
+import '../../data/providers/user_provider.dart';
+import '../../data/models/user_model.dart';
+import '../../routes/app_routes.dart';
+import '../../controllers/app_controller.dart';
 
 class UserSetController extends GetxController {
   final UserProvider _userProvider = UserProvider();
@@ -90,17 +90,10 @@ class UserSetController extends GetxController {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        content: const Text(
-          '确认退出登录',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14),
-        ),
+        content: const Text('确认退出登录', textAlign: TextAlign.center, style: TextStyle(fontSize: 14)),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('取消')),
           TextButton(
             onPressed: () async {
               Get.back();

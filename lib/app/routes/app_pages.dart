@@ -113,49 +113,45 @@ import 'package:shuhang_mall_flutter/app/modules/user/bindings/vip_exp_record_bi
 import 'package:shuhang_mall_flutter/app/modules/user/views/vip_exp_record_view.dart';
 
 // User Sign模块（带Binding）
-import 'package:shuhang_mall_flutter/app/modules/user_sign/bindings/user_sign_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_sign/views/user_sign_view.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_sign_record/bindings/user_sign_record_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_sign_record/views/user_sign_record_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_sign/user_sign_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_sign/user_sign_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_sign_record/user_sign_record_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_sign_record/user_sign_record_view.dart';
 
 // User Info模块
-import 'package:shuhang_mall_flutter/app/modules/user_info/bindings/user_info_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_info/views/user_info_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_info/user_info_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_info/user_info_view.dart';
 
 // User Address模块
-import 'package:shuhang_mall_flutter/app/modules/user_address/bindings/user_address_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address/views/user_address_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address/user_address_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address/user_address_view.dart';
 
 // User Address List模块
-import 'package:shuhang_mall_flutter/app/modules/user_address_list/bindings/user_address_list_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address_list/views/user_address_list_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_list_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address_list/user_address_list_view.dart';
 
 // User Account Safe模块
 import 'package:shuhang_mall_flutter/app/modules/user_account_safe/bindings/user_account_safe_binding.dart';
 import 'package:shuhang_mall_flutter/app/modules/user_account_safe/views/user_account_safe_view.dart';
 
 // Update Login Password模块
-import 'package:shuhang_mall_flutter/app/modules/update_login_pwd/bindings/update_login_pwd_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/update_login_pwd/views/update_login_pwd_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/update_login_pwd/update_login_pwd_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/update_login_pwd/update_login_pwd_view.dart';
 
 // Update Payment Password模块
-import 'package:shuhang_mall_flutter/app/modules/update_payment_pwd/bindings/update_payment_pwd_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/update_payment_pwd/views/update_payment_pwd_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/update_payment_pwd/update_payment_pwd_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/update_payment_pwd/update_payment_pwd_view.dart';
 
 // User Set模块
-import 'package:shuhang_mall_flutter/app/modules/user_set/bindings/user_set_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_set/views/user_set_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_set/user_set_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_set/user_set_view.dart';
 
 /// 路由页面配置
 /// 对应原 pages.json
 class AppPages {
   static final pages = [
     // ==================== 启动页 ====================
-    GetPage(
-      name: AppRoutes.splash,
-      page: () => const SplashPage(),
-      transition: Transition.fadeIn,
-    ),
+    GetPage(name: AppRoutes.splash, page: () => const SplashPage(), transition: Transition.fadeIn),
 
     // ==================== 主框架 ====================
     GetPage(name: AppRoutes.main, page: () => const MainPage(), transition: Transition.fadeIn),

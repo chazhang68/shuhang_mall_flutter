@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address/bindings/user_address_binding.dart';
-import 'package:shuhang_mall_flutter/app/modules/user_address/views/user_address_view.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address/user_address_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/user_address/user_address_view.dart';
 
 /// 地址编辑页
 /// 对应原 pages/users/user_address/index.vue

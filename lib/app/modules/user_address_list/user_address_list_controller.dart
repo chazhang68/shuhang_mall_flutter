@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:get/get.dart';
-import '../../../data/models/address_model.dart';
-import '../../../data/providers/user_provider.dart';
-import '../../../routes/app_routes.dart';
+import '../../data/models/address_model.dart';
+import '../../data/providers/user_provider.dart';
+import '../../routes/app_routes.dart';
 
 class UserAddressListController extends GetxController {
   final UserProvider _userProvider = UserProvider();

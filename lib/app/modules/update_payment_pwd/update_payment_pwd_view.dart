@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/update_payment_pwd_controller.dart';
+import 'update_payment_pwd_controller.dart';
 
 class UpdatePaymentPwdView extends GetView<UpdatePaymentPwdController> {
   const UpdatePaymentPwdView({super.key});

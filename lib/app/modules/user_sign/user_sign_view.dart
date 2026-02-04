@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../controllers/user_sign_controller.dart';
+import 'user_sign_controller.dart';
 
 class UserSignView extends GetView<UserSignController> {
   const UserSignView({super.key});

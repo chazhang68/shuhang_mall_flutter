@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:get/get.dart';
-import '../controllers/user_sign_record_controller.dart';
+import 'user_sign_record_controller.dart';
 
 class UserSignRecordView extends GetView<UserSignRecordController> {
   const UserSignRecordView({super.key});

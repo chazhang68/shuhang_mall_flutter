@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../../../data/providers/user_provider.dart';
-import '../../../data/providers/public_provider.dart';
-import '../../../data/models/user_model.dart';
+import '../../data/providers/user_provider.dart';
+import '../../data/providers/public_provider.dart';
+import '../../data/models/user_model.dart';
 
 /// 个人信息控制器
 /// 对应原 pages/users/user_info/index.vue

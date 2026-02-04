@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../controllers/user_info_controller.dart';
+import 'user_info_controller.dart';
 
 /// 个人信息页面
 /// 对应原 pages/users/user_info/index.vue

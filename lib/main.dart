@@ -14,7 +14,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:shuhang_mall_flutter/app/services/wechat_service.dart';
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
-import 'package:shuhang_mall_flutter/app/utils/debug_logger.dart';
 import 'package:shuhang_mall_flutter/app/services/navigation_service.dart';
 import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
 
@@ -65,9 +64,6 @@ void main() async {
   // 配置 EasyLoading
   _configLoading();
   LogService.i('EasyLoading configured');
-
-  // 测试日志功能
-  DebugLogger.testLogging();
 }
 
 class MyApp extends StatelessWidget {

@@ -16,8 +16,7 @@ class TaskPage extends StatefulWidget {
   State<TaskPage> createState() => _TaskPageState();
 }
 
-class _TaskPageState extends State<TaskPage>
-    with AutomaticKeepAliveClientMixin {
+class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin {
   final UserProvider _userProvider = UserProvider();
   final AdManager _adManager = AdManager.instance;
 
@@ -100,9 +99,7 @@ class _TaskPageState extends State<TaskPage>
       final response = await _userProvider.getUserTask();
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _seedList = List<Map<String, dynamic>>.from(
-            response.data as List? ?? [],
-          );
+          _seedList = List<Map<String, dynamic>>.from(response.data as List? ?? []);
         });
       }
     } catch (e) {
@@ -148,8 +145,7 @@ class _TaskPageState extends State<TaskPage>
 
         // 如果是空数据，显示提示
         if (response.isSuccess &&
-            (response.data == null ||
-                (response.data as List?)?.isEmpty == true)) {
+            (response.data == null || (response.data as List?)?.isEmpty == true)) {
           debugPrint('ℹ️ 用户还没有田地，需要先购买种子并播种');
         }
       }
@@ -193,10 +189,7 @@ class _TaskPageState extends State<TaskPage>
     }
 
     // 2. 显示加载中
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     // 3. 显示激励视频广告
     final success = await _adManager.showRewardedVideoAd(
@@ -254,10 +247,7 @@ class _TaskPageState extends State<TaskPage>
 
   // 领取奖励（与uni-app的lingqu方法一致）
   Future<void> _lingqu() async {
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
       final response = await _userProvider.lingqu();
@@ -295,10 +285,8 @@ class _TaskPageState extends State<TaskPage>
       return;
     }
 
-    final dhNum =
-        double.tryParse(_selectedSeed!['dh_num']?.toString() ?? '0') ?? 0;
-    final userFudou =
-        double.tryParse(_userInfo['fudou']?.toString() ?? '0') ?? 0;
+    final dhNum = double.tryParse(_selectedSeed!['dh_num']?.toString() ?? '0') ?? 0;
+    final userFudou = double.tryParse(_userInfo['fudou']?.toString() ?? '0') ?? 0;
 
     if (userFudou < dhNum * _buyNum) {
       FlutterToastPro.showMessage('积分不够哦');
@@ -307,10 +295,7 @@ class _TaskPageState extends State<TaskPage>
 
     _isExchanging = true;
 
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
       final response = await _userProvider.exchangeTask({
@@ -378,10 +363,7 @@ class _TaskPageState extends State<TaskPage>
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          themeColor.gradientStart,
-                          themeColor.gradientEnd,
-                        ],
+                        colors: [themeColor.gradientStart, themeColor.gradientEnd],
                       ),
                     ),
                   ),
@@ -391,9 +373,7 @@ class _TaskPageState extends State<TaskPage>
               // 主内容
               SafeArea(
                 child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
+                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
                     : Column(
                         children: [
                           // 水壶进度条
@@ -465,9 +445,7 @@ class _TaskPageState extends State<TaskPage>
                     height: 4,
                     width: _getProgressBarWidth(constraints.maxWidth),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.red[400]!, Colors.red[600]!],
-                      ),
+                      gradient: LinearGradient(colors: [Colors.red[400]!, Colors.red[600]!]),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -534,10 +512,7 @@ class _TaskPageState extends State<TaskPage>
                       ],
                     ),
                     child: Center(
-                      child: Text(
-                        btn['label'] as String,
-                        style: const TextStyle(fontSize: 10),
-                      ),
+                      child: Text(btn['label'] as String, style: const TextStyle(fontSize: 10)),
                     ),
                   );
                 },
@@ -555,21 +530,11 @@ class _TaskPageState extends State<TaskPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.agriculture,
-              size: 64,
-              color: Colors.white.withOpacity(0.5),
-            ),
+            Icon(Icons.agriculture, size: 64, color: Colors.white.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
-            const Text(
-              '暂无种植任务',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
+            const Text('暂无种植任务', style: TextStyle(color: Colors.white70, fontSize: 16)),
             const SizedBox(height: 8),
-            const Text(
-              '点击右侧"播种"按钮购买种子开始种植',
-              style: TextStyle(color: Colors.white60, fontSize: 14),
-            ),
+            const Text('点击右侧"播种"按钮购买种子开始种植', style: TextStyle(color: Colors.white60, fontSize: 14)),
           ],
         ),
       );
@@ -586,10 +551,7 @@ class _TaskPageState extends State<TaskPage>
   }
 
   // 3D田块渲染（与uni-app一致）
-  Widget _build3DPlotItem(
-    Map<String, dynamic> plot,
-    ThemeColorData themeColor,
-  ) {
+  Widget _build3DPlotItem(Map<String, dynamic> plot, ThemeColorData themeColor) {
     final plants = plot['plants'] as List? ?? [];
     final fieldType = plot['fieldType'] ?? 1;
     final rightIcon = plot['right'] ?? 0;
@@ -630,10 +592,7 @@ class _TaskPageState extends State<TaskPage>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
-                        child: Text(
-                          '田块 $fieldType',
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                        child: Text('田块 $fieldType', style: const TextStyle(color: Colors.white)),
                       ),
                     );
                   },
@@ -690,7 +649,7 @@ class _TaskPageState extends State<TaskPage>
     return GestureDetector(
       onTap: () => setState(() => _showShopPopup = false),
       child: Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         child: Center(
           child: GestureDetector(
             onTap: () {}, // 阻止点击穿透
@@ -731,11 +690,11 @@ class _TaskPageState extends State<TaskPage>
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
+                          color: Colors.white.withValues(alpha: 0.95),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -744,11 +703,7 @@ class _TaskPageState extends State<TaskPage>
                         child: const Center(
                           child: Text(
                             '×',
-                            style: TextStyle(
-                              fontSize: 28,
-                              color: Color(0xFF999999),
-                              height: 1,
-                            ),
+                            style: TextStyle(fontSize: 28, color: Color(0xFF999999), height: 1),
                           ),
                         ),
                       ),
@@ -764,21 +719,17 @@ class _TaskPageState extends State<TaskPage>
                     bottom: popupWidth * 0.1, // 底部留白
                     child: _seedList.isEmpty
                         ? const Center(
-                            child: Text(
-                              '暂无种子',
-                              style: TextStyle(color: Colors.white70),
-                            ),
+                            child: Text('暂无种子', style: TextStyle(color: Colors.white70)),
                           )
                         : GridView.builder(
                             padding: EdgeInsets.zero,
                             physics: const BouncingScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.85, // 调整宽高比，减少间距
-                                  crossAxisSpacing: 8, // 16rpx
-                                  mainAxisSpacing: 8, // 16rpx
-                                ),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.85, // 调整宽高比，减少间距
+                              crossAxisSpacing: 8, // 16rpx
+                              mainAxisSpacing: 8, // 16rpx
+                            ),
                             itemCount: _seedList.length,
                             itemBuilder: (context, index) {
                               return _buildSeedItem(_seedList[index]);
@@ -806,7 +757,7 @@ class _TaskPageState extends State<TaskPage>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -840,10 +791,7 @@ class _TaskPageState extends State<TaskPage>
               return Container(
                 width: 45,
                 height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: Colors.green[100], shape: BoxShape.circle),
                 child: Icon(Icons.eco, color: Colors.green[600], size: 25),
               );
             },
@@ -857,27 +805,15 @@ class _TaskPageState extends State<TaskPage>
             children: [
               Text(
                 '预计获得${seed['output_num'] ?? 0}积分',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF666666),
-                  height: 1.2,
-                ),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF666666), height: 1.2),
               ),
               Text(
                 '活跃度：${seed['activity'] ?? 0}',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF666666),
-                  height: 1.2,
-                ),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF666666), height: 1.2),
               ),
               Text(
                 '种子数量：${seed['count'] ?? 0}/${seed['limit'] ?? 0}个',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF666666),
-                  height: 1.2,
-                ),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF666666), height: 1.2),
               ),
             ],
           ),
@@ -894,13 +830,11 @@ class _TaskPageState extends State<TaskPage>
               width: double.infinity,
               height: 28,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7DD87D), Color(0xFF4EB84E)],
-                ),
+                gradient: const LinearGradient(colors: [Color(0xFF7DD87D), Color(0xFF4EB84E)]),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF44AA44).withOpacity(0.3),
+                    color: const Color(0xFF44AA44).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -934,19 +868,13 @@ class _TaskPageState extends State<TaskPage>
             TextField(
               obscureText: true,
               maxLength: 6,
-              decoration: const InputDecoration(
-                hintText: '请输入交易密码',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(hintText: '请输入交易密码', border: OutlineInputBorder()),
               onChanged: (value) => _pwd = value,
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -1011,11 +939,11 @@ class _TaskPageState extends State<TaskPage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -1033,9 +961,7 @@ class _TaskPageState extends State<TaskPage>
                         height: fieldWidth * 0.024, // 12rpx / 500rpx ≈ 0.024
                         decoration: BoxDecoration(
                           color: const Color(0xFFE0E0E0),
-                          borderRadius: BorderRadius.circular(
-                            fieldWidth * 0.012,
-                          ),
+                          borderRadius: BorderRadius.circular(fieldWidth * 0.012),
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
@@ -1045,9 +971,7 @@ class _TaskPageState extends State<TaskPage>
                               gradient: const LinearGradient(
                                 colors: [Color(0xFF7dd87d), Color(0xFF4eb84e)],
                               ),
-                              borderRadius: BorderRadius.circular(
-                                fieldWidth * 0.012,
-                              ),
+                              borderRadius: BorderRadius.circular(fieldWidth * 0.012),
                             ),
                           ),
                         ),
@@ -1056,8 +980,7 @@ class _TaskPageState extends State<TaskPage>
                       Text(
                         '$dkDay/$totalDay天',
                         style: TextStyle(
-                          fontSize:
-                              fieldWidth * 0.02, // 10rpx / 500rpx = 0.02（放大文字）
+                          fontSize: fieldWidth * 0.02, // 10rpx / 500rpx = 0.02（放大文字）
                           color: const Color(0xFF333333),
                         ),
                       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/update_login_pwd_controller.dart';
+import 'update_login_pwd_controller.dart';
 
 class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
   const UpdateLoginPwdView({super.key});

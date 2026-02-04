@@ -20,12 +20,12 @@ class CustomerService {
   Future<void> openCustomer({String? url, int? productId}) async {
     debugPrint('=== 开始打开客服 ===');
     debugPrint('商品ID: $productId');
-    
+
     try {
       // 获取客服配置
       debugPrint('正在获取客服配置...');
       final response = await _publicProvider.getCustomerType();
-      
+
       if (!response.isSuccess || response.data == null) {
         // API 失败，直接跳转到客服页面（降级方案）
         debugPrint('API 失败，使用降级方案直接跳转客服页面');
@@ -76,7 +76,7 @@ class CustomerService {
         '提示',
         '客服电话未配置',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.orange.withOpacity(0.8),
+        backgroundColor: Colors.orange.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
       return;
@@ -92,7 +92,7 @@ class CustomerService {
           '错误',
           '无法拨打电话',
           snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red.withOpacity(0.8),
+          backgroundColor: Colors.red.withValues(alpha: 0.8),
           colorText: Colors.white,
         );
       }
@@ -102,7 +102,7 @@ class CustomerService {
         '错误',
         '拨打电话失败',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red.withOpacity(0.8),
+        backgroundColor: Colors.red.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
     }
@@ -117,7 +117,7 @@ class CustomerService {
         '提示',
         '客服链接未配置',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.orange.withOpacity(0.8),
+        backgroundColor: Colors.orange.withValues(alpha: 0.8),
         colorText: Colors.white,
       );
       return;
@@ -150,7 +150,7 @@ class CustomerService {
           '错误',
           '无法打开企业微信客服',
           snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red.withOpacity(0.8),
+          backgroundColor: Colors.red.withValues(alpha: 0.8),
           colorText: Colors.white,
         );
       }
@@ -173,9 +173,6 @@ class CustomerService {
 
   /// 快速打开客服（带商品ID）
   Future<void> openCustomerWithProduct(int productId) async {
-    await openCustomer(
-      url: '/pages/extension/customer_list/chat',
-      productId: productId,
-    );
+    await openCustomer(url: '/pages/extension/customer_list/chat', productId: productId);
   }
 }

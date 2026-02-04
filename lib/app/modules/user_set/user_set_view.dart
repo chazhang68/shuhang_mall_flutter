@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../controllers/user_set_controller.dart';
+import 'user_set_controller.dart';
 
 /// 设置页面
 /// 对应原 pages/users/user_set/index.vue

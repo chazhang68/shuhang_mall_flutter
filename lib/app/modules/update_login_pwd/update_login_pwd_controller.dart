@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
-import '../../../data/providers/user_provider.dart';
-import '../../../data/providers/api_provider.dart';
-import '../../../data/models/user_model.dart';
+import '../../data/providers/user_provider.dart';
+import '../../data/providers/api_provider.dart';
+import '../../data/models/user_model.dart';
 
 class UpdateLoginPwdController extends GetxController {
   final UserProvider _userProvider = UserProvider();
@@ -60,7 +60,7 @@ class UpdateLoginPwdController extends GetxController {
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
-      FlutterToastPro.showMessage( '获取用户信息失败: $e');
+      FlutterToastPro.showMessage('获取用户信息失败: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -84,7 +84,7 @@ class UpdateLoginPwdController extends GetxController {
   // 发送验证码
   Future<void> sendVerificationCode() async {
     if (_userInfo.value?.phone == null || _userInfo.value!.phone.isEmpty) {
-      FlutterToastPro.showMessage( '手机号码不存在,无法发送验证码！');
+      FlutterToastPro.showMessage('手机号码不存在,无法发送验证码！');
       return;
     }
 
@@ -115,11 +115,11 @@ class UpdateLoginPwdController extends GetxController {
 
       // 模拟API调用成功
       await Future.delayed(const Duration(seconds: 1));
-      FlutterToastPro.showMessage( '验证码已发送');
+      FlutterToastPro.showMessage('验证码已发送');
     } catch (e) {
       _disabled.value = false;
       _text.value = '获取验证码';
-      FlutterToastPro.showMessage( '发送验证码失败: $e');
+      FlutterToastPro.showMessage('发送验证码失败: $e');
     }
   }
 
@@ -127,22 +127,22 @@ class UpdateLoginPwdController extends GetxController {
   Future<bool> editPassword() async {
     // 验证输入
     if (_newPassword.value.isEmpty) {
-      FlutterToastPro.showMessage( '请输入新密码');
+      FlutterToastPro.showMessage('请输入新密码');
       return false;
     }
 
     if (_enterPassword.value.isEmpty) {
-      FlutterToastPro.showMessage( '请再次输入新密码');
+      FlutterToastPro.showMessage('请再次输入新密码');
       return false;
     }
 
     if (_newPassword.value != _enterPassword.value) {
-      FlutterToastPro.showMessage( '两次输入的密码不一致！');
+      FlutterToastPro.showMessage('两次输入的密码不一致！');
       return false;
     }
 
     if (_captcha.value.isEmpty) {
-      FlutterToastPro.showMessage( '请输入验证码');
+      FlutterToastPro.showMessage('请输入验证码');
       return false;
     }
 
@@ -160,20 +160,18 @@ class UpdateLoginPwdController extends GetxController {
       );
 
       if (response.isSuccess) {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
         return true;
       } else {
-        FlutterToastPro.showMessage( response.msg);
+        FlutterToastPro.showMessage(response.msg);
         return false;
       }
     } catch (e) {
       debugPrint('修改密码失败: $e');
-      FlutterToastPro.showMessage( '密码修改失败: $e');
+      FlutterToastPro.showMessage('密码修改失败: $e');
       return false;
     } finally {
       _isLoading.value = false;
     }
   }
 }
-
-

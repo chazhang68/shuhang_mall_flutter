@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constants/app_icons.dart';
-import '../controllers/user_address_controller.dart';
+import 'user_address_controller.dart';
 
 class UserAddressView extends GetView<UserAddressController> {
   const UserAddressView({super.key});

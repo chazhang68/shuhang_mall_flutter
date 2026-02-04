@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:easy_refresh/easy_refresh.dart';
-import '../../../core/constants/app_icons.dart';
-import '../../../data/models/address_model.dart';
-import '../controllers/user_address_list_controller.dart';
+import '../../core/constants/app_icons.dart';
+import '../../data/models/address_model.dart';
+import 'user_address_list_controller.dart';
 
 class UserAddressListView extends GetView<UserAddressListController> {
   const UserAddressListView({super.key});
