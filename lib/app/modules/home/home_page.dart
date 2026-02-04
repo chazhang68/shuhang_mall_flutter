@@ -21,7 +21,8 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
   final PublicProvider _publicProvider = PublicProvider();
 
   // 数据
@@ -35,7 +36,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   final int _limit = 10;
   bool _loadEnd = false;
   bool _loadingMore = false;
-  bool _showAd = true; // 控制广告显示
+  bool _showAd = true; // 控制广告显示，关闭后隐藏
 
   @override
   bool get wantKeepAlive => true;
@@ -206,7 +207,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                 Container(
                                   width: 1.5,
                                   height: 16,
-                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                   color: const Color(0xFFDDDDDD),
                                 ),
                                 // 公告内容 - 点击跳转详情
@@ -220,14 +223,19 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                         color: Color(0xFF666666),
                                       ),
                                       scrollAxis: Axis.horizontal,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       blankSpace: 100.0,
                                       velocity: 100.0,
                                       pauseAfterRound: Duration(seconds: 1),
                                       startPadding: 0,
-                                      accelerationDuration: Duration(seconds: 1),
+                                      accelerationDuration: Duration(
+                                        seconds: 1,
+                                      ),
                                       accelerationCurve: Curves.linear,
-                                      decelerationDuration: Duration(milliseconds: 500),
+                                      decelerationDuration: Duration(
+                                        milliseconds: 500,
+                                      ),
                                       decelerationCurve: Curves.easeOut,
                                     ),
                                   ),
@@ -239,9 +247,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                       ),
 
                       // 广告位 - 对应uni-app的APP-PLUS广告组件
-                      SliverToBoxAdapter(
-                        child: Visibility(visible: !_showAd, child: _buildAdView()),
-                      ),
+                      // 广告关闭后隐藏，不占用空间
+                      if (_showAd) SliverToBoxAdapter(child: _buildAdView()),
 
                       // 搜索栏
                       SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
@@ -252,25 +259,32 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                               child: Center(
                                 child: Padding(
                                   padding: EdgeInsets.all(40),
-                                  child: Text('暂无商品', style: TextStyle(color: Color(0xFF999999))),
+                                  child: Text(
+                                    '暂无商品',
+                                    style: TextStyle(color: Color(0xFF999999)),
+                                  ),
                                 ),
                               ),
                             )
                           : SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               sliver: SliverGrid(
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                  // 宽高比调整：图片169px + 文字区域约70px = 239px
-                                  // 宽度约170px，比例 170/239 ≈ 0.71
-                                  childAspectRatio: 0.68,
-                                ),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 8,
+                                      crossAxisSpacing: 8,
+                                      // 宽高比调整：图片169px + 文字区域约70px = 239px
+                                      // 宽度约170px，比例 170/239 ≈ 0.71
+                                      childAspectRatio: 0.68,
+                                    ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) => HomeProductCard(
                                     product: _hotList[index],
-                                    onTap: () => _goGoodsDetail(_hotList[index].id),
+                                    onTap: () =>
+                                        _goGoodsDetail(_hotList[index].id),
                                   ),
                                   childCount: _hotList.length,
                                 ),
@@ -283,8 +297,13 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                           padding: const EdgeInsets.all(20),
                           alignment: Alignment.center,
                           child: Text(
-                            _loadEnd ? '我也是有底线的' : (_loadingMore ? '加载中...' : ''),
-                            style: const TextStyle(color: Color(0xFF999999), fontSize: 12),
+                            _loadEnd
+                                ? '我也是有底线的'
+                                : (_loadingMore ? '加载中...' : ''),
+                            style: const TextStyle(
+                              color: Color(0xFF999999),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -342,7 +361,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       return Container(
         margin: const EdgeInsets.all(12),
         height: 188,
-        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: const Center(
           child: Text('暂无轮播图', style: TextStyle(color: Color(0xFF999999))),
         ),
@@ -380,11 +402,16 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: Colors.grey[200],
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ),
@@ -415,7 +442,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(35)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(35),
+        ),
         child: Row(
           children: [
             Image.asset(
@@ -428,9 +458,15 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
             ),
             const SizedBox(width: 8),
             const Expanded(
-              child: Text('输入你想搜索的商品', style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 13)),
+              child: Text(
+                '输入你想搜索的商品',
+                style: TextStyle(color: Color(0xFFA6A6A6), fontSize: 13),
+              ),
             ),
-            const Text('搜索', style: TextStyle(color: Color(0xFF444444), fontSize: 13)),
+            const Text(
+              '搜索',
+              style: TextStyle(color: Color(0xFF444444), fontSize: 13),
+            ),
           ],
         ),
       ),
@@ -439,23 +475,34 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   /// 广告位 - ZJSDK信息流广告
   Widget _buildAdView() {
+    debugPrint('🎯 首页广告：开始构建广告组件');
+
+    // 计算广告高度：宽度的0.6倍（常见的信息流广告比例）
+    final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
+    final adHeight = adWidth * 0.6; // 约230dp
+
     return Container(
-      padding: const EdgeInsets.only(top: 12, bottom: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 12), // 左右间距12dp
+      padding: const EdgeInsets.only(top: 12, bottom: 12), // 上下间距
       child: ZJFeedAdWidget(
-        width: MediaQuery.of(context).size.width - 24,
-        // 不传height参数，使用自适应高度
+        width: adWidth,
+        height: adHeight, // 设置明确的高度
         videoSoundEnable: false, // 静音，与uni-app一致
-        onShow: () => debugPrint('信息流广告展示'),
+        onShow: () {
+          debugPrint('✅ 首页广告：信息流广告展示成功');
+        },
         onClose: () {
-          debugPrint('信息流广告关闭');
+          debugPrint('❌ 首页广告：信息流广告关闭');
+          // 广告关闭后隐藏，不占用空间
           setState(() {
-            _showAd = false; // 广告关闭后隐藏
+            _showAd = false;
           });
         },
         onError: (error) {
-          debugPrint('信息流广告错误: $error');
+          debugPrint('⚠️ 首页广告：信息流广告错误 - $error');
+          // 广告加载失败也隐藏
           setState(() {
-            _showAd = false; // 广告加载失败也隐藏
+            _showAd = false;
           });
         },
       ),

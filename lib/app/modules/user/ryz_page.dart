@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 import '../../data/providers/user_provider.dart';
 import '../../../widgets/empty_page.dart';
+import '../../../widgets/main_bottom_navigation_bar.dart';
 
 /// 我的账户页面 (仓库积分/可用积分/SWP)
 /// 对应原 pages/users/ryz/ryz.vue
@@ -105,7 +106,11 @@ class _RyzPageState extends State<RyzPage> {
         }, 0);
       } else {
         // 仓库积分/可用积分 - 使用福豆接口
-        response = await _userProvider.getFudouList({'page': _page, 'limit': _limit, 'pm': 0});
+        response = await _userProvider.getFudouList({
+          'page': _page,
+          'limit': _limit,
+          'pm': 0,
+        });
       }
 
       if (response.isSuccess && response.data != null) {
@@ -168,6 +173,10 @@ class _RyzPageState extends State<RyzPage> {
           Expanded(child: _buildRecordList()),
         ],
       ),
+      // 添加底部导航栏
+      bottomNavigationBar: const MainBottomNavigationBar(
+        currentIndex: 4, // 选中"我的"
+      ),
     );
   }
 
@@ -197,7 +206,10 @@ class _RyzPageState extends State<RyzPage> {
                   Positioned(
                     left: 0,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Get.back(),
                     ),
                   ),
@@ -237,7 +249,10 @@ class _RyzPageState extends State<RyzPage> {
                   GestureDetector(
                     onTap: _goExchange,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
@@ -370,7 +385,10 @@ class _RyzPageState extends State<RyzPage> {
                 const SizedBox(height: 10),
                 Text(
                   '时间：${item['add_time'] ?? ''}',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF333333),
+                  ),
                 ),
               ],
             ),

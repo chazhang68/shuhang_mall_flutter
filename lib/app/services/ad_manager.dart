@@ -21,11 +21,15 @@ class AdManager {
   /// 初始化广告SDK（不启动）
   /// 可以在用户同意隐私政策前调用
   Future<void> initWithoutStart() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      debugPrint('✅ ZJSDK广告SDK已经初始化，无需重复初始化');
+      return;
+    }
 
     try {
-      debugPrint('开始初始化ZJSDK广告SDK...');
-      debugPrint('AppId: ${AdConfig.appId}');
+      debugPrint('🔧 开始初始化ZJSDK广告SDK...');
+      debugPrint('📱 AppId: ${AdConfig.appId}');
+      debugPrint('🐛 Debug模式: ${AdConfig.isDebug}');
 
       ZJAndroid.initWithoutStart(
         AdConfig.appId,
@@ -45,9 +49,9 @@ class AdManager {
       );
 
       _isInitialized = true;
-      debugPrint('ZJSDK广告SDK初始化成功（未启动）');
+      debugPrint('✅ ZJSDK广告SDK初始化成功（未启动）');
     } catch (e) {
-      debugPrint('ZJSDK广告SDK初始化失败: $e');
+      debugPrint('❌ ZJSDK广告SDK初始化失败: $e');
     }
   }
 
@@ -58,28 +62,33 @@ class AdManager {
       await initWithoutStart();
     }
 
-    if (_isStarted) return true;
+    if (_isStarted) {
+      debugPrint('✅ ZJSDK广告SDK已经启动，无需重复启动');
+      return true;
+    }
 
     try {
-      debugPrint('启动ZJSDK广告SDK...');
+      debugPrint('🚀 启动ZJSDK广告SDK...');
 
       ZJAndroid.start(
         onStartListener: (ret) {
+          debugPrint('📢 ZJSDK启动回调: action=${ret.action}, msg=${ret.msg}');
+
           if (ret.action == ZJEventAction.startSuccess) {
-            debugPrint('ZJSDK SDK启动成功');
+            debugPrint('✅ ZJSDK SDK启动成功');
             _isStarted = true;
           } else {
-            debugPrint('ZJSDK SDK启动失败: ${ret.msg}');
+            debugPrint('⚠️ ZJSDK SDK启动失败: ${ret.msg}');
           }
         },
       );
 
-      // Android 启动是异步的，这里先返回true
-      // 等待回调确认启动状态
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Android 启动是异步的，等待一段时间确保启动完成
+      await Future.delayed(const Duration(milliseconds: 800));
+      debugPrint('⏰ ZJSDK启动等待完成，当前状态: $_isStarted');
       return true;
     } catch (e) {
-      debugPrint('ZJSDK广告SDK启动失败: $e');
+      debugPrint('❌ ZJSDK广告SDK启动异常: $e');
       return false;
     }
   }

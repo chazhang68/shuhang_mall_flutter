@@ -48,6 +48,9 @@ class _TaskPageState extends State<TaskPage>
   // 购买数量
   int _buyNum = 1;
 
+  // 防重复点击
+  bool _isExchanging = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -172,12 +175,9 @@ class _TaskPageState extends State<TaskPage>
         }
         break;
       case 'points':
-        // 跳转到积分页面
-        Get.toNamed('/user/ryz', arguments: {'index': 1});
-        break;
       case 'SWP':
-        // 跳转到SWP页面
-        Get.toNamed('/user/ryz', arguments: {'index': 0});
+        // 直接切换到"我的" tab（index=4）
+        Get.offAllNamed(AppRoutes.main, arguments: {'tab': 4});
         break;
     }
   }
@@ -279,12 +279,21 @@ class _TaskPageState extends State<TaskPage>
 
   // 购买种子
   Future<void> _buySeed() async {
+    // 防重复点击
+    if (_isExchanging) return;
+
     if (_pwd.isEmpty) {
       FlutterToastPro.showMessage('请输入交易密码');
       return;
     }
 
     if (_selectedSeed == null) return;
+
+    // 验证数量
+    if (_buyNum <= 0) {
+      FlutterToastPro.showMessage('最少兑换一个');
+      return;
+    }
 
     final dhNum =
         double.tryParse(_selectedSeed!['dh_num']?.toString() ?? '0') ?? 0;
@@ -295,6 +304,8 @@ class _TaskPageState extends State<TaskPage>
       FlutterToastPro.showMessage('积分不够哦');
       return;
     }
+
+    _isExchanging = true;
 
     Get.dialog(
       const Center(child: CircularProgressIndicator()),
@@ -308,7 +319,7 @@ class _TaskPageState extends State<TaskPage>
         'pwd': _pwd,
       });
 
-      Get.back();
+      Get.back(); // 关闭加载对话框
 
       if (response.isSuccess) {
         FlutterToastPro.showMessage('兑换成功');
@@ -318,13 +329,24 @@ class _TaskPageState extends State<TaskPage>
           _buyNum = 1;
           _selectedSeed = null;
         });
+        // 刷新数据
         await _loadData();
       } else {
+        // 失败时清空密码
+        setState(() {
+          _pwd = '';
+        });
         FlutterToastPro.showMessage(response.msg);
       }
     } catch (e) {
-      Get.back();
-      FlutterToastPro.showMessage('兑换失败');
+      Get.back(); // 关闭加载对话框
+      // 失败时清空密码
+      setState(() {
+        _pwd = '';
+      });
+      FlutterToastPro.showMessage('兑换失败: ${e.toString()}');
+    } finally {
+      _isExchanging = false;
     }
   }
 
@@ -618,9 +640,13 @@ class _TaskPageState extends State<TaskPage>
                 ),
 
                 // 植物层 - 使用绝对定位（与uni-app一致）
+                // 使用固定尺寸的容器来确保植物定位准确
                 if (plants.isNotEmpty)
-                  Positioned.fill(
+                  SizedBox(
+                    width: fieldWidth,
+                    height: fieldWidth, // 使用固定高度确保定位准确
                     child: Stack(
+                      clipBehavior: Clip.none,
                       children: plants.asMap().entries.map((entry) {
                         final plantIndex = entry.key;
                         final plant = entry.value;
@@ -677,12 +703,12 @@ class _TaskPageState extends State<TaskPage>
                   Image.asset(
                     'assets/images/popup_bg.png',
                     width: popupWidth,
-                    fit: BoxFit.contain,
+                    fit: BoxFit.fitWidth,
                     errorBuilder: (context, error, stackTrace) {
                       // 如果背景图加载失败，使用纯色背景
                       return Container(
                         width: popupWidth,
-                        height: popupWidth * 1.2,
+                        height: popupWidth * 1.4,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             begin: Alignment.topCenter,
@@ -730,11 +756,12 @@ class _TaskPageState extends State<TaskPage>
                   ),
 
                   // 内容区域（覆盖在背景图上）
+                  // 参考uni-app: top: 27%, left/right: 5%, bottom: 7%
                   Positioned(
-                    top: popupWidth * 0.27, // 27%
+                    top: popupWidth * 0.38, // 顶部位置
                     left: popupWidth * 0.05, // 5%
                     right: popupWidth * 0.05, // 5%
-                    bottom: popupWidth * 0.07, // 7%
+                    bottom: popupWidth * 0.1, // 底部留白
                     child: _seedList.isEmpty
                         ? const Center(
                             child: Text(
@@ -744,19 +771,17 @@ class _TaskPageState extends State<TaskPage>
                           )
                         : GridView.builder(
                             padding: EdgeInsets.zero,
+                            physics: const BouncingScrollPhysics(),
                             gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
+                                const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
-                                  childAspectRatio: 0.75,
-                                  crossAxisSpacing: popupWidth * 0.027, // 16rpx
-                                  mainAxisSpacing: popupWidth * 0.027, // 16rpx
+                                  childAspectRatio: 0.85, // 调整宽高比，减少间距
+                                  crossAxisSpacing: 8, // 16rpx
+                                  mainAxisSpacing: 8, // 16rpx
                                 ),
                             itemCount: _seedList.length,
                             itemBuilder: (context, index) {
-                              return _buildSeedItem(
-                                _seedList[index],
-                                popupWidth,
-                              );
+                              return _buildSeedItem(_seedList[index]);
                             },
                           ),
                   ),
@@ -769,18 +794,16 @@ class _TaskPageState extends State<TaskPage>
     );
   }
 
-  Widget _buildSeedItem(Map<String, dynamic> seed, double popupWidth) {
-    final itemWidth = (popupWidth * 0.9 - popupWidth * 0.027) / 2;
-
+  Widget _buildSeedItem(Map<String, dynamic> seed) {
     return Container(
-      padding: EdgeInsets.all(itemWidth * 0.08), // 16rpx / 200rpx ≈ 0.08
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFFFFFEF8), Color(0xFFFFF9E6)],
         ),
-        borderRadius: BorderRadius.circular(itemWidth * 0.08), // 16rpx
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
@@ -795,38 +818,38 @@ class _TaskPageState extends State<TaskPage>
           // 种子名称
           Text(
             seed['name']?.toString() ?? '',
-            style: TextStyle(
-              fontSize: itemWidth * 0.12, // 24rpx / 200rpx = 0.12
+            style: const TextStyle(
+              fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF333333),
+              color: Color(0xFF333333),
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
 
+          const SizedBox(height: 4),
+
           // 种子图片
           Image.network(
             seed['image']?.toString() ?? '',
-            width: itemWidth * 0.4, // 80rpx / 200rpx = 0.4
-            height: itemWidth * 0.4,
+            width: 45,
+            height: 45,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                width: itemWidth * 0.4,
-                height: itemWidth * 0.4,
+                width: 45,
+                height: 45,
                 decoration: BoxDecoration(
                   color: Colors.green[100],
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.eco,
-                  color: Colors.green[600],
-                  size: itemWidth * 0.2,
-                ),
+                child: Icon(Icons.eco, color: Colors.green[600], size: 25),
               );
             },
           ),
+
+          const SizedBox(height: 4),
 
           // 种子信息
           Column(
@@ -834,30 +857,32 @@ class _TaskPageState extends State<TaskPage>
             children: [
               Text(
                 '预计获得${seed['output_num'] ?? 0}积分',
-                style: TextStyle(
-                  fontSize: itemWidth * 0.1, // 20rpx / 200rpx = 0.1
-                  color: const Color(0xFF666666),
-                  height: 1.3,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF666666),
+                  height: 1.2,
                 ),
               ),
               Text(
                 '活跃度：${seed['activity'] ?? 0}',
-                style: TextStyle(
-                  fontSize: itemWidth * 0.1,
-                  color: const Color(0xFF666666),
-                  height: 1.3,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF666666),
+                  height: 1.2,
                 ),
               ),
               Text(
                 '种子数量：${seed['count'] ?? 0}/${seed['limit'] ?? 0}个',
-                style: TextStyle(
-                  fontSize: itemWidth * 0.1,
-                  color: const Color(0xFF666666),
-                  height: 1.3,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF666666),
+                  height: 1.2,
                 ),
               ),
             ],
           ),
+
+          const SizedBox(height: 4),
 
           // 购买按钮
           GestureDetector(
@@ -867,12 +892,12 @@ class _TaskPageState extends State<TaskPage>
             },
             child: Container(
               width: double.infinity,
-              height: itemWidth * 0.24, // 48rpx / 200rpx = 0.24
+              height: 28,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF7DD87D), Color(0xFF4EB84E)],
                 ),
-                borderRadius: BorderRadius.circular(itemWidth * 0.12), // 24rpx
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF44AA44).withOpacity(0.3),
@@ -884,8 +909,8 @@ class _TaskPageState extends State<TaskPage>
               child: Center(
                 child: Text(
                   '${seed['dh_num'] ?? 0}积分',
-                  style: TextStyle(
-                    fontSize: itemWidth * 0.11, // 22rpx / 200rpx ≈ 0.11
+                  style: const TextStyle(
+                    fontSize: 11,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -958,8 +983,8 @@ class _TaskPageState extends State<TaskPage>
     return Positioned(
       left: position['left']! * fieldWidth, // 转换百分比为像素
       top: position['top']! * fieldWidth,
-      child: Transform.translate(
-        offset: Offset(-plantWidth / 2, -plantWidth * 1.3), // 增加向上偏移，让植物位置更准确
+      child: FractionalTranslation(
+        translation: const Offset(-0.5, -0.85), // 从-1.0调整到-0.85，让植物往下移一点
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
