@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/home_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/shop_page.dart';
@@ -20,6 +21,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
+  int _bottomIndex = 0;
   final PageController _pageController = PageController();
 
   final List<Widget> _pages = const [HomePage(), ShopPage(), TaskPage(), CartPage(), UserPage()];
@@ -33,6 +35,9 @@ class _MainPageState extends State<MainPage> {
       final tabIndex = args['tab'] as int;
       if (tabIndex >= 0 && tabIndex < _pages.length) {
         _currentIndex = tabIndex;
+        if (tabIndex != 2) {
+          _bottomIndex = tabIndex > 2 ? tabIndex - 1 : tabIndex;
+        }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _pageController.jumpToPage(tabIndex);
         });
@@ -49,6 +54,9 @@ class _MainPageState extends State<MainPage> {
   void _onPageChanged(int index) {
     setState(() {
       _currentIndex = index;
+      if (index != 2) {
+        _bottomIndex = index > 2 ? index - 1 : index;
+      }
     });
   }
 
@@ -67,6 +75,21 @@ class _MainPageState extends State<MainPage> {
     _pageController.jumpToPage(index);
   }
 
+  Future<void> _onBottomTap(int index) async {
+    final targetIndex = index >= 2 ? index + 1 : index;
+    await _onItemTapped(targetIndex);
+    if (!mounted) return;
+    if (targetIndex != 2) {
+      setState(() {
+        _bottomIndex = index;
+      });
+    }
+  }
+
+  Future<void> _onCenterTap() async {
+    await _onItemTapped(2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<AppController>(
@@ -80,96 +103,71 @@ class _MainPageState extends State<MainPage> {
             physics: const NeverScrollableScrollPhysics(),
             children: _pages,
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onItemTapped,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: themeColor.primary,
-            unselectedItemColor: const Color(0xFF999999),
-            selectedFontSize: 16,
-            unselectedFontSize: 14,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
-            iconSize: 28,
-            items: [
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 28),
-                activeIcon: Icon(Icons.home, size: 28),
-                label: '首页',
-              ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.store_outlined, size: 28),
-                activeIcon: Icon(Icons.store, size: 28),
-                label: '商城',
-              ),
-              const BottomNavigationBarItem(
-                icon: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.fromBorderSide(BorderSide(color: Color(0xFFE93323), width: 2)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-                      ],
-                    ),
-                    child: Icon(Icons.check, color: Color(0xFFE93323), size: 28),
-                  ),
-                ),
-                activeIcon: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.fromBorderSide(BorderSide(color: Color(0xFFE93323), width: 2)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-                      ],
-                    ),
-                    child: Icon(Icons.check, color: Color(0xFFE93323), size: 28),
-                  ),
-                ),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Obx(() {
-                  final cartNum = controller.cartNum;
-                  if (cartNum > 0) {
-                    return badges.Badge(
-                      badgeContent: Text(
-                        cartNum > 99 ? '99+' : cartNum.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: GestureDetector(
+            onTap: _onCenterTap,
+            child: Image.asset('assets/images/main_conter.png', width: 60, height: 60),
+          ),
+          bottomNavigationBar: AnimatedBottomNavigationBar.builder(
+            itemCount: 4,
+            activeIndex: _bottomIndex,
+            gapLocation: GapLocation.center,
+            notchSmoothness: NotchSmoothness.defaultEdge,
+            splashColor: Colors.white,
+            elevation: 0,
+            leftCornerRadius: 0,
+            rightCornerRadius: 0,
+            onTap: _onBottomTap,
+            height: kBottomNavigationBarHeight + 4,
+            tabBuilder: (index, isActive) {
+              final color = isActive ? themeColor.primary : const Color(0xFF999999);
+              final label = switch (index) {
+                0 => '首页',
+                1 => '商城',
+                2 => '购物车',
+                _ => '我的',
+              };
+              final icon = switch (index) {
+                0 => isActive ? Icons.home : Icons.home_outlined,
+                1 => isActive ? Icons.store : Icons.store_outlined,
+                2 => isActive ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+                _ => isActive ? Icons.person : Icons.person_outline,
+              };
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (index == 2)
+                      Obx(() {
+                        final cartNum = controller.cartNum;
+                        if (cartNum > 0) {
+                          return badges.Badge(
+                            badgeContent: Text(
+                              cartNum > 99 ? '99+' : cartNum.toString(),
+                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                            ),
+                            child: Icon(icon, color: color, size: 26),
+                          );
+                        }
+                        return Icon(icon, color: color, size: 26);
+                      })
+                    else
+                      Icon(icon, color: color, size: 26),
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                       ),
-                      child: const Icon(Icons.shopping_cart_outlined, size: 28),
-                    );
-                  }
-                  return const Icon(Icons.shopping_cart_outlined, size: 28);
-                }),
-                activeIcon: Obx(() {
-                  final cartNum = controller.cartNum;
-                  if (cartNum > 0) {
-                    return badges.Badge(
-                      badgeContent: Text(
-                        cartNum > 99 ? '99+' : cartNum.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                      child: const Icon(Icons.shopping_cart, size: 28),
-                    );
-                  }
-                  return const Icon(Icons.shopping_cart, size: 28);
-                }),
-                label: '购物车',
-              ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline, size: 28),
-                activeIcon: Icon(Icons.person, size: 28),
-                label: '我的',
-              ),
-            ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         );
       },

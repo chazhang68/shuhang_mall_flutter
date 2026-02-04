@@ -1,6 +1,6 @@
 name: shuhang_mall_flutter
 description: "数航商道 - Flutter 电商应用"
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -45,7 +45,7 @@ dependencies:
 
   # 图片保存到相册
   gal: ^2.3.2
-  
+
   # 路径处理
   path_provider: ^2.1.5
 
@@ -114,6 +114,7 @@ dependencies:
   marquee: ^2.3.0
   chat_context_menu: ^1.5.6
   just_audio: ^0.10.5
+  animated_bottom_navigation_bar: ^1.4.0
 
 dev_dependencies:
   flutter_test:
