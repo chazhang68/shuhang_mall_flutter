@@ -4,6 +4,7 @@ import 'package:zjsdk_android/zj_custom_controller.dart';
 import 'package:zjsdk_android/event/zj_event.dart';
 import 'package:zjsdk_android/event/event_action.dart';
 import 'package:shuhang_mall_flutter/app/config/ad_config.dart';
+import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 
 /// ZJSDK 广告管理器 (Android)
 /// 统一管理广告SDK
@@ -17,6 +18,23 @@ class AdManager {
   bool _isInitialized = false;
   bool _isStarted = false;
   bool _isAdLoading = false;
+  bool _isAdShowing = false; // 新增：标记广告是否正在展示
+  bool _hasRetryOnExpired =
+      false; // 标记当前这一轮展示是否已经针对“广告过期”重试过一次
+
+  /// 获取当前用户ID，用于激励视频 userId
+  String _getCurrentUserId() {
+    try {
+      final app = AppController.to;
+      final uid = app.userInfo?.uid ?? app.uid;
+      if (uid != 0) {
+        return uid.toString();
+      }
+    } catch (e) {
+      debugPrint('⚠️ 获取当前用户ID失败，使用测试ID: $e');
+    }
+    return AdConfig.testUserId;
+  }
 
   /// 初始化广告SDK（不启动）
   /// 可以在用户同意隐私政策前调用
@@ -103,14 +121,13 @@ class AdManager {
     if (_isAdLoading) return false;
 
     _isAdLoading = true;
-    debugPrint('开始预加载激励视频广告...');
+    final userId = _getCurrentUserId();
+    debugPrint('开始预加载激励视频广告，userId=$userId...');
 
     try {
       bool success = false;
 
-      ZJAndroid.loadRewardVideo(AdConfig.rewardVideoAdId, AdConfig.testUserId, (
-        ret,
-      ) {
+      ZJAndroid.loadRewardVideo(AdConfig.rewardVideoAdId, userId, (ret) {
         if (ret.action == ZJEventAction.onAdLoaded) {
           debugPrint('激励视频广告预加载成功');
           success = true;
@@ -136,6 +153,17 @@ class AdManager {
     Function()? onClose,
     Function(String)? onError,
   }) async {
+    // 防止重复调用
+    if (_isAdShowing) {
+      debugPrint('⚠️ 广告正在展示中，忽略重复调用');
+      return false;
+    }
+
+    if (_isAdLoading) {
+      debugPrint('⚠️ 广告正在加载中，忽略重复调用');
+      return false;
+    }
+
     if (!_isStarted) {
       final started = await start();
       if (!started) {
@@ -145,9 +173,36 @@ class AdManager {
     }
 
     try {
-      debugPrint('准备显示激励视频广告');
+      // 开启新一轮展示时，重置“过期重试”标记
+      _hasRetryOnExpired = false;
+      _loadAndShowRewardVideo(onShow, onClick, onReward, onClose, onError);
+      return true;
+    } catch (e) {
+      debugPrint('显示激励视频广告失败: $e');
+      _isAdLoading = false;
+      _isAdShowing = false;
+      onError?.call(e.toString());
+      return false;
+    }
+  }
 
-      ZJAndroid.showRewardVideo((ret) {
+  /// 内部方法：加载并展示激励视频广告
+  void _loadAndShowRewardVideo(
+    Function()? onShow,
+    Function()? onClick,
+    Function()? onReward,
+    Function()? onClose,
+    Function(String)? onError,
+  ) {
+    final userId = _getCurrentUserId();
+    debugPrint('准备加载并显示激励视频广告，userId=$userId');
+    _isAdLoading = true;
+
+    // 先加载广告，加载成功后自动显示
+    ZJAndroid.loadRewardVideo(
+      AdConfig.rewardVideoAdId,
+      userId,
+      (ret) {
         _handleRewardVideoCallback(
           ret,
           onShow,
@@ -156,14 +211,9 @@ class AdManager {
           onClose,
           onError,
         );
-      });
-
-      return true;
-    } catch (e) {
-      debugPrint('显示激励视频广告失败: $e');
-      onError?.call(e.toString());
-      return false;
-    }
+      },
+      isPreLoad: false, // 不是预加载，加载完成后立即显示
+    );
   }
 
   /// 处理激励视频回调
@@ -175,21 +225,53 @@ class AdManager {
     Function()? onClose,
     Function(String)? onError,
   ) {
-    if (ret.action == ZJEventAction.onAdShow) {
-      debugPrint('激励视频展示');
+    debugPrint('📢 激励视频事件: ${ret.action}, msg: ${ret.msg}');
+
+    if (ret.action == ZJEventAction.onAdLoaded) {
+      debugPrint('✅ 激励视频加载成功');
+      _isAdLoading = false;
+    } else if (ret.action == ZJEventAction.onAdShow) {
+      debugPrint('✅ 激励视频展示');
+      _isAdLoading = false;
+      _isAdShowing = true; // 标记广告正在展示
       onShow?.call();
     } else if (ret.action == ZJEventAction.onAdClick) {
-      debugPrint('激励视频点击');
+      debugPrint('👆 激励视频点击');
       onClick?.call();
     } else if (ret.action == ZJEventAction.onAdRewardVerify) {
-      debugPrint('激励视频发奖');
+      debugPrint('🎁 激励视频发奖');
       onReward?.call();
     } else if (ret.action == ZJEventAction.onAdClose) {
-      debugPrint('激励视频关闭');
+      debugPrint('❌ 激励视频关闭');
+      _isAdLoading = false;
+      _isAdShowing = false; // 重置展示状态
+      _hasRetryOnExpired = false; // 这一轮展示已结束，重置过期重试标记
       onClose?.call();
     } else if (ret.action == ZJEventAction.onAdError) {
-      debugPrint('激励视频错误: ${ret.msg}');
-      onError?.call(ret.msg ?? '未知错误');
+      final msg = ret.msg ?? '未知错误';
+      debugPrint('⚠️ 激励视频错误: $msg');
+      _isAdLoading = false;
+      _isAdShowing = false; // 重置展示状态
+      // 特殊处理：预加载超过20分钟后会返回“广告已过期，请重新加载”
+      if (msg.contains('广告已过期，请重新加载')) {
+        if (_hasRetryOnExpired) {
+          debugPrint('⚠️ 激励视频已过期且已重试一次，本次不再继续重试');
+          onError?.call(msg);
+        } else {
+          debugPrint('🔁 激励视频已过期，开始重新加载并展示');
+          _hasRetryOnExpired = true;
+          // 直接重新加载并展示一次（等同于重新调用加载和展示的方法）
+          _loadAndShowRewardVideo(
+            onShow,
+            onClick,
+            onReward,
+            onClose,
+            onError,
+          );
+        }
+      } else {
+        onError?.call(msg);
+      }
     }
   }
 
@@ -258,4 +340,7 @@ class AdManager {
 
   /// 检查是否正在加载
   bool get isAdLoading => _isAdLoading;
+
+  /// 检查广告是否正在展示
+  bool get isAdShowing => _isAdShowing;
 }

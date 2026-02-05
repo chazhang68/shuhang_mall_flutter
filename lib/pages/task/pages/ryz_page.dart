@@ -6,7 +6,7 @@ import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import '../models/task_record_model.dart';
 
-/// 我的账户页面（积分/SWP详情）
+  /// 我的账户页面（积分/消费券详情，原 SWP）
 /// 对应原 pages/users/ryz/ryz.vue
 class RyzPage extends StatefulWidget {
   const RyzPage({super.key});
@@ -18,7 +18,7 @@ class RyzPage extends StatefulWidget {
 class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   final UserProvider _userProvider = UserProvider();
 
-  // 当前选中的 tab (0=仓库积分, 1=可用积分, 2=SWP)
+  // 当前选中的 tab (0=仓库积分, 1=可用积分, 2=消费券/原SWP)
   int _current = 0;
 
   // 用户信息
@@ -149,7 +149,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
       case 1:
         return '可用积分';
       case 2:
-        return 'SWP';
+        return '消费券';
       default:
         return '';
     }
@@ -170,10 +170,10 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
 
   void _goExchange() {
     if (_current == 0 || _current == 1) {
-      // 积分兑换SWP
+      // 积分兑换消费券（原 SWP）
       Get.toNamed('/task/jifen-exchange');
     } else if (_current == 2) {
-      // SWP兑换积分
+      // 消费券兑换积分（原 SWP 兑换积分）
       Get.toNamed('/task/swp-exchange');
     }
   }
@@ -270,7 +270,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            _current == 2 ? 'SWP兑换积分' : '积分兑换SWP',
+                            _current == 2 ? '消费券兑换积分' : '积分兑换消费券',
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
@@ -287,22 +287,25 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildTabBar() {
-    return Container(
-      height: 75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(17)),
-      ),
-      margin: const EdgeInsets.only(top: -65),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildTabItem('仓库积分', 0),
-          const SizedBox(width: 15),
-          _buildTabItem('可用积分', 1),
-          const SizedBox(width: 15),
-          _buildTabItem('SWP', 2),
-        ],
+    // 注意：Container 的 margin 不允许为负数，这里用 Transform 实现上移效果
+    return Transform.translate(
+      offset: const Offset(0, -65),
+      child: Container(
+        height: 75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(17)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildTabItem('仓库积分', 0),
+            const SizedBox(width: 15),
+            _buildTabItem('可用积分', 1),
+            const SizedBox(width: 15),
+            _buildTabItem('消费券', 2),
+          ],
+        ),
       ),
     );
   }

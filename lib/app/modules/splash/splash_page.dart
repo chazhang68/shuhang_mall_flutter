@@ -267,54 +267,6 @@ class _SplashPageState extends State<SplashPage> {
                 style: TextStyle(fontSize: 12, color: Color(0xFF999999)),
               ),
             ),
-
-            // Debug模式：显示状态信息
-            if (AdConfig.isDebug)
-              Positioned(
-                top: 50,
-                left: 10,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '启动页显示: ${_showSplashContent ? "是" : "否"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '最小时间: ${_minTimeReached ? "已到" : "未到"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '广告状态: ${_adLoaded ? "已加载" : "加载中"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '已跳转: ${_hasNavigated ? "是" : "否"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
       ),

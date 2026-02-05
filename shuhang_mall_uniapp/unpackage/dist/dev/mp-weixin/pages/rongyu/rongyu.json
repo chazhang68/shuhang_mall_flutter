@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "",
-  "navigationStyle": "custom",
-  "navigationBarTextStyle": "black",
-  "usingComponents": {
-    "page-foot": "/components/pageFooter/index"
-  }
-}

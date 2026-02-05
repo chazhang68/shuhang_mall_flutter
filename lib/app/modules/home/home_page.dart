@@ -440,9 +440,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   Widget _buildAdView() {
     debugPrint('🎯 首页广告：开始构建广告组件');
 
-    // 计算广告高度：宽度的0.6倍（常见的信息流广告比例）
+    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐）
     final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
-    final adHeight = adWidth * 0.6; // 约230dp
+    final adHeight = adWidth / 3.75;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12), // 左右间距12dp

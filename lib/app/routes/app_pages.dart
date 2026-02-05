@@ -10,7 +10,8 @@ import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/splash/splash_page.dart';
 
 // Task模块
-import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart' as task_ryz;
+import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart'
+    as task_ryz;
 import 'package:shuhang_mall_flutter/pages/task/pages/jifen_exchange_page.dart';
 import 'package:shuhang_mall_flutter/pages/task/pages/swp_exchange_page.dart';
 
@@ -77,6 +78,8 @@ import 'package:shuhang_mall_flutter/app/modules/user/bind_phone_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/points_mall/points_mall_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/points_mall/points_goods_list_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/points_mall/points_goods_detail_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/points_mall/points_order_list_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/points_mall/points_order_detail_page.dart';
 
 // Lottery模块
 import 'package:shuhang_mall_flutter/app/modules/lottery/lottery_page.dart';
@@ -151,10 +154,18 @@ import 'package:shuhang_mall_flutter/app/modules/user_set/user_set_view.dart';
 class AppPages {
   static final pages = [
     // ==================== 启动页 ====================
-    GetPage(name: AppRoutes.splash, page: () => const SplashPage(), transition: Transition.fadeIn),
+    GetPage(
+      name: AppRoutes.splash,
+      page: () => const SplashPage(),
+      transition: Transition.fadeIn,
+    ),
 
     // ==================== 主框架 ====================
-    GetPage(name: AppRoutes.main, page: () => const MainPage(), transition: Transition.fadeIn),
+    GetPage(
+      name: AppRoutes.main,
+      page: () => const MainPage(),
+      transition: Transition.fadeIn,
+    ),
 
     // ==================== 首页模块 ====================
     GetPage(name: AppRoutes.home, page: () => const HomePage()),
@@ -196,7 +207,11 @@ class AppPages {
     ),
 
     // ==================== 购物车模块 ====================
-    GetPage(name: AppRoutes.cart, page: () => const CartPage(), transition: Transition.rightToLeft),
+    GetPage(
+      name: AppRoutes.cart,
+      page: () => const CartPage(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ==================== OTC 交易 ====================
     GetPage(
@@ -312,7 +327,11 @@ class AppPages {
     ),
 
     // ==================== 客服 ====================
-    GetPage(name: AppRoutes.chat, page: () => const ChatPage(), transition: Transition.rightToLeft),
+    GetPage(
+      name: AppRoutes.chat,
+      page: () => const ChatPage(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ==================== 实名认证 ====================
     GetPage(
@@ -485,6 +504,16 @@ class AppPages {
       page: () => const PointsGoodsDetailPage(),
       transition: Transition.rightToLeft,
     ),
+    GetPage(
+      name: AppRoutes.pointsOrderList,
+      page: () => const PointsOrderListPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.pointsOrderDetail,
+      page: () => const PointsOrderDetailPage(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ==================== 抽奖 ====================
     GetPage(
@@ -576,8 +605,16 @@ class AppPages {
       page: () => const FubaoPage(),
       transition: Transition.rightToLeft,
     ),
-    GetPage(name: AppRoutes.gxz, page: () => const GxzPage(), transition: Transition.rightToLeft),
-    GetPage(name: AppRoutes.ryz, page: () => const RyzPage(), transition: Transition.rightToLeft),
+    GetPage(
+      name: AppRoutes.gxz,
+      page: () => const GxzPage(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.ryz,
+      page: () => const RyzPage(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ==================== 用户扩展页面 ====================
     GetPage(

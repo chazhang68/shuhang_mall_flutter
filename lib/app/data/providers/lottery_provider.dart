@@ -22,7 +22,11 @@ class LotteryProvider {
 
   /// 获取中奖用户列表
   Future<ApiResponse> getLotteryUserList(Map<String, dynamic>? params) async {
-    return await _api.get('lottery/user_list', queryParameters: params, noAuth: true);
+    return await _api.get(
+      'lottery/user_list',
+      queryParameters: params,
+      noAuth: true,
+    );
   }
 
   /// 兑换奖品
@@ -43,7 +47,11 @@ class PointsMallProvider {
 
   /// 获取积分商品列表
   Future<ApiResponse> getPointsGoodsList(Map<String, dynamic>? params) async {
-    return await _api.get('points/goods', queryParameters: params, noAuth: true);
+    return await _api.get(
+      'points/goods',
+      queryParameters: params,
+      noAuth: true,
+    );
   }
 
   /// 获取积分商品详情
@@ -57,12 +65,39 @@ class PointsMallProvider {
   }
 
   /// 获取积分订单列表
-  Future<ApiResponse> getPointsOrderList(Map<String, dynamic>? params) async {
-    return await _api.get('points/order', queryParameters: params);
+  Future<ApiResponse> getIntegralOrderList({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    return await _api.get(
+      'store_integral/order/list',
+      queryParameters: {'page': page, 'limit': limit},
+    );
   }
 
   /// 获取积分订单详情
-  Future<ApiResponse> getPointsOrderDetail(int id) async {
-    return await _api.get('points/order/$id');
+  Future<ApiResponse> getPointsOrderDetail(int orderId) async {
+    return await _api.get('store_integral/order/detail/$orderId');
+  }
+
+  /// 确认收货
+  Future<ApiResponse> orderTake(String orderId) async {
+    return await _api.post(
+      'store_integral/order/take',
+      data: {'order_id': orderId},
+    );
+  }
+
+  /// 删除订单
+  Future<ApiResponse> orderDel(String orderId) async {
+    return await _api.post(
+      'store_integral/order/del',
+      data: {'order_id': orderId},
+    );
+  }
+
+  /// 获取物流信息
+  Future<ApiResponse> getLogisticsDetails(String orderId) async {
+    return await _api.get('store_integral/order/express/$orderId');
   }
 }

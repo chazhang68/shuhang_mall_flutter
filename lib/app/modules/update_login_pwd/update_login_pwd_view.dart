@@ -15,69 +15,76 @@ class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: Form(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                // 当前手机号显示
-                Obx(
-                  () => Text(
-                    '当前手机号：${controller.phone}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+        child: SingleChildScrollView(
+          child: Form(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  // 当前手机号显示
+                  Obx(
+                    () => Text(
+                      '当前手机号：${controller.phone}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 55),
+                  const SizedBox(height: 30),
 
-                // 新密码输入
-                _buildPasswordField(
-                  label: '新密码',
-                  hint: '请输入新密码',
-                  controller: TextEditingController(),
-                  onChanged: controller.updateNewPassword,
-                  isPassword: true,
-                ),
+                  // 新密码输入
+                  _buildPasswordField(
+                    label: '新密码',
+                    hint: '请输入新密码',
+                    controller: TextEditingController(),
+                    onChanged: controller.updateNewPassword,
+                    isPassword: true,
+                  ),
 
-                const SizedBox(height: 1),
+                  const SizedBox(height: 16),
 
-                // 确认新密码输入
-                _buildPasswordField(
-                  label: '确认新密码',
-                  hint: '请再次输入新密码',
-                  controller: TextEditingController(),
-                  onChanged: controller.updateEnterPassword,
-                  isPassword: true,
-                ),
+                  // 确认新密码输入
+                  _buildPasswordField(
+                    label: '确认新密码',
+                    hint: '请再次输入新密码',
+                    controller: TextEditingController(),
+                    onChanged: controller.updateEnterPassword,
+                    isPassword: true,
+                  ),
 
-                const SizedBox(height: 1),
+                  const SizedBox(height: 16),
 
-                // 验证码输入行
-                _buildVerificationCodeField(),
+                  // 验证码输入行
+                  _buildVerificationCodeField(),
 
-                const SizedBox(height: 75),
+                  const SizedBox(height: 40),
 
-                // 保存按钮
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () => _handleSave(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                    ),
-                    child: const Text(
-                      '保存',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // 保存按钮
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => _handleSave(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text(
+                        '保存',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -109,8 +116,11 @@ class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
       child: Row(
         children: [
           SizedBox(
-            width: 80, // 对应原25%宽度
-            child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            width: 80,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -133,7 +143,7 @@ class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
   // 构建验证码输入行
   Widget _buildVerificationCodeField() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -148,12 +158,14 @@ class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
       child: Row(
         children: [
           const SizedBox(
-            width: 80, // 对应原25%宽度
-            child: Text('验证码', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            width: 80,
+            child: Text(
+              '验证码',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 12),
           Expanded(
-            flex: 3,
             child: TextFormField(
               onChanged: controller.updateCaptcha,
               keyboardType: TextInputType.number,
@@ -161,24 +173,35 @@ class UpdateLoginPwdView extends GetView<UpdateLoginPwdController> {
                 hintText: '请输入验证码',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                isDense: true,
               ),
             ),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            flex: 2,
-            child: Obx(
-              () => ElevatedButton(
-                onPressed: controller.disabled ? null : () => controller.sendVerificationCode(),
+          const SizedBox(width: 12),
+          Obx(
+            () => SizedBox(
+              width: 100,
+              height: 36,
+              child: ElevatedButton(
+                onPressed: controller.disabled
+                    ? null
+                    : () => controller.sendVerificationCode(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: controller.disabled ? Colors.grey.shade300 : Colors.red,
+                  backgroundColor: controller.disabled
+                      ? Colors.grey.shade300
+                      : Colors.red,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
-                child: Text(
-                  controller.text,
-                  style: const TextStyle(fontSize: 14, color: Colors.white),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    controller.text,
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                 ),
               ),
             ),

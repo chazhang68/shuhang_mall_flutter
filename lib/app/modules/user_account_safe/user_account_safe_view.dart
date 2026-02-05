@@ -8,6 +8,9 @@ class UserAccountSafeView extends GetView<UserAccountSafeController> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('账户与安全'),
@@ -16,57 +19,66 @@ class UserAccountSafeView extends GetView<UserAccountSafeController> {
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // 背景区域，显示手机号
-            Container(
-              width: double.infinity,
-              height: 335, // 大约等于536rpx转换后的高度
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/account_safe_bac.png'), // 需要添加背景图片
-                  fit: BoxFit.fill,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // 背景区域，显示手机号
+              Container(
+                width: double.infinity,
+                height: screenHeight * 0.35, // 使用屏幕高度的35%，更灵活
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/account_safe_bac.png'),
+                    fit: BoxFit.cover, // 改为cover以更好适配
+                  ),
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Obx(
-                    () => Text(
-                      controller.formattedPhone,
-                      style: const TextStyle(
-                        fontSize: 60, // 对应原60rpx
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'DIN Alternate',
-                        color: Colors.black,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Obx(
+                      () => Text(
+                        controller.formattedPhone,
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.12, // 使用屏幕宽度的12%
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'DIN Alternate',
+                          color: Colors.black,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 49), // 49rpx
-                  const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        AppIcons.phone, // 使用手机图标
-                        size: 24,
-                        color: Colors.black,
-                      ),
-                      SizedBox(width: 14),
-                      Text('手机号码', style: TextStyle(fontSize: 16, color: Colors.black)),
-                    ],
-                  ),
-                ],
+                    SizedBox(height: screenHeight * 0.03), // 使用屏幕高度的3%
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          AppIcons.phone,
+                          size: screenWidth * 0.06, // 使用屏幕宽度的6%
+                          color: Colors.black,
+                        ),
+                        const SizedBox(width: 14),
+                        Text(
+                          '手机号码',
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.04, // 使用屏幕宽度的4%
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // 设置选项列表
-            Expanded(
-              child: Container(
+              // 设置选项列表
+              Container(
                 margin: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     // 登录密码设置
-                    _buildSettingItem(title: '登录密码', onTap: () => controller.goToUpdateLoginPwd()),
+                    _buildSettingItem(
+                      title: '登录密码',
+                      onTap: () => controller.goToUpdateLoginPwd(),
+                    ),
 
                     const SizedBox(height: 16),
 
@@ -78,15 +90,18 @@ class UserAccountSafeView extends GetView<UserAccountSafeController> {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   // 构建设置项
-  Widget _buildSettingItem({required String title, required VoidCallback onTap}) {
+  Widget _buildSettingItem({
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -105,7 +120,10 @@ class UserAccountSafeView extends GetView<UserAccountSafeController> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),

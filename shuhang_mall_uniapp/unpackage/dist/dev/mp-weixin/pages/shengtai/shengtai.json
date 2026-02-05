@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "生态",
-  "enablePullDownRefresh": false,
-  "usingComponents": {
-    "page-foot": "/components/pageFooter/index"
-  }
-}

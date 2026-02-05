@@ -43,9 +43,9 @@ class _ZJFeedAdWidgetState extends State<ZJFeedAdWidget> {
     }
 
     // 使用明确的高度，如果传入的height为null或0，使用默认高度
+    // 默认按照 3.75 : 1 的宽高比（SDK 建议）
     final adHeight = (widget.height == null || widget.height == 0)
-        ? widget.width *
-              0.6 // 默认高度为宽度的0.6倍
+        ? widget.width / 3.75
         : widget.height!;
 
     debugPrint(

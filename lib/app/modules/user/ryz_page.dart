@@ -18,9 +18,9 @@ class RyzPage extends StatefulWidget {
 class _RyzPageState extends State<RyzPage> {
   final UserProvider _userProvider = UserProvider();
 
-  // 选项卡: 0-仓库积分, 1-可用积分, 2-SWP
+  // 选项卡: 0-仓库积分, 1-可用积分, 2-消费券（原 SWP）
   int _currentIndex = 0;
-  final List<String> _tabNames = ['仓库积分', '可用积分', 'SWP'];
+  final List<String> _tabNames = ['仓库积分', '可用积分', '消费券'];
 
   // 用户数据
   Map<String, dynamic> _userInfo = {};
@@ -41,14 +41,22 @@ class _RyzPageState extends State<RyzPage> {
   String get _currentBalance {
     switch (_currentIndex) {
       case 0:
-        return (_userInfo['fudou'] ?? 0).toString();
+        return _formatAmount(_userInfo['fudou']);
       case 1:
-        return (_userInfo['fd_ky'] ?? 0).toString();
+        return _formatAmount(_userInfo['fd_ky']);
       case 2:
-        return (_userInfo['now_money'] ?? 0).toString();
+        return _formatAmount(_userInfo['now_money']);
       default:
         return '0';
     }
+  }
+
+  /// 统一格式化金额为两位小数
+  String _formatAmount(dynamic value) {
+    if (value == null) return '0.00';
+    if (value is num) return value.toStringAsFixed(2);
+    final parsed = double.tryParse(value.toString()) ?? 0;
+    return parsed.toStringAsFixed(2);
   }
 
   @override
@@ -151,10 +159,10 @@ class _RyzPageState extends State<RyzPage> {
 
   void _goExchange() {
     if (_currentIndex == 0 || _currentIndex == 1) {
-      // 积分兑换SWP
+      // 积分兑换消费券（原 SWP）
       Get.toNamed('/asset/jifen-exchange');
     } else {
-      // SWP兑换积分
+      // 消费券兑换积分（原 SWP 兑换积分）
       Get.toNamed('/asset/swp-exchange');
     }
   }
@@ -258,7 +266,7 @@ class _RyzPageState extends State<RyzPage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        _currentIndex == 2 ? 'SWP兑换积分' : '积分兑换SWP',
+                        _currentIndex == 2 ? '消费券兑换积分' : '积分兑换消费券',
                         style: TextStyle(color: _primaryColor, fontSize: 12),
                       ),
                     ),
@@ -348,9 +356,10 @@ class _RyzPageState extends State<RyzPage> {
 
   Widget _buildRecordItem(Map<String, dynamic> item) {
     final isPM = item['pm'] == 1;
-    final num = _currentIndex == 2
+    final raw = _currentIndex == 2
         ? (item['number'] ?? item['num'] ?? '0')
         : (item['num'] ?? item['number'] ?? '0');
+    final value = double.tryParse(raw.toString()) ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -398,7 +407,7 @@ class _RyzPageState extends State<RyzPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isPM ? '+' : '-'}$num',
+                '${isPM ? '+' : '-'}${value.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

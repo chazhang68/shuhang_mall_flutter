@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "我的福宝",
-  "usingComponents": {
-    "authorize": "/components/Authorize",
-    "empty-page": "/components/emptyPage",
-    "home": "/components/home/index"
-  }
-}
