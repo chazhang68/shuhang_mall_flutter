@@ -5,7 +5,7 @@ import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 
-/// 积分兑换SWP页面
+/// 积分兑换消费券页面
 /// 对应原 pages/users/jifendswp/jifendswp.vue
 class JifenExchangePage extends StatefulWidget {
   const JifenExchangePage({super.key});
@@ -49,13 +49,21 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
     }
 
     final value = double.tryParse(text) ?? 0;
-    final sxfRate = 0.0; // 手续费率暂时为0，需要从配置获取
+    // 从用户信息中获取手续费率（百分比）
+    final sxfRate = (_userInfo?.xfqSxf ?? 0) / 100;
+    
+    debugPrint('输入值: $value');
+    debugPrint('手续费率: ${_userInfo?.xfqSxf}%');
+    debugPrint('手续费率(小数): $sxfRate');
 
     setState(() {
       _jfnum = value;
       _xfqsxfnum = double.parse((value * sxfRate).toStringAsFixed(2));
       _dznum = double.parse((value - _xfqsxfnum).toStringAsFixed(2));
     });
+    
+    debugPrint('损耗数量: $_xfqsxfnum');
+    debugPrint('到账数量: $_dznum');
   }
 
   Future<void> _getUserInfo() async {
@@ -65,6 +73,10 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
         setState(() {
           _userInfo = response.data;
         });
+        // 调试信息
+        debugPrint('用户信息加载成功');
+        debugPrint('手续费率: ${_userInfo?.xfqSxf}');
+        debugPrint('可用积分: ${_userInfo?.fdKy}');
       }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
@@ -132,7 +144,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('积分兑换SWP'),
+        title: const Text('积分兑换消费券'),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -142,7 +154,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
         padding: const EdgeInsets.all(8),
         child: Column(
           children: [
-            // 兑换数量输入
+            // 兑换数量输入卡片
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -179,8 +191,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
                         hintText: '请输入兑换数量',
                         hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
                         border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
+                        contentPadding: EdgeInsets.symmetric(vertical: 4),
                       ),
                       style: const TextStyle(fontSize: 14),
                     ),
@@ -191,7 +202,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
                     children: [
                       Text(
                         '可用积分数量${_userInfo?.fdKy ?? 0}个',
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
                       ),
                       GestureDetector(
                         onTap: _allJifen,
@@ -211,7 +222,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
 
             const SizedBox(height: 8),
 
-            // 手续费信息
+            // 手续费信息卡片
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -224,10 +235,10 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
                     flex: 3,
                     child: Row(
                       children: [
-                        const Text('手续费', style: TextStyle(fontSize: 12)),
+                        const Text('手续费', style: TextStyle(fontSize: 12, color: Color(0xFF666666))),
                         const SizedBox(width: 12),
                         Text(
-                          '0%', // 手续费率暂时为0
+                          '${_userInfo?.xfqSxf ?? 0}%',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFFFF5A5A),
@@ -241,7 +252,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const Text('损耗数量', style: TextStyle(fontSize: 12)),
+                        const Text('损耗数量', style: TextStyle(fontSize: 12, color: Color(0xFF666666))),
                         const SizedBox(width: 12),
                         Text(
                           '$_xfqsxfnum个',
@@ -259,7 +270,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
 
             const SizedBox(height: 8),
 
-            // 实际到账
+            // 实际到账卡片
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -269,7 +280,7 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('实际到账数量', style: TextStyle(fontSize: 12)),
+                  const Text('实际到账数量', style: TextStyle(fontSize: 12, color: Color(0xFF666666))),
                   Text(
                     '$_dznum个',
                     style: const TextStyle(

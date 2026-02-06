@@ -407,7 +407,7 @@ class _VisitListPageState extends State<VisitListPage> {
             const SizedBox(height: 8),
             // 价格
             Text(
-              'SWP ${product.price}',
+              '消费券 ${product.price}',
               style: TextStyle(fontSize: 12, color: _primaryColor, fontWeight: FontWeight.w600),
             ),
           ],

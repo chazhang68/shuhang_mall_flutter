@@ -605,7 +605,7 @@ class UserProvider {
     return await _api.post('xfq_dui', data: data, noAuth: true);
   }
 
-  /// SWP兑换
+  /// 消费券兑换
   Future<ApiResponse> swpDui(Map<String, dynamic> data) async {
     return await _api.post('swp_dui', data: data, noAuth: true);
   }

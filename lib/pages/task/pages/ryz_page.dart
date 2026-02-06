@@ -6,7 +6,7 @@ import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import '../models/task_record_model.dart';
 
-  /// 我的账户页面（积分/消费券详情，原 SWP）
+  /// 我的账户页面（积分/消费券详情）
 /// 对应原 pages/users/ryz/ryz.vue
 class RyzPage extends StatefulWidget {
   const RyzPage({super.key});
@@ -18,14 +18,14 @@ class RyzPage extends StatefulWidget {
 class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   final UserProvider _userProvider = UserProvider();
 
-  // 当前选中的 tab (0=仓库积分, 1=可用积分, 2=消费券/原SWP)
+  // 当前选中的 tab (0=仓库积分, 1=可用积分, 2=消费券)
   int _current = 0;
 
   // 用户信息
   UserModel? _userInfo;
 
   // 数据列表
-  final List<TaskRecordModel> _yueList = []; // SWP列表
+  final List<TaskRecordModel> _yueList = []; // 消费券列表
   final List<TaskRecordModel> _fuDouList = []; // 积分列表
   List<TaskRecordModel> _showDataList = []; // 当前显示的列表
 
@@ -100,7 +100,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
         case 1: // 可用积分
           _showDataList = List.from(_fuDouList);
           break;
-        case 2: // SWP
+        case 2: // 消费券
           _showDataList = List.from(_yueList);
           break;
       }
@@ -170,10 +170,10 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
 
   void _goExchange() {
     if (_current == 0 || _current == 1) {
-      // 积分兑换消费券（原 SWP）
+      // 积分兑换消费券
       Get.toNamed('/task/jifen-exchange');
     } else if (_current == 2) {
-      // 消费券兑换积分（原 SWP 兑换积分）
+      // 消费券兑换积分
       Get.toNamed('/task/swp-exchange');
     }
   }
@@ -199,45 +199,50 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      height: 232,
       decoration: const BoxDecoration(color: Color(0xFFFF5A5A)),
       child: SafeArea(
+        bottom: false,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // 导航栏
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            SizedBox(
+              height: 56,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Get.back(),
-                  ),
                   const Text(
                     '我的账户',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  Positioned(
+                    left: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                      onPressed: () => Get.back(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            // 余额信息
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            // 余额信息区域
+            Container(
+              padding: const EdgeInsets.fromLTRB(32, 20, 32, 40),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 左侧：标题和余额
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           _getTitle(),
@@ -247,37 +252,41 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 16),
                         Text(
                           _getNumber(),
                           style: const TextStyle(
-                            fontSize: 29,
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontFamily: 'DIN Alternate',
+                            height: 1.2,
                           ),
                         ),
                       ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GestureDetector(
-                        onTap: _goExchange,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            _current == 2 ? '消费券兑换积分' : '积分兑换消费券',
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                  ),
+                  
+                  // 右侧：兑换按钮
+                  GestureDetector(
+                    onTap: _goExchange,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _current == 2 ? '消费券兑换积分' : '积分兑换消费券',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -287,25 +296,24 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildTabBar() {
-    // 注意：Container 的 margin 不允许为负数，这里用 Transform 实现上移效果
-    return Transform.translate(
-      offset: const Offset(0, -65),
-      child: Container(
-        height: 75,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(17)),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildTabItem('仓库积分', 0),
-            const SizedBox(width: 15),
-            _buildTabItem('可用积分', 1),
-            const SizedBox(width: 15),
-            _buildTabItem('消费券', 2),
-          ],
-        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildTabItem('仓库积分', 0),
+          const SizedBox(width: 15),
+          _buildTabItem('可用积分', 1),
+          const SizedBox(width: 15),
+          _buildTabItem('消费券', 2),
+        ],
       ),
     );
   }
@@ -325,16 +333,17 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
         }
       },
       child: Container(
-        width: 90,
-        height: 35,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFFF5A5A) : const Color(0xFFF6F7F9),
-          borderRadius: BorderRadius.circular(17),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Center(
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 15, color: isActive ? Colors.white : Colors.black),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: isActive ? Colors.white : const Color(0xFF000000),
           ),
         ),
       ),

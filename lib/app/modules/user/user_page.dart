@@ -613,7 +613,7 @@ class _AccountCard extends StatelessWidget {
                     // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=1'),
                   ),
                   AccountItem(
-                    label: 'SWP',
+                    label: '消费券',
                     value: isLogin ? (userInfo?.balance ?? 0).toStringAsFixed(2) : '0.00',
                     // onTap: () => Get.toNamed('${AppRoutes.ryz}?index=2'),
                   ),

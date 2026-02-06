@@ -20,7 +20,7 @@ class UserModel {
   final int spreadUid; // 推广人ID
   final String? spreadNickname;
   @JsonKey(fromJson: stringToDouble)
-  final double balance; // 余额 (now_money / SWP)
+  final double balance; // 余额 (now_money / 消费券)
   @JsonKey(fromJson: stringToDouble)
   final double integral; // 积分（消费券）
   @JsonKey(fromJson: stringToDouble)
@@ -35,6 +35,8 @@ class UserModel {
   final double gxz; // 贡献值（燃料值）
   @JsonKey(fromJson: stringToDouble)
   final double ryz; // 荣誉值
+  @JsonKey(fromJson: stringToDouble)
+  final double xfqSxf; // 消费券手续费率（百分比）
   @JsonKey(fromJson: stringToInt, readValue: _readCouponCount)
   final int couponCount; // 优惠券数量
   @JsonKey(fromJson: stringToInt, readValue: _readCollectCount)
@@ -89,6 +91,7 @@ class UserModel {
     this.fubao = 0,
     this.gxz = 0,
     this.ryz = 0,
+    this.xfqSxf = 0,
     this.couponCount = 0,
     this.collectCount = 0,
     this.visitCount = 0,
@@ -133,6 +136,7 @@ class UserModel {
     double? fubao,
     double? gxz,
     double? ryz,
+    double? xfqSxf,
     int? couponCount,
     int? collectCount,
     int? visitCount,
@@ -172,6 +176,7 @@ class UserModel {
       fubao: fubao ?? this.fubao,
       gxz: gxz ?? this.gxz,
       ryz: ryz ?? this.ryz,
+      xfqSxf: xfqSxf ?? this.xfqSxf,
       couponCount: couponCount ?? this.couponCount,
       collectCount: collectCount ?? this.collectCount,
       visitCount: visitCount ?? this.visitCount,

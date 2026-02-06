@@ -405,7 +405,7 @@ class _CashierPageState extends State<CashierPage> {
     final subtitle = isVoucher
         ? '可用余额 消费券$balanceText'
         : method.value == 'yue'
-        ? '可用余额 SWP$balanceText'
+        ? '可用余额 消费券$balanceText'
         : method.title;
 
     return GestureDetector(
@@ -462,7 +462,7 @@ class _CashierPageState extends State<CashierPage> {
       return Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF999999)));
     }
 
-    final prefix = method.value == 'yue' ? ' SWP' : '消费券';
+    final prefix = method.value == 'yue' ? '消费券' : '消费券';
     return RichText(
       text: TextSpan(
         children: [

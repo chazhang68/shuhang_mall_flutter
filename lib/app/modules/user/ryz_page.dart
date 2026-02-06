@@ -6,7 +6,7 @@ import '../../data/providers/user_provider.dart';
 import '../../../widgets/empty_page.dart';
 import '../../../widgets/main_bottom_navigation_bar.dart';
 
-/// 我的账户页面 (仓库积分/可用积分/SWP)
+/// 我的账户页面 (仓库积分/可用积分/消费券)
 /// 对应原 pages/users/ryz/ryz.vue
 class RyzPage extends StatefulWidget {
   const RyzPage({super.key});
@@ -18,7 +18,7 @@ class RyzPage extends StatefulWidget {
 class _RyzPageState extends State<RyzPage> {
   final UserProvider _userProvider = UserProvider();
 
-  // 选项卡: 0-仓库积分, 1-可用积分, 2-消费券（原 SWP）
+  // 选项卡: 0-仓库积分, 1-可用积分, 2-消费券
   int _currentIndex = 0;
   final List<String> _tabNames = ['仓库积分', '可用积分', '消费券'];
 
@@ -106,7 +106,7 @@ class _RyzPageState extends State<RyzPage> {
       late final ApiResponse<dynamic> response;
 
       if (_currentIndex == 2) {
-        // SWP - 使用佣金接口
+        // 消费券 - 使用佣金接口
         response = await _userProvider.getCommissionInfo({
           'page': _page,
           'limit': _limit,
@@ -159,10 +159,10 @@ class _RyzPageState extends State<RyzPage> {
 
   void _goExchange() {
     if (_currentIndex == 0 || _currentIndex == 1) {
-      // 积分兑换消费券（原 SWP）
+      // 积分兑换消费券
       Get.toNamed('/asset/jifen-exchange');
     } else {
-      // 消费券兑换积分（原 SWP 兑换积分）
+      // 消费券兑换积分
       Get.toNamed('/asset/swp-exchange');
     }
   }

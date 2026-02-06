@@ -5,7 +5,7 @@ import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 
-/// SWP兑换积分页面
+/// 消费券兑换积分页面
 /// 对应原 pages/users/swpdjifen/swpdjifen.vue
 class SwpExchangePage extends StatefulWidget {
   const SwpExchangePage({super.key});
@@ -77,7 +77,7 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
 
     final nowMoney = _userInfo?.balance ?? 0;
     if (_jfnum > nowMoney) {
-      FlutterToastPro.showMessage( '可用SWP不足');
+      FlutterToastPro.showMessage( '可用消费券不足');
       return;
     }
 
@@ -117,7 +117,7 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('SWP兑换积分'),
+        title: const Text('消费券兑换积分'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -144,29 +144,36 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
                       color: Color(0xFF333333),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(7),
-                    ],
-                    decoration: const InputDecoration(
-                      hintText: '请输入兑换数量',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFEEEEEE)),
+                      ),
                     ),
-                    style: const TextStyle(fontSize: 14),
+                    child: TextField(
+                      controller: _controller,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(7),
+                      ],
+                      decoration: const InputDecoration(
+                        hintText: '请输入兑换数量',
+                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 4),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   ),
-                  const Divider(),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '可用SWP数量${_userInfo?.balance ?? 0}个',
+                        '可用消费券数量${_userInfo?.balance ?? 0}个',
                         style: const TextStyle(fontSize: 12),
                       ),
                       GestureDetector(

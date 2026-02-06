@@ -30,6 +30,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   fubao: json['fubao'] == null ? 0 : stringToDouble(json['fubao']),
   gxz: json['gxz'] == null ? 0 : stringToDouble(json['gxz']),
   ryz: json['ryz'] == null ? 0 : stringToDouble(json['ryz']),
+  xfqSxf: json['xfq_sxf'] == null ? 0 : stringToDouble(json['xfq_sxf']),
   couponCount: _readCouponCount(json, 'coupon_count') == null
       ? 0
       : stringToInt(_readCouponCount(json, 'coupon_count')),
@@ -84,6 +85,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'fubao': instance.fubao,
   'gxz': instance.gxz,
   'ryz': instance.ryz,
+  'xfq_sxf': instance.xfqSxf,
   'coupon_count': instance.couponCount,
   'collect_count': instance.collectCount,
   'visit_count': instance.visitCount,
