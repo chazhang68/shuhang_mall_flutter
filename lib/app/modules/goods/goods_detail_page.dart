@@ -369,7 +369,8 @@ class _GoodsDetailPageState extends State<GoodsDetailPage> with SingleTickerProv
               backgroundColor: Colors.white,
               borderRadius: .circular(8),
               menuConstraints: BoxConstraints(maxWidth: 124),
-              spacing: 0,
+              spacing: 4,
+              topPadding: 0,
               horizontalMargin: 0,
               widgetBuilder: (BuildContext context, void Function() showMenu) {
                 return GestureDetector(
