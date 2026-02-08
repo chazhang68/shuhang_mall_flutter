@@ -112,6 +112,10 @@ class AdManager {
   }
 
   /// 预加载激励视频广告
+  ///
+  /// ⚠️ 已废弃：由于广告有20分钟时效性，预加载可能导致广告过期
+  /// 建议使用实时加载（showRewardedVideoAd）以获得更好的用户体验
+  @Deprecated('使用实时加载代替预加载，避免20分钟超时问题')
   Future<bool> preloadRewardedVideoAd() async {
     if (!_isStarted) {
       final started = await start();

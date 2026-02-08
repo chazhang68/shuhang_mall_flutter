@@ -68,7 +68,7 @@ class TaskController extends GetxController {
   Future<void> _initAd() async {
     try {
       await _adManager.start();
-      _adManager.preloadRewardedVideoAd();
+      // 不再预加载，改为实时加载以避免20分钟超时问题
     } catch (e) {
       debugPrint('初始化广告失败: $e');
     }
@@ -207,8 +207,7 @@ class TaskController extends GetxController {
         if (_taskDoneCount.value >= 8) {
           lingqu();
         }
-        // 预加载下一个广告
-        _adManager.preloadRewardedVideoAd();
+        // 不再预加载下一个广告，改为实时加载
       }
     } catch (e) {
       FlutterToastPro.showMessage('领取奖励失败');

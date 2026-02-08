@@ -65,8 +65,7 @@ class _TaskPageState extends State<TaskPage>
   Future<void> _initAd() async {
     // 启动广告SDK
     await AdManager.instance.start();
-    // 预加载激励视频广告（实现秒开）
-    await AdManager.instance.preloadRewardedVideoAd();
+    // 不再预加载激励视频，改为实时加载以避免20分钟超时问题
   }
 
   Future<void> _loadData() async {
