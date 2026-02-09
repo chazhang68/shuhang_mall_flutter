@@ -33,13 +33,14 @@ void main() async {
   WechatService().init();
   LogService.i('WeChat service initialized');
 
-  // 初始化并启动广告SDK（提前启动，优化开屏广告加载速度）
+  // 仅初始化广告SDK（不启动，不阻塞），启动在闪屏页完成
   LogService.i('🎬 开始初始化广告SDK...');
-  await AdManager.instance.start();
-  LogService.i('✅ 广告SDK启动完成');
-  debugPrint(
-    '🎯 广告SDK状态: initialized=${AdManager.instance.isInitialized}, started=${AdManager.instance.isStarted}',
-  );
+  try {
+    await AdManager.instance.initWithoutStart();
+  } catch (e) {
+    debugPrint('❌ 广告SDK初始化异常，跳过: $e');
+  }
+  LogService.i('✅ 广告SDK初始化完成');
 
   // 设置状态栏样式
   SystemChrome.setSystemUIOverlayStyle(

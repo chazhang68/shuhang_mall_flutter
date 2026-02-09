@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/main_page.dart';
+import 'package:shuhang_mall_flutter/app/services/ad_manager.dart';
 import 'package:zjsdk_android/zj_android.dart';
 import 'package:zjsdk_android/event/zj_event.dart';
 import 'package:zjsdk_android/event/event_action.dart';
@@ -18,76 +19,74 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
-  bool _showSplashContent = true; // 显示启动页内容
-  bool _adLoaded = false; // 广告是否加载完成
-  bool _minTimeReached = false; // 最小显示时间是否已到
-  DateTime? _startTime; // 启动时间
+  bool _adRequested = false;
 
   @override
   void initState() {
     super.initState();
-    _startTime = DateTime.now();
-    _initAndShowAd();
+    _init();
   }
 
-  /// 初始化并显示开屏广告
-  Future<void> _initAndShowAd() async {
-    debugPrint('🚀 开屏页面：开始加载开屏广告');
-    debugPrint('📱 广告位ID: ${AdConfig.splashAdId}');
-    debugPrint('📱 应用ID: ${AdConfig.appId}');
+  Future<void> _init() async {
+    debugPrint('🚀 启动页初始化');
+    debugPrint('📱 广告SDK状态: initialized=${AdManager.instance.isInitialized}, started=${AdManager.instance.isStarted}');
 
-    // 延迟一小段时间，确保SDK完全启动
+    // 延迟500ms确保页面渲染
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
 
-    if (mounted) {
-      _loadNativeSplashAd();
+    // 启动SDK（main.dart中只做了初始化，这里完成启动）
+    bool sdkReady = AdManager.instance.isStarted;
+    if (!sdkReady) {
+      debugPrint('⏳ SDK尚未启动，开始启动...');
+      try {
+        sdkReady = await AdManager.instance.start();
+        debugPrint('🎯 SDK启动结果: $sdkReady');
+      } catch (e) {
+        debugPrint('❌ SDK启动异常: $e');
+        sdkReady = false;
+      }
     }
 
-    // 设置最小显示时间（5秒）- 启动页至少停留5秒
+    if (!mounted) return;
+
+    if (sdkReady) {
+      debugPrint('✅ SDK已就绪，加载开屏广告');
+      _loadSplashAd();
+    } else {
+      debugPrint('⚠️ SDK启动失败，直接跳转首页');
+      _navigateToMain();
+      return;
+    }
+
+    // 5秒超时：如果广告没有任何回调（既没成功也没失败），强制跳转
     Future.delayed(const Duration(seconds: 5), () {
-      debugPrint('⏰ 启动页最小显示时间（5秒）已到');
-      if (mounted) {
-        setState(() {
-          _minTimeReached = true;
-        });
-        // 如果广告已加载，显示广告；否则等待广告或超时
-        if (_adLoaded) {
-          debugPrint('✅ 广告已加载，准备显示');
-          setState(() {
-            _showSplashContent = false;
-          });
-        }
-      }
-    });
-
-    // 设置强制跳转时间（6秒）- 如果6秒后还在启动页，强制跳转
-    Future.delayed(const Duration(seconds: 6), () {
-      if (!_hasNavigated && _showSplashContent && mounted) {
-        debugPrint('⚠️ 启动页显示超过6秒，强制跳转主页');
-        _navigateToMain();
-      }
-    });
-
-    // 设置最大等待时间（8秒）- 总超时
-    Future.delayed(const Duration(seconds: 8), () {
       if (!_hasNavigated && mounted) {
-        debugPrint('⏰ 总超时（8秒），强制跳转主页');
+        debugPrint('⏰ 广告超时（5秒），强制跳转主页');
         _navigateToMain();
       }
     });
   }
 
-  /// 加载原生开屏广告
-  void _loadNativeSplashAd() {
+  /// 加载开屏广告
+  void _loadSplashAd() {
+    if (_adRequested) return;
+    _adRequested = true;
+
     debugPrint('📱 开始加载开屏广告，广告位ID: ${AdConfig.splashAdId}');
 
-    ZJAndroid.loadSplashAd(
-      AdConfig.splashAdId,
-      bgResType: 'default',
-      splashListener: (ret) {
-        _handleSplashAdEvent(ret);
-      },
-    );
+    try {
+      ZJAndroid.loadSplashAd(
+        AdConfig.splashAdId,
+        bgResType: 'default',
+        splashListener: (ret) {
+          _handleSplashAdEvent(ret);
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ 开屏广告加载异常: $e');
+      _navigateToMain();
+    }
   }
 
   /// 处理开屏广告事件
@@ -95,17 +94,7 @@ class _SplashPageState extends State<SplashPage> {
     debugPrint('📢 开屏广告事件: action=${ret.action}, msg=${ret.msg}');
 
     if (ret.action == ZJEventAction.onAdShow) {
-      // 广告开始展示
       debugPrint('✅ 开屏广告展示中');
-      if (mounted) {
-        setState(() {
-          _adLoaded = true;
-          // 只有在最小时间已到时才隐藏启动页
-          if (_minTimeReached) {
-            _showSplashContent = false;
-          }
-        });
-      }
     } else if (ret.action == ZJEventAction.onAdClick) {
       debugPrint('👆 开屏广告点击');
     } else if (ret.action == ZJEventAction.onAdClose) {
@@ -113,27 +102,9 @@ class _SplashPageState extends State<SplashPage> {
       _navigateToMain();
     } else if (ret.action == ZJEventAction.onAdError) {
       debugPrint('⚠️ 开屏广告错误: ${ret.msg}');
-      // 广告加载失败，等待最小显示时间后跳转
-      _waitAndNavigate();
+      _navigateToMain();
     } else {
       debugPrint('ℹ️ 开屏广告其他事件: ${ret.action}');
-    }
-  }
-
-  /// 等待最小显示时间后跳转
-  Future<void> _waitAndNavigate() async {
-    if (_minTimeReached) {
-      // 最小时间已到，立即跳转
-      _navigateToMain();
-    } else {
-      // 等待最小时间（5秒）
-      final elapsed = DateTime.now().difference(_startTime!).inMilliseconds;
-      final remaining = 5000 - elapsed;
-      if (remaining > 0) {
-        debugPrint('⏰ 等待最小显示时间，剩余 ${remaining}ms');
-        await Future.delayed(Duration(milliseconds: remaining));
-      }
-      _navigateToMain();
     }
   }
 
@@ -193,75 +164,68 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 确保背景始终是白色
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            // 启动页内容 - 简洁版本，不显示任何文字提示
-            if (_showSplashContent)
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 应用Logo
-                    Image.asset(
-                      AppImages.logo,
-                      width: 120,
-                      height: 120,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.image,
-                            size: 60,
-                            color: Colors.grey,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      '数航商道',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '优质商品，品质生活',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
-                    ),
-                    const SizedBox(height: 30),
-                    // 加载动画 - 不显示任何文字
-                    const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFFFF5A5A),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    AppImages.logo,
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                        child: const Icon(
+                          Icons.image,
+                          size: 60,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    '数航商道',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '优质商品，品质生活',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
+                  ),
+                  const SizedBox(height: 30),
+                  const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFFF5A5A),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-
-            // 底部版权信息
-            Positioned(
+            ),
+            const Positioned(
               bottom: 30,
               left: 0,
               right: 0,
-              child: const Text(
+              child: Text(
                 '© 2024 数航商道',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Color(0xFF999999)),

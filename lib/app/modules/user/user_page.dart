@@ -302,51 +302,36 @@ class _UserHeader extends StatelessWidget {
                 Expanded(
                   child: _UserInfo(isLogin: isLogin, userInfo: userInfo, onCopyCode: onCopyCode),
                 ),
-                if (isLogin)
-                  Row(
-                    children: [
-                      // 扫一扫按钮
-                      Padding(
-                        padding: EdgeInsets.only(top: 6.h, right: 12.w),
-                        child: GestureDetector(
-                          onTap: () => Get.toNamed(AppRoutes.scanQrcode),
-                          child: Image.asset(
-                            'assets/images/icon_scan@2x.png',
-                            width: 28.w,
-                            height: 28.w,
-                            fit: .cover,
-                          ),
-                        ),
+                if (isLogin) ...[
+                  // 消费券二维码按钮
+                  Padding(
+                    padding: EdgeInsets.only(top: 6.h, right: 12.w),
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.scanQrcode),
+                      child: Image.asset(
+                        'assets/images/icon_qrcode_red@2x.png',
+                        width: 26.w,
+                        height: 26.w,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.qr_code, color: Colors.black54, size: 44.sp),
                       ),
-                      // 消费券二维码按钮
-                      Padding(
-                        padding: EdgeInsets.only(top: 6.h, right: 12.w),
-                        child: GestureDetector(
-                          onTap: () => Get.toNamed(AppRoutes.couponQrcode),
-                          child: Image.asset(
-                            'assets/images/icon_qrcode@2x.png',
-                            width: 24.w,
-                            height: 24.w,
-                            fit: .cover,
-                          ),
-                        ),
-                      ),
-                      // 设置按钮
-                      Padding(
-                        padding: EdgeInsets.only(top: 6.h),
-                        child: GestureDetector(
-                          onTap: () => Get.toNamed(AppRoutes.userSetting),
-                          child: Image.asset(
-                            'assets/images/icon_set@2x.png',
-                            width: 36.w,
-                            height: 36.w,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.settings, color: Colors.black54, size: 44.sp),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
+                  // 设置按钮
+                  Padding(
+                    padding: EdgeInsets.only(top: 6.h),
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.userSetting),
+                      child: Image.asset(
+                        'assets/images/icon_set@2x.png',
+                        width: 36.w,
+                        height: 36.w,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.settings, color: Colors.black54, size: 44.sp),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

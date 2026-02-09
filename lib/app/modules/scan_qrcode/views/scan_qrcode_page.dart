@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import '../controllers/scan_qrcode_controller.dart';
 
 /// 扫一扫页面
@@ -11,18 +12,13 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('扫一扫'),
+        title: const Text('扫一扫', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: controller.pickFromGallery,
-            icon: const Icon(Icons.photo_library_outlined),
-            tooltip: '相册',
-          ),
-        ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
@@ -47,52 +43,84 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
             ),
           ),
 
-          // 提示文字
+          // 手电筒按钮（扫描框下方居中）
           Positioned(
-            bottom: 150,
+            bottom: 200,
             left: 0,
             right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  '将二维码放入框内，即可自动扫描',
-                  style: TextStyle(
+            child: GestureDetector(
+              onTap: controller.toggleTorch,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.flashlight_on_outlined,
                     color: Colors.white,
-                    fontSize: 14,
+                    size: 32,
                   ),
-                ),
+                  SizedBox(height: 6),
+                  Text(
+                    '轻触照亮',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
           // 底部操作按钮
           Positioned(
-            bottom: 50,
+            bottom: 100,
+            left: 40,
+            right: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // 我的二维码
+                _buildActionButton(
+                  icon: Icons.qr_code,
+                  label: '我的二维码',
+                  onTap: () => Get.toNamed(AppRoutes.couponQrcode),
+                ),
+
+                // 相册
+                _buildActionButton(
+                  icon: Icons.photo_library_outlined,
+                  label: '相册',
+                  onTap: controller.pickFromGallery,
+                ),
+              ],
+            ),
+          ),
+
+          // 底部tab指示
+          Positioned(
+            bottom: 40,
             left: 0,
             right: 0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 闪光灯按钮
-                _buildActionButton(
-                  icon: Icons.flash_on,
-                  label: '闪光灯',
-                  onTap: controller.toggleTorch,
-                ),
-
-                // 切换摄像头按钮
-                _buildActionButton(
-                  icon: Icons.flip_camera_ios,
-                  label: '翻转',
-                  onTap: controller.switchCamera,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      '扫一扫',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    CircleAvatar(
+                      radius: 3,
+                      backgroundColor: Colors.blue,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -114,19 +142,19 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
+            width: 50,
+            height: 50,
+            decoration: const BoxDecoration(
               color: Colors.white24,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               color: Colors.white,
-              size: 30,
+              size: 26,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             label,
             style: const TextStyle(
