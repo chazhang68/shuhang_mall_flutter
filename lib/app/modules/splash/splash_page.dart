@@ -36,6 +36,18 @@ class _SplashPageState extends State<SplashPage> {
     debugPrint('📱 广告位ID: ${AdConfig.splashAdId}');
     debugPrint('📱 应用ID: ${AdConfig.appId}');
 
+    // 临时调试：2秒后直接跳转到主页，跳过广告
+    debugPrint('⚠️ 调试模式：跳过广告，2秒后跳转主页');
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!_hasNavigated && mounted) {
+        debugPrint('🏠 调试模式：执行跳转');
+        _navigateToMain();
+      }
+    });
+    return;
+
+    // 原有的广告加载逻辑（暂时注释，调试完成后恢复）
+    // ignore: dead_code
     // 延迟一小段时间，确保SDK完全启动
     await Future.delayed(const Duration(milliseconds: 500));
 
