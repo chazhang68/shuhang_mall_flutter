@@ -114,8 +114,8 @@ class UserInfoView extends GetView<UserInfoController> {
               Expanded(
                 child: Obx(
                   () => TextFormField(
-                    initialValue: controller.userInfo?.nickname ?? '',
                     maxLength: 12,
+                    controller: TextEditingController(text: controller.userInfo?.nickname),
                     textAlign: TextAlign.right,
                     onChanged: (value) => controller.updateNickname(value),
                     decoration: InputDecoration(
