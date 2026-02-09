@@ -2,7 +2,7 @@ name: shuhang_mall_flutter
 description: "数航商道 - Flutter 电商应用"
 publish_to: "none"
 
-version: 1.0.0+1
+version: 2.0.0+2
 
 environment:
   sdk: ^3.10.7
@@ -29,7 +29,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # 轮播图
-  carousel_slider: ^5.1.1
+  carousel_slider: ^5.1.2
 
   # 下拉刷新/上拉加载
   easy_refresh: ^3.4.0
@@ -38,7 +38,7 @@ dependencies:
   qr_flutter: ^4.1.0
 
   # 二维码扫描
-  mobile_scanner: ^5.2.3
+  mobile_scanner: ^7.1.4
 
   # WebSocket
   web_socket_channel: ^3.0.3
@@ -98,9 +98,9 @@ dependencies:
   url_launcher: ^6.3.2
 
   # WebView
-  webview_flutter: ^4.10.0
-  webview_flutter_android: ^4.0.0
-  webview_flutter_wkwebview: ^3.0.0
+  webview_flutter: ^4.13.1
+  webview_flutter_android: ^4.10.11
+  webview_flutter_wkwebview: ^3.23.6
 
   flutter_toast_pro: ^2.1.1
   talker_dio_logger: ^5.1.13
