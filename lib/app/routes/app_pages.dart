@@ -62,6 +62,12 @@ import 'package:shuhang_mall_flutter/app/modules/goods/goods_logistics_page.dart
 import 'package:shuhang_mall_flutter/app/modules/user/user_return_list_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/goods/goods_comment_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/coupon_center_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/coupon_qrcode/bindings/coupon_qrcode_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/coupon_qrcode/views/coupon_qrcode_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/points_transfer/bindings/points_transfer_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/points_transfer/views/points_transfer_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/scan_qrcode/bindings/scan_qrcode_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/scan_qrcode/views/scan_qrcode_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/news/news_list_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/news/news_detail_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/user_money_page.dart';
@@ -148,6 +154,14 @@ import 'package:shuhang_mall_flutter/app/modules/update_payment_pwd/update_payme
 // User Set模块
 import 'package:shuhang_mall_flutter/app/modules/user_set/user_set_binding.dart';
 import 'package:shuhang_mall_flutter/app/modules/user_set/user_set_view.dart';
+
+// WebView模块
+import 'package:shuhang_mall_flutter/app/modules/webview/bindings/webview_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/webview/views/webview_page.dart';
+
+// Merchant Settlement模块
+import 'package:shuhang_mall_flutter/app/modules/merchant_settlement/bindings/merchant_settlement_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/merchant_settlement/views/merchant_settlement_view.dart';
 
 /// 路由页面配置
 /// 对应原 pages.json
@@ -309,6 +323,30 @@ class AppPages {
     GetPage(
       name: AppRoutes.userCoupon,
       page: () => const CouponPage(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 消费券二维码 ====================
+    GetPage(
+      name: AppRoutes.couponQrcode,
+      page: () => const CouponQrcodePage(),
+      binding: CouponQrcodeBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 积分转赠 ====================
+    GetPage(
+      name: AppRoutes.pointsTransfer,
+      page: () => const PointsTransferPage(),
+      binding: PointsTransferBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 扫一扫 ====================
+    GetPage(
+      name: AppRoutes.scanQrcode,
+      page: () => const ScanQrcodePage(),
+      binding: ScanQrcodeBinding(),
       transition: Transition.rightToLeft,
     ),
 
@@ -674,6 +712,22 @@ class AppPages {
       name: AppRoutes.userAddressList,
       page: () => const UserAddressListView(),
       binding: UserAddressListBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== WebView ====================
+    GetPage(
+      name: AppRoutes.webView,
+      page: () => const WebViewPage(),
+      binding: WebViewBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 商家入驻 ====================
+    GetPage(
+      name: AppRoutes.merchantSettlement,
+      page: () => const MerchantSettlementView(),
+      binding: MerchantSettlementBinding(),
       transition: Transition.rightToLeft,
     ),
   ];

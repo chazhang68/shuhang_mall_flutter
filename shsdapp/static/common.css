@@ -1,0 +1,50 @@
+/* 文字 */
+.text-main{
+	color: #1aaffa;
+}
+.text-main-hover{
+	color: #22cafd;
+}
+.text-main-disabled{
+	color: #22cafd;
+}
+/* 背景 */
+.bg-main{
+	background-color: #1aaffa;
+}
+.bg-main-hover{
+	background-color: #22cafd;
+}
+.bg-main-disabled{
+	background-color: #22cafd;
+}
+/* 边框 */
+.border-main{
+	border-color: #1aaffa!important;
+}
+
+.btn-main-plain{
+	border-color: #1aaffa!important;
+	border-width: 1rpx;
+	border-style: solid;
+	/* #ifndef APP-NVUE */
+	display: flex;
+	/* #endif */
+	align-items: center;
+	justify-content: center;
+	color: #1aaffa;
+	padding-top: 15rpx;
+	padding-bottom: 15rpx;
+	padding-left: 20rpx;
+	padding-right: 20rpx;
+	border-radius: 8rpx;
+}
+/* 行高 */
+.line-h{
+	line-height: 1.2;
+}
+/* 分割线 */
+.f-divider{
+	height: 18rpx;
+	background-color: #F5F5F4;
+}

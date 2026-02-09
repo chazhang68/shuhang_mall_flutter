@@ -49,6 +49,9 @@ abstract class AppRoutes {
   static const String userBill = '/user/bill';
   static const String userIntegral = '/user/integral';
   static const String userCoupon = '/user/coupon';
+  static const String couponQrcode = '/coupon-qrcode'; // 消费券二维码
+  static const String scanQrcode = '/scan-qrcode'; // 扫一扫
+  static const String pointsTransfer = '/points-transfer'; // 积分转赠
   static const String userSign = '/user/sign';
   static const String userSignList = '/user/sign-list';
   static const String userMoney = '/user/money';
@@ -144,6 +147,7 @@ abstract class AppRoutes {
   static const String active = '/active';
   static const String webView = '/web-view';
   static const String feedback = '/feedback';
+  static const String merchantSettlement = '/merchant-settlement'; // 商家入驻
 
   // ==================== 账户资产 ====================
   static const String fudou = '/asset/fudou';

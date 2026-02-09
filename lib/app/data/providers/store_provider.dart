@@ -158,4 +158,37 @@ class StoreProvider {
   Future<ApiResponse> getRealDetails() async {
     return await _api.get('user/apply/info', noAuth: true);
   }
+
+  // ==================== 代理商入驻 ====================
+
+  /// 提交代理商入驻申请
+  /// 对应原 api/store.js 的 create (agent/apply)
+  Future<ApiResponse> createMerchantSettlement(Map<String, dynamic> data) async {
+    final id = data['id'] ?? 0;
+    return await _api.post('agent/apply/$id', data: data);
+  }
+
+  /// 获取代理商入驻申请详情
+  /// 对应原 api/store.js 的 getGoodsDetails (agent/apply/info)
+  Future<ApiResponse> getMerchantSettlementInfo() async {
+    return await _api.get('agent/apply/info', noAuth: true);
+  }
+
+  /// 获取代理商入驻协议
+  /// 对应原 api/store.js 的 getAgentAgreement
+  Future<ApiResponse> getMerchantAgreement() async {
+    return await _api.get('agent/get_agent_agreement', noAuth: true);
+  }
+
+  /// 获取验证码key
+  /// 对应原 api/store.js 的 getCodeApi
+  Future<ApiResponse> getVerifyCodeKey() async {
+    return await _api.get('verify_code', noAuth: true);
+  }
+
+  /// 发送验证码
+  /// 对应原 api/store.js 的 registerVerify
+  Future<ApiResponse> sendVerifyCode(Map<String, dynamic> data) async {
+    return await _api.post('register/verify', data: data, noAuth: true);
+  }
 }

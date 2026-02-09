@@ -37,6 +37,9 @@ dependencies:
   # 二维码生成
   qr_flutter: ^4.1.0
 
+  # 二维码扫描
+  mobile_scanner: ^5.2.3
+
   # WebSocket
   web_socket_channel: ^3.0.3
 
@@ -93,6 +96,12 @@ dependencies:
 
   # URL启动
   url_launcher: ^6.3.2
+
+  # WebView
+  webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.0.0
+  webview_flutter_wkwebview: ^3.0.0
+
   flutter_toast_pro: ^2.1.1
   talker_dio_logger: ^5.1.13
   json_annotation: ^4.10.0

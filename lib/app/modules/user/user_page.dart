@@ -64,6 +64,14 @@ class _UserPageState extends State<UserPage>
       if (response.isSuccess && response.data != null) {
         await controller.updateUserInfo(response.data!);
       }
+
+      // 调用获取用户中心菜单接口并打印结果
+      final menuResponse = await _userProvider.getMenuList();
+      debugPrint('========== 用户中心菜单配置 ==========');
+      debugPrint('接口状态: ${menuResponse.isSuccess}');
+      debugPrint('接口消息: ${menuResponse.msg}');
+      debugPrint('菜单数据: ${menuResponse.data}');
+      debugPrint('====================================');
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
     } finally {
@@ -122,6 +130,12 @@ class _UserPageState extends State<UserPage>
         icon: 'assets/images/tuandui3@2x.png',
         title: '邀请好友',
         route: AppRoutes.spreadCode,
+        show: true,
+      ),
+      _ServiceMenuItem(
+        icon: 'assets/images/shangjiaruzhu.png',
+        title: '商家入驻',
+        route: '${AppRoutes.webView}?url=aHR0cHM6Ly9jYy5zaHNkLnRvcC9tZXJjaGFudC8jL3BhZ2VzL21lcmNoYW50L2FwcGx5',
         show: true,
       ),
       _ServiceMenuItem(
@@ -280,7 +294,36 @@ class _UserHeader extends StatelessWidget {
                 Expanded(
                   child: _UserInfo(isLogin: isLogin, userInfo: userInfo, onCopyCode: onCopyCode),
                 ),
-                if (isLogin)
+                if (isLogin) ...[
+                  // 扫一扫按钮
+                  Padding(
+                    padding: EdgeInsets.only(top: 6.h, right: 12.w),
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.scanQrcode),
+                      child: Image.asset(
+                        'assets/images/icon_scan@2x.png',
+                        width: 36.w,
+                        height: 36.w,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.qr_code_scanner, color: Colors.black54, size: 44.sp),
+                      ),
+                    ),
+                  ),
+                  // 消费券二维码按钮
+                  Padding(
+                    padding: EdgeInsets.only(top: 6.h, right: 12.w),
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.couponQrcode),
+                      child: Image.asset(
+                        'assets/images/icon_qrcode@2x.png',
+                        width: 36.w,
+                        height: 36.w,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.qr_code, color: Colors.black54, size: 44.sp),
+                      ),
+                    ),
+                  ),
+                  // 设置按钮
                   Padding(
                     padding: EdgeInsets.only(top: 6.h),
                     child: GestureDetector(
@@ -294,6 +337,7 @@ class _UserHeader extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ],

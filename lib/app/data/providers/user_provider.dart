@@ -165,6 +165,12 @@ class UserProvider {
     return await _api.get('integral/list', queryParameters: params);
   }
 
+  /// 积分转赠
+  /// 对应原 api/user.js 的 fudou_zhuan
+  Future<ApiResponse> transferPoints(Map<String, dynamic> data) async {
+    return await _api.post('fudou_zhuan', data: data);
+  }
+
   // ==================== 分销推广 ====================
 
   /// 获取分销海报
