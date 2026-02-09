@@ -445,8 +445,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     final adHeight = adWidth / 3.75;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12), // 左右间距12dp
-      // padding: const EdgeInsets.only(top: 12, bottom: 12), // 上下间距
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 左右间距12dp，上下8dp
       child: ZJFeedAdWidget(
         width: adWidth,
         height: adHeight, // 设置明确的高度
