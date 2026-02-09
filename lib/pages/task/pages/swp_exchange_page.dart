@@ -163,10 +163,7 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
                     child: TextField(
                       controller: _controller,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(7),
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(7)],
                       decoration: InputDecoration(
                         hintText: '请输入兑换数量',
                         hintStyle: TextStyle(color: Colors.grey, fontSize: 14),

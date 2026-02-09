@@ -730,7 +730,7 @@ class _TaskPageState extends State<TaskPage> with AutomaticKeepAliveClientMixin 
                             child: Text('暂无种子', style: TextStyle(color: Colors.white70)),
                           )
                         : GridView.builder(
-                            padding: EdgeInsets.zero,
+                            padding: EdgeInsets.only(bottom: 16.h, top: 16.h),
                             physics: const BouncingScrollPhysics(),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
