@@ -440,15 +440,13 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   Widget _buildAdView() {
     debugPrint('🎯 首页广告：开始构建广告组件');
 
-    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐）
-    final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
+    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐），使用屏幕全宽
+    final adWidth = MediaQuery.of(context).size.width;
     final adHeight = adWidth / 3.75;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 左右间距12dp，上下8dp
-      child: ZJFeedAdWidget(
+    return ZJFeedAdWidget(
         width: adWidth,
-        height: adHeight, // 设置明确的高度
+        height: adHeight,
         videoSoundEnable: false, // 静音，与uni-app一致
         onShow: () {
           debugPrint('✅ 首页广告：信息流广告展示成功');
@@ -467,7 +465,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
             _showAd = false;
           });
         },
-      ),
     );
   }
 }
