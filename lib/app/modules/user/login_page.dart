@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -96,28 +98,25 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                // Logo
-                _buildLogo(),
-                const SizedBox(height: 60),
-                // 表单
-                _buildForm(),
-                const SizedBox(height: 40),
-                // 登录/注册按钮
-                _buildSubmitButton(),
-                const SizedBox(height: 20),
-                // 切换登录/注册
-                _buildSwitchTabs(),
-                const SizedBox(height: 30),
-                // 协议
-                _buildProtocol(),
-              ],
-            ),
+        appBar: AppBar(title: Text('登录'), backgroundColor: Colors.grey[50]),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              SizedBox(height: 30.h),
+              // Logo
+              _buildLogo(),
+              SizedBox(height: 50.h),
+              // 表单
+              _buildForm(),
+              SizedBox(height: 30.h),
+              // 登录/注册按钮
+              _buildSubmitButton(),
+              // 切换登录/注册
+              _buildSwitchTabs(),
+              // 协议
+              _buildProtocol(),
+            ],
           ),
         ),
       ),
@@ -170,6 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_off : Icons.visibility,
                   color: Colors.grey,
+                  size: 20.sp,
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
@@ -225,27 +225,31 @@ class _LoginPageState extends State<LoginPage> {
           if (_currentTab == 0)
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => Get.toNamed('/user/retrieve-password'),
-                child: const Text('忘记密码', style: TextStyle(color: Colors.grey, fontSize: 14)),
+              child: GestureDetector(
+                onTap: () => Get.toNamed('/user/retrieve-password'),
+                child: Row(
+                  spacing: 2.w,
+                  children: [
+                    Icon(CupertinoIcons.question_circle, size: 16.sp),
+                    Text('忘记密码', style: TextStyle(fontSize: 14.sp)),
+                  ],
+                ),
               ),
             ),
 
-          // 记住账号（仅在登录时显示）
+          /*        // 记住账号（仅在登录时显示）
           if (_currentTab != 2)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: _rememberAccount,
-                    onChanged: (value) => setState(() => _rememberAccount = value ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  const Text('记住账号', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                ],
-              ),
-            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _rememberAccount,
+                  onChanged: (value) => setState(() => _rememberAccount = value ?? false),
+                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                  visualDensity: .compact,
+                ),
+                const Text('记住账号', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              ],
+            ),*/
         ],
       ),
     );
@@ -262,20 +266,25 @@ class _LoginPageState extends State<LoginPage> {
     Widget? suffixIcon,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: 12.h),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         maxLength: maxLength,
+        style: TextStyle(fontSize: 14.sp),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
-          prefixIcon: Icon(prefixIcon, color: Colors.grey, size: 22),
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14.sp),
+          prefixIcon: Icon(prefixIcon, color: Colors.grey, size: 20.sp),
+          prefixIconConstraints: BoxConstraints(maxWidth: 36.w, maxHeight: 36.w),
           suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          suffixIconConstraints: BoxConstraints(maxWidth: 36.w, maxHeight: 36.w),
+          filled: false,
+          border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200)),
+          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200)),
+          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200)),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           counterText: '',
         ),
       ),
@@ -287,7 +296,7 @@ class _LoginPageState extends State<LoginPage> {
     String buttonText = _currentTab == 2 ? '注册' : '登录';
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 48.h,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
         style: ElevatedButton.styleFrom(
@@ -295,18 +304,14 @@ class _LoginPageState extends State<LoginPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         ),
         child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
+            ? SizedBox(
+                width: 24.w,
+                height: 24.w,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
             : Text(
                 buttonText,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 15.sp, color: Colors.white),
               ),
       ),
     );
@@ -352,6 +357,7 @@ class _LoginPageState extends State<LoginPage> {
           value: _protocol,
           onChanged: (value) => setState(() => _protocol = value ?? false),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          hoverColor: Colors.grey,
         ),
         const Text('已阅读并同意 ', style: TextStyle(fontSize: 12, color: Colors.grey)),
         GestureDetector(

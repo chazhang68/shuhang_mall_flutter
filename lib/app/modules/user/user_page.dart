@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 
@@ -120,24 +121,6 @@ class _UserPageState extends State<UserPage>
   // 我的服务菜单数据
   List<_ServiceMenuItem> _getServiceMenu(bool h5Open) {
     return [
-      const _ServiceMenuItem(
-        icon: 'assets/images/shimingrenzheng.png',
-        title: '实名认证',
-        route: AppRoutes.realName,
-        show: true,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/tuandui3@2x.png',
-        title: '邀请好友',
-        route: AppRoutes.spreadCode,
-        show: true,
-      ),
-      _ServiceMenuItem(
-        icon: 'assets/images/shangjiaruzhu.png',
-        title: '商家入驻',
-        route: '${AppRoutes.webView}?url=aHR0cHM6Ly9jYy5zaHNkLnRvcC9tZXJjaGFudC8jL3BhZ2VzL21lcmNoYW50L2FwcGx5',
-        show: true,
-      ),
       _ServiceMenuItem(
         icon: 'assets/images/shanggong.png',
         title: '兑换宝',
@@ -145,9 +128,9 @@ class _UserPageState extends State<UserPage>
         show: h5Open,
       ),
       const _ServiceMenuItem(
-        icon: 'assets/images/ditu3@2x.png',
-        title: '地址管理',
-        route: AppRoutes.addressList,
+        icon: 'assets/images/shimingrenzheng.png',
+        title: '实名认证',
+        route: AppRoutes.realName,
         show: true,
       ),
       const _ServiceMenuItem(
@@ -157,6 +140,26 @@ class _UserPageState extends State<UserPage>
         route: '',
         show: true,
       ),
+      _ServiceMenuItem(
+        icon: 'assets/images/shangjiaruzhu.png',
+        title: '申请入驻',
+        route:
+            '${AppRoutes.webView}?url=aHR0cHM6Ly9jYy5zaHNkLnRvcC9tZXJjaGFudC8jL3BhZ2VzL21lcmNoYW50L2FwcGx5',
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/tuandui3@2x.png',
+        title: '邀请好友',
+        route: AppRoutes.spreadCode,
+        show: true,
+      ),
+      const _ServiceMenuItem(
+        icon: 'assets/images/ditu3@2x.png',
+        title: '地址管理',
+        route: AppRoutes.addressList,
+        show: true,
+      ),
+
       const _ServiceMenuItem(
         icon: 'assets/images/yijianfankui-2@2x.png',
         title: '意见反馈',
@@ -228,7 +231,7 @@ class _UserPageState extends State<UserPage>
                 child: Column(
                   children: [
                     Image.asset(
-                      'assets/images/bg_mine@2x.png',
+                      'assets/images/haoyou.png',
                       width: size.width,
                       height: size.height * 0.4,
                       fit: BoxFit.cover,
@@ -239,9 +242,14 @@ class _UserPageState extends State<UserPage>
               ),
               CustomScrollView(
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: _UserHeader(isLogin: isLogin, userInfo: userInfo, onCopyCode: _copyCode),
-                  ),
+                  if (userInfo != null)
+                    SliverToBoxAdapter(
+                      child: _UserHeader(
+                        isLogin: isLogin,
+                        userInfo: userInfo,
+                        onCopyCode: _copyCode,
+                      ),
+                    ),
                   SliverToBoxAdapter(
                     child: _OrderSection(
                       isLogin: isLogin,
@@ -270,7 +278,7 @@ class _UserHeader extends StatelessWidget {
   const _UserHeader({required this.isLogin, required this.userInfo, required this.onCopyCode});
 
   final bool isLogin;
-  final dynamic userInfo;
+  final UserModel userInfo;
   final ValueChanged<String> onCopyCode;
 
   @override
@@ -294,50 +302,51 @@ class _UserHeader extends StatelessWidget {
                 Expanded(
                   child: _UserInfo(isLogin: isLogin, userInfo: userInfo, onCopyCode: onCopyCode),
                 ),
-                if (isLogin) ...[
-                  // 扫一扫按钮
-                  Padding(
-                    padding: EdgeInsets.only(top: 6.h, right: 12.w),
-                    child: GestureDetector(
-                      onTap: () => Get.toNamed(AppRoutes.scanQrcode),
-                      child: Image.asset(
-                        'assets/images/icon_scan@2x.png',
-                        width: 36.w,
-                        height: 36.w,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.qr_code_scanner, color: Colors.black54, size: 44.sp),
+                if (isLogin)
+                  Row(
+                    children: [
+                      // 扫一扫按钮
+                      Padding(
+                        padding: EdgeInsets.only(top: 6.h, right: 12.w),
+                        child: GestureDetector(
+                          onTap: () => Get.toNamed(AppRoutes.scanQrcode),
+                          child: Image.asset(
+                            'assets/images/icon_scan@2x.png',
+                            width: 28.w,
+                            height: 28.w,
+                            fit: .cover,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  // 消费券二维码按钮
-                  Padding(
-                    padding: EdgeInsets.only(top: 6.h, right: 12.w),
-                    child: GestureDetector(
-                      onTap: () => Get.toNamed(AppRoutes.couponQrcode),
-                      child: Image.asset(
-                        'assets/images/icon_qrcode@2x.png',
-                        width: 36.w,
-                        height: 36.w,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.qr_code, color: Colors.black54, size: 44.sp),
+                      // 消费券二维码按钮
+                      Padding(
+                        padding: EdgeInsets.only(top: 6.h, right: 12.w),
+                        child: GestureDetector(
+                          onTap: () => Get.toNamed(AppRoutes.couponQrcode),
+                          child: Image.asset(
+                            'assets/images/icon_qrcode@2x.png',
+                            width: 24.w,
+                            height: 24.w,
+                            fit: .cover,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  // 设置按钮
-                  Padding(
-                    padding: EdgeInsets.only(top: 6.h),
-                    child: GestureDetector(
-                      onTap: () => Get.toNamed(AppRoutes.userSetting),
-                      child: Image.asset(
-                        'assets/images/icon_set@2x.png',
-                        width: 36.w,
-                        height: 36.w,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.settings, color: Colors.black54, size: 44.sp),
+                      // 设置按钮
+                      Padding(
+                        padding: EdgeInsets.only(top: 6.h),
+                        child: GestureDetector(
+                          onTap: () => Get.toNamed(AppRoutes.userSetting),
+                          child: Image.asset(
+                            'assets/images/icon_set@2x.png',
+                            width: 36.w,
+                            height: 36.w,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Icon(Icons.settings, color: Colors.black54, size: 44.sp),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
               ],
             ),
           ],
@@ -351,7 +360,7 @@ class _UserAvatar extends StatelessWidget {
   const _UserAvatar({required this.isLogin, required this.userInfo});
 
   final bool isLogin;
-  final dynamic userInfo;
+  final UserModel userInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -365,58 +374,38 @@ class _UserAvatar extends StatelessWidget {
       },
       child: Stack(
         children: [
-          Container(
-            width: 60.w,
-            height: 60.w,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(60.w),
-              border: Border.all(
-                color: userInfo?.isVip == true ? const Color(0xFFFFAC65) : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(56.r),
-              child: isLogin && userInfo?.avatar != null && userInfo!.avatar.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: userInfo.avatar,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Icon(Icons.person, color: Colors.grey, size: 64.sp),
-                      errorWidget: (context, url, error) =>
-                          Image.asset('assets/images/f.png', fit: BoxFit.cover),
-                    )
-                  : Image.asset(
-                      'assets/images/f.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.person, color: Colors.grey, size: 64.sp),
-                    ),
-            ),
+          ClipOval(
+            child: isLogin && userInfo?.avatar != null && userInfo!.avatar.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: userInfo.avatar,
+                    fit: BoxFit.cover,
+                    width: 60.w,
+                    height: 60.w,
+                    placeholder: (context, url) =>
+                        Icon(Icons.person, color: Colors.grey, size: 64.sp),
+                    errorWidget: (context, url, error) =>
+                        Image.asset('assets/images/f.png', fit: BoxFit.cover),
+                  )
+                : Image.asset(
+                    'assets/images/f.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.person, color: Colors.grey, size: 64.sp),
+                  ),
           ),
           if (isLogin && userInfo != null)
             Positioned(
-              right: 10.w,
-              bottom: 0,
+              right: 2,
+              bottom: 2,
               child: userInfo.isSign
-                  ? Image.asset(
-                      'assets/images/duihao@2x.png',
-                      width: 28.w,
-                      height: 28.w,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 28.w,
-                        height: 28.w,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF54DC54), Color(0xFF00D900)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.check, color: Colors.white, size: 20.sp),
+                  ? Container(
+                      width: 14.w,
+                      height: 14.w,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF54DC54),
+                        shape: BoxShape.circle,
                       ),
+                      child: Icon(Icons.check, color: Colors.white, size: 12.sp),
                     )
                   : Container(
                       width: 38.w,
@@ -442,7 +431,7 @@ class _UserInfo extends StatelessWidget {
   const _UserInfo({required this.isLogin, required this.userInfo, required this.onCopyCode});
 
   final bool isLogin;
-  final dynamic userInfo;
+  final UserModel userInfo;
   final ValueChanged<String> onCopyCode;
 
   @override
@@ -476,9 +465,9 @@ class _UserInfo extends StatelessWidget {
                 SizedBox(width: 8.w),
                 if (userInfo?.agentLevel != null && userInfo!.agentLevel > 0)
                   Image.asset(
-                    'assets/images/${userInfo.agentLevel}.png',
-                    width: 18.w,
-                    height: 22.w,
+                    'assets/images/level${userInfo.agentLevel}.png',
+                    width: 24.w,
+                    height: 24.w,
                     errorBuilder: (context, error, stackTrace) => const SizedBox(),
                   ),
                 if (userInfo?.isVip == true)

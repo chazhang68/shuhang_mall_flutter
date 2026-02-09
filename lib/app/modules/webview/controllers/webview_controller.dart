@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -97,6 +98,11 @@ class WebViewPageController extends GetxController {
         final androidController = webViewController.platform as AndroidWebViewController;
         androidController.setMediaPlaybackRequiresUserGesture(false);
 
+        // 启用文件访问权限
+        AndroidWebViewWidgetCreationParams.fromPlatformWebViewWidgetCreationParams(
+          PlatformWebViewWidgetCreationParams(controller: webViewController.platform),
+        );
+
         // 设置文件选择器回调
         androidController.setOnShowFileSelector(_onShowFileSelector);
       }
@@ -118,9 +124,9 @@ class WebViewPageController extends GetxController {
       debugPrint('文件选择器被调用，接受类型: ${params.acceptTypes}');
 
       // 判断是否接受图片
-      final acceptsImages = params.acceptTypes.any((type) =>
-        type.contains('image') || type == '*/*' || type.isEmpty
-      );
+      final acceptsImages =
+          params.acceptTypes.isEmpty ||
+          params.acceptTypes.any((type) => type.contains('image') || type == '*/*');
 
       if (!acceptsImages) {
         debugPrint('不支持的文件类型');
@@ -146,39 +152,34 @@ class WebViewPageController extends GetxController {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('取消'),
-            ),
-          ],
+          actions: [TextButton(onPressed: () => Get.back(), child: const Text('取消'))],
         ),
       );
 
       if (source == null) {
+        debugPrint('用户取消选择');
         return [];
       }
 
       // 根据是否支持多选来选择图片
-      if (params.mode == FileSelectorMode.openMultiple) {
+      if (params.mode == FileSelectorMode.openMultiple && source == ImageSource.gallery) {
         // 多选模式（仅相册支持）
-        if (source == ImageSource.gallery) {
-          final List<XFile> images = await _imagePicker.pickMultiImage(
-            maxWidth: 1920,
-            maxHeight: 1920,
-            imageQuality: 85,
-          );
-          return images.map((image) => image.path).toList();
-        } else {
-          // 相机只能单选
-          final XFile? image = await _imagePicker.pickImage(
-            source: source,
-            maxWidth: 1920,
-            maxHeight: 1920,
-            imageQuality: 85,
-          );
-          return image != null ? [image.path] : [];
+        final List<XFile> images = await _imagePicker.pickMultiImage(
+          maxWidth: 1920,
+          maxHeight: 1920,
+          imageQuality: 85,
+        );
+        if (images.isEmpty) {
+          debugPrint('未选择任何图片');
+          return [];
         }
+        // 转换为正确的 URI 格式
+        final uris = images.map((image) {
+          final uri = File(image.path).uri.toString();
+          debugPrint('选择的图片 URI: $uri');
+          return uri;
+        }).toList();
+        return uris;
       } else {
         // 单选模式
         final XFile? image = await _imagePicker.pickImage(
@@ -187,10 +188,18 @@ class WebViewPageController extends GetxController {
           maxHeight: 1920,
           imageQuality: 85,
         );
-        return image != null ? [image.path] : [];
+        if (image == null) {
+          debugPrint('未选择图片');
+          return [];
+        }
+        // 转换为正确的 URI 格式
+        final uri = File(image.path).uri.toString();
+        debugPrint('选择的图片 URI: $uri');
+        return [uri];
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('文件选择失败: $e');
+      debugPrint('堆栈跟踪: $stackTrace');
       return [];
     }
   }

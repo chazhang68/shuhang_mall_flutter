@@ -1,6 +1,8 @@
 ///转换对象时字符串转double类型
 double stringToDouble(dynamic value) {
-  if (value is double) {
+  if (value is int) {
+    return value.toDouble();
+  } else if (value is double) {
     return value;
   } else if (value is String) {
     return double.tryParse(value) ?? 0.0;

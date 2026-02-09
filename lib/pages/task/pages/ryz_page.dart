@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
@@ -6,7 +7,7 @@ import 'package:shuhang_mall_flutter/widgets/empty_page.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import '../models/task_record_model.dart';
 
-  /// 我的账户页面（积分/消费券详情）
+/// 我的账户页面（积分/消费券详情）
 /// 对应原 pages/users/ryz/ryz.vue
 class RyzPage extends StatefulWidget {
   const RyzPage({super.key});
@@ -266,7 +267,7 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
                       ],
                     ),
                   ),
-                  
+
                   // 右侧：兑换按钮
                   GestureDetector(
                     onTap: _goExchange,
@@ -297,22 +298,15 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
 
   Widget _buildTabBar() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
+        spacing: 12.w,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildTabItem('仓库积分', 0),
-          const SizedBox(width: 15),
-          _buildTabItem('可用积分', 1),
-          const SizedBox(width: 15),
-          _buildTabItem('消费券', 2),
+          Expanded(child: _buildTabItem('仓库积分', 0)),
+          Expanded(child: _buildTabItem('可用积分', 1)),
+          Expanded(child: _buildTabItem('消费券', 2)),
         ],
       ),
     );
@@ -333,15 +327,16 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 8.h),
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFFF5A5A) : const Color(0xFFF6F7F9),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
         ),
+        alignment: .center,
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w400,
             color: isActive ? Colors.white : const Color(0xFF000000),
           ),

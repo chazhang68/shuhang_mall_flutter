@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -12,7 +13,7 @@ class UserInfoView extends GetView<UserInfoController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('个人信息'), centerTitle: true, elevation: 0),
+      appBar: AppBar(title: const Text('个人资料'), centerTitle: true, elevation: 0),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
@@ -94,85 +95,77 @@ class UserInfoView extends GetView<UserInfoController> {
 
   /// 信息列表（昵称、性别）
   Widget _buildInfoList(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-      child: Column(
-        children: [
-          // 昵称
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 17),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 60, // 约20%
-                  child: const Text(
-                    '昵称',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
+    return Column(
+      spacing: 1,
+      children: [
+        // 昵称
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 60, // 约20%
+                child: const Text(
+                  '昵称',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => TextFormField(
+                    initialValue: controller.userInfo?.nickname ?? '',
+                    maxLength: 12,
+                    textAlign: TextAlign.right,
+                    onChanged: (value) => controller.updateNickname(value),
+                    decoration: InputDecoration(
+                      hintText: '请输入昵称',
+                      hintStyle: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      counter: SizedBox.shrink(),
+                      filled: false,
+                      contentPadding: EdgeInsets.symmetric(vertical: 6),
                     ),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
                   ),
                 ),
-                Expanded(
-                  child: Obx(
-                    () => TextFormField(
-                      initialValue: controller.userInfo?.nickname ?? '',
-                      maxLength: 12,
-                      textAlign: TextAlign.right,
-                      onChanged: (value) => controller.updateNickname(value),
-                      decoration: const InputDecoration(
-                        hintText: '请输入昵称',
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
-                        border: InputBorder.none,
-                        isDense: true,
-                        counterText: '',
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        contentPadding: EdgeInsets.symmetric(vertical: 4),
+              ),
+            ],
+          ),
+        ),
+        // 分隔线（实际上uni-app没有分隔线，但视觉上有）
+        // 性别选择
+        InkWell(
+          onTap: () => _showGenderPicker(context),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '性别',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+                ),
+                Row(
+                  children: [
+                    Obx(
+                      () => Text(
+                        controller.genderOptions[controller.genderIndex],
+                        style: const TextStyle(fontSize: 13),
                       ),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                  ],
                 ),
               ],
             ),
           ),
-          // 分隔线（实际上uni-app没有分隔线，但视觉上有）
-          // 性别选择
-          InkWell(
-            onTap: () => _showGenderPicker(context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 17),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '性别',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Obx(
-                        () => Text(
-                          controller.genderOptions[controller.genderIndex],
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

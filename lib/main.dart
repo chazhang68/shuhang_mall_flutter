@@ -75,6 +75,7 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       child: FlutterToastProWrapper(
+        uiOptions: ToastUiOptions(message: ToastMessageOptions(effectType: .primary)),
         child: GetMaterialApp(
           title: '数航商道',
           debugShowCheckedModeBanner: false,
