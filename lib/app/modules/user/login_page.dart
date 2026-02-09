@@ -6,7 +6,6 @@ import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
-import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 
 /// 登录页面
@@ -36,12 +35,14 @@ class _LoginPageState extends State<LoginPage> {
 
   // 验证码倒计时
   int _countdown = 0;
+
   bool get _canSendCode => _countdown == 0;
+
+  final AppController appController = Get.find<AppController>();
 
   @override
   void initState() {
     super.initState();
-    _ensureBackUrl();
     _loadLogo();
     _loadRememberedAccount();
   }
@@ -57,18 +58,6 @@ class _LoginPageState extends State<LoginPage> {
         _accountController.text = rememberedAccount;
       }
     });
-  }
-
-  void _ensureBackUrl() {
-    final cached = Cache.getString(CacheKey.backUrl) ?? '';
-    if (cached.isNotEmpty) {
-      return;
-    }
-
-    final previousRoute = Get.previousRoute;
-    if (previousRoute.isNotEmpty && !previousRoute.contains('/login')) {
-      Cache.setString(CacheKey.backUrl, previousRoute);
-    }
   }
 
   @override
@@ -98,29 +87,37 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
-              // Logo
-              _buildLogo(),
-              const SizedBox(height: 60),
-              // 表单
-              _buildForm(),
-              const SizedBox(height: 40),
-              // 登录/注册按钮
-              _buildSubmitButton(),
-              const SizedBox(height: 20),
-              // 切换登录/注册
-              _buildSwitchTabs(),
-              const SizedBox(height: 30),
-              // 协议
-              _buildProtocol(),
-            ],
+    return PopScope(
+      canPop: appController.isLogin,
+      onPopInvokedWithResult: (canPop, result) {
+        if (!canPop) {
+          FlutterToastPro.showWaringMessage('请登录后返回');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                const SizedBox(height: 60),
+                // Logo
+                _buildLogo(),
+                const SizedBox(height: 60),
+                // 表单
+                _buildForm(),
+                const SizedBox(height: 40),
+                // 登录/注册按钮
+                _buildSubmitButton(),
+                const SizedBox(height: 20),
+                // 切换登录/注册
+                _buildSwitchTabs(),
+                const SizedBox(height: 30),
+                // 协议
+                _buildProtocol(),
+              ],
+            ),
           ),
         ),
       ),
@@ -588,11 +585,6 @@ class _LoginPageState extends State<LoginPage> {
     // 获取 AppController
     final appController = Get.find<AppController>();
 
-    // 对应 uni-app: let backUrl = that.$Cache.get(BACK_URL) || "/pages/index/index"
-    String backUrl = Cache.getString(CacheKey.backUrl) ?? '';
-    // 清除返回URL缓存
-    Cache.remove(CacheKey.backUrl);
-
     // 先保存 token，确保后续请求携带鉴权
     await appController.login(token: token, uid: 0, expiresTime: expiresTime);
 
@@ -609,8 +601,7 @@ class _LoginPageState extends State<LoginPage> {
           userInfo: userResponse.data,
           expiresTime: expiresTime,
         );
-
-        _navigateAfterLogin(backUrl);
+        Get.back();
       } else {
         await appController.logout();
         FlutterToastPro.showMessage('获取用户信息失败');
@@ -620,20 +611,5 @@ class _LoginPageState extends State<LoginPage> {
       await appController.logout();
       FlutterToastPro.showMessage('获取用户信息失败');
     }
-  }
-
-  /// 登录后跳转
-  /// 对应 uni-app: uni.reLaunch({url: backUrl})
-  void _navigateAfterLogin(String backUrl) {
-    if (!mounted) return;
-
-    debugPrint('开始执行跳转');
-    if (backUrl.isEmpty || backUrl.contains('/login')) {
-      debugPrint('跳转到主页');
-      Get.offNamedUntil(backUrl, (route) => route.settings.name == AppRoutes.main);
-      return;
-    }
-    debugPrint('跳转到: $backUrl');
-    Get.offNamedUntil(backUrl, (route) => route.settings.name == AppRoutes.main);
   }
 }

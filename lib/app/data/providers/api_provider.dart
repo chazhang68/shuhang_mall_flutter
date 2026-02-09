@@ -14,6 +14,7 @@ import 'package:dio/dio.dart'
         ErrorInterceptorHandler;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/services/log_service.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 import 'package:shuhang_mall_flutter/app/utils/config.dart';
@@ -31,14 +32,9 @@ class ApiResponse<T> {
   /// 是否成功
   bool get isSuccess => status == 200;
 
-  factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(dynamic)? fromJsonT,
-  ) {
+  factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(dynamic)? fromJsonT) {
     final statusRaw = json['status'];
-    final status = statusRaw is int
-        ? statusRaw
-        : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+    final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
 
     return ApiResponse(
       status: status,
@@ -58,6 +54,8 @@ class ApiProvider {
 
   /// 需要跳转登录的状态码
   static const List<int> _loginRequiredCodes = [110002, 110003, 110004];
+
+  final AppController appController = Get.find<AppController>();
 
   ApiProvider._() {
     _dio = Dio(
@@ -80,14 +78,8 @@ class ApiProvider {
   /// 初始化拦截器
   void _initInterceptors() {
     _dio.interceptors.addAll([
-      InterceptorsWrapper(
-        onRequest: _onRequest,
-        onResponse: _onResponse,
-        onError: _onError,
-      ),
-      TalkerDioLogger(
-        settings: TalkerDioLoggerSettings(printRequestHeaders: true),
-      ),
+      InterceptorsWrapper(onRequest: _onRequest, onResponse: _onResponse, onError: _onError),
+      TalkerDioLogger(settings: TalkerDioLoggerSettings(printRequestHeaders: true)),
     ]);
   }
 
@@ -241,17 +233,11 @@ class ApiProvider {
 
       // 不验证响应，直接返回
       if (noVerify) {
-        return ApiResponse<T>(
-          status: 200,
-          msg: 'success',
-          data: responseData as T?,
-        );
+        return ApiResponse<T>(status: 200, msg: 'success', data: responseData as T?);
       }
 
       final statusRaw = responseData['status'];
-      final status = statusRaw is int
-          ? statusRaw
-          : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
+      final status = statusRaw is int ? statusRaw : int.tryParse(statusRaw?.toString() ?? '') ?? 0;
       final msg = responseData['msg']?.toString() ?? '';
 
       // 需要登录
@@ -324,19 +310,12 @@ class ApiProvider {
 
   /// 跳转登录页
   void _toLogin() {
-    // 保存当前页面URL，登录成功后返回
-    // 对应 uni-app: that.$Cache.set(BACK_URL, currentUrl)
-    final currentRoute = Get.currentRoute;
-    if (currentRoute.isNotEmpty && !currentRoute.contains('/login')) {
-      Cache.setString(CacheKey.backUrl, currentRoute);
-    }
-
     // 清除登录信息
     Cache.remove(CacheKey.token);
     Cache.remove(CacheKey.userInfo);
     Cache.remove(CacheKey.uid);
 
     // 跳转登录页
-    Get.offAllNamed(AppRoutes.login);
+    Get.toNamed(AppRoutes.login);
   }
 }

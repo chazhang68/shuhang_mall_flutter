@@ -86,11 +86,7 @@ class Cache {
   }
 
   /// 设置带过期时间的缓存
-  static Future<bool> setWithExpire(
-    String key,
-    dynamic value, {
-    required Duration expire,
-  }) async {
+  static Future<bool> setWithExpire(String key, dynamic value, {required Duration expire}) async {
     final expireTime = DateTime.now().add(expire).millisecondsSinceEpoch;
     final data = {'value': value, 'expire': expireTime};
     return await prefs.setString(key, jsonEncode(data));
@@ -166,7 +162,6 @@ class CacheKey {
   static const String isDiy = 'IS_DIY';
   static const String storeInfo = 'STORE_INFO';
   static const String snsapiKey = 'SNSAPI_KEY';
-  static const String backUrl = 'BACK_URL'; // 登录后返回的URL
 
   // 记住账号
   static const String rememberedAccount = 'REMEMBERED_ACCOUNT'; // 记住的账号
