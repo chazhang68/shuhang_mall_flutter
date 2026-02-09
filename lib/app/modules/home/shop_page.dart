@@ -16,7 +16,7 @@ class ShopPage extends StatefulWidget {
   State<ShopPage> createState() => _ShopPageState();
 }
 
-class _ShopPageState extends State<ShopPage> {
+class _ShopPageState extends State<ShopPage> with AutomaticKeepAliveClientMixin {
   final PublicProvider _publicProvider = PublicProvider();
 
   List<HomeBannerItem> _banners = [];
@@ -92,6 +92,7 @@ class _ShopPageState extends State<ShopPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final bannerList = _banners
         .map(
@@ -190,4 +191,7 @@ class _ShopPageState extends State<ShopPage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

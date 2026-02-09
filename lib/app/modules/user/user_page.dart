@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -202,6 +203,11 @@ class _UserPageState extends State<UserPage>
       return;
     }
 
+    if (route == AppRoutes.userInfo) {
+      Get.toNamed(AppRoutes.userInfo)?.then((_) => _loadUserInfo());
+      return;
+    }
+
     if (route == 'shuhangshangdao') {
       // 打开外部APP - 兑换宝
       FlutterToastPro.showMessage('功能开发中');
@@ -240,31 +246,41 @@ class _UserPageState extends State<UserPage>
                   ],
                 ),
               ),
-              CustomScrollView(
-                slivers: [
-                  if (userInfo != null)
+              EasyRefresh(
+                header: const ClassicHeader(
+                  dragText: '下拉刷新',
+                  armedText: '松手刷新',
+                  processingText: '刷新中...',
+                  processedText: '刷新完成',
+                  failedText: '刷新失败',
+                ),
+                onRefresh: _loadUserInfo,
+                child: CustomScrollView(
+                  slivers: [
+                    if (userInfo != null)
+                      SliverToBoxAdapter(
+                        child: _UserHeader(
+                          isLogin: isLogin,
+                          userInfo: userInfo,
+                          onCopyCode: _copyCode,
+                        ),
+                      ),
                     SliverToBoxAdapter(
-                      child: _UserHeader(
+                      child: _OrderSection(
                         isLogin: isLogin,
                         userInfo: userInfo,
-                        onCopyCode: _copyCode,
+                        orderMenu: _orderMenu,
                       ),
                     ),
-                  SliverToBoxAdapter(
-                    child: _OrderSection(
-                      isLogin: isLogin,
-                      userInfo: userInfo,
-                      orderMenu: _orderMenu,
+                    SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+                    SliverToBoxAdapter(
+                      child: _ServiceSection(
+                        serviceMenu: _getServiceMenu(userInfo?.h5Open ?? false),
+                        onTap: _goMenuPage,
+                      ),
                     ),
-                  ),
-                  SliverToBoxAdapter(child: SizedBox(height: 16.h)),
-                  SliverToBoxAdapter(
-                    child: _ServiceSection(
-                      serviceMenu: _getServiceMenu(userInfo?.h5Open ?? false),
-                      onTap: _goMenuPage,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
