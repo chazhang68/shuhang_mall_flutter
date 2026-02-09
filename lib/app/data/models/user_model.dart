@@ -19,7 +19,7 @@ class UserModel {
   final bool isPromoter; // 是否是推广员
   final int spreadUid; // 推广人ID
   final String? spreadNickname;
-  @JsonKey(fromJson: stringToDouble)
+  @JsonKey(name: 'now_money', fromJson: stringToDouble)
   final double balance; // 余额 (now_money / 消费券)
   @JsonKey(fromJson: stringToDouble)
   final double integral; // 积分（消费券）

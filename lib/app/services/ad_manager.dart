@@ -28,13 +28,15 @@ class AdManager {
     try {
       final app = AppController.to;
       final uid = app.userInfo?.uid ?? app.uid;
+      debugPrint('📱 激励视频用户ID: uid=$uid');
       if (uid != 0) {
         return uid.toString();
       }
     } catch (e) {
-      debugPrint('⚠️ 获取当前用户ID失败，使用测试ID: $e');
+      debugPrint('⚠️ 获取当前用户ID失败: $e');
     }
-    return AdConfig.testUserId;
+    // 未登录时使用设备OAID或空字符串，不使用固定测试ID
+    return '';
   }
 
   /// 初始化广告SDK（不启动）
@@ -125,42 +127,6 @@ class AdManager {
 
   /// 预加载激励视频广告
   ///
-  /// ⚠️ 已废弃：由于广告有20分钟时效性，预加载可能导致广告过期
-  /// 建议使用实时加载（showRewardedVideoAd）以获得更好的用户体验
-  @Deprecated('使用实时加载代替预加载，避免20分钟超时问题')
-  Future<bool> preloadRewardedVideoAd() async {
-    if (!_isStarted) {
-      final started = await start();
-      if (!started) return false;
-    }
-
-    if (_isAdLoading) return false;
-
-    _isAdLoading = true;
-    final userId = _getCurrentUserId();
-    debugPrint('开始预加载激励视频广告，userId=$userId...');
-
-    try {
-      bool success = false;
-
-      ZJAndroid.loadRewardVideo(AdConfig.rewardVideoAdId, userId, (ret) {
-        if (ret.action == ZJEventAction.onAdLoaded) {
-          debugPrint('激励视频广告预加载成功');
-          success = true;
-        } else if (ret.action == ZJEventAction.onAdError) {
-          debugPrint('激励视频广告预加载失败: ${ret.msg}');
-        }
-        _isAdLoading = false;
-      }, isPreLoad: true);
-
-      return success;
-    } catch (e) {
-      _isAdLoading = false;
-      debugPrint('激励视频广告预加载失败: $e');
-      return false;
-    }
-  }
-
   /// 显示激励视频广告
   Future<bool> showRewardedVideoAd({
     Function()? onShow,

@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
+import 'package:gal/gal.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:flutter_toast_pro/flutter_toast_pro.dart';
 
 /// 消费券二维码控制器
 class CouponQrcodeController extends GetxController {
   final qrcodeData = ''.obs;
   final isLoading = true.obs;
+  final GlobalKey qrcodeKey = GlobalKey();
 
   @override
   void onInit() {
@@ -39,5 +46,30 @@ class CouponQrcodeController extends GetxController {
   void refresh() {
     isLoading.value = true;
     _loadQrcodeData();
+  }
+
+  /// 保存二维码图片到相册
+  Future<void> saveQrcode() async {
+    try {
+      final boundary = qrcodeKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        FlutterToastPro.showMessage('保存失败');
+        return;
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        FlutterToastPro.showMessage('保存失败');
+        return;
+      }
+
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      await Gal.putImageBytes(pngBytes, name: 'coupon_qrcode_${DateTime.now().millisecondsSinceEpoch}');
+      FlutterToastPro.showMessage('已保存到相册');
+    } catch (e) {
+      debugPrint('保存二维码失败: $e');
+      FlutterToastPro.showMessage('保存失败: $e');
+    }
   }
 }

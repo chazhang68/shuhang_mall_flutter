@@ -403,13 +403,14 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     debugPrint('🎯 首页广告：开始构建广告组件');
 
     final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
+    final adHeight = adWidth / 3.75; // 3.75:1 宽高比
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: ZJFeedAdWidget(
         key: ValueKey('ad_$_adKey'),
         width: adWidth,
-        height: 280, // SDK推荐高度，左右图文信息流需要足够高度渲染
+        height: adHeight,
         videoSoundEnable: false, // 静音，与广告位配置一致
         onShow: () {
           debugPrint('✅ 首页广告：信息流广告展示成功');

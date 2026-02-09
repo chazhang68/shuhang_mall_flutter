@@ -52,6 +52,7 @@ abstract class AppRoutes {
   static const String couponQrcode = '/coupon-qrcode'; // 消费券二维码
   static const String scanQrcode = '/scan-qrcode'; // 扫一扫
   static const String pointsTransfer = '/points-transfer'; // 积分转赠
+  static const String couponTransfer = '/coupon-transfer'; // 消费券互转
   static const String userSign = '/user/sign';
   static const String userSignList = '/user/sign-list';
   static const String userMoney = '/user/money';

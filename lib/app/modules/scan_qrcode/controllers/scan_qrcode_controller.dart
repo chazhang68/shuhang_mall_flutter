@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 
 /// 扫一扫控制器
@@ -46,7 +47,7 @@ class ScanQrcodeController extends GetxController {
 
     // 根据二维码前缀判断跳转
     if (code.startsWith('COUPON:')) {
-      // 消费券二维码，格式：COUPON:13800138000
+      // 消费券二维码，格式：COUPON:手机号
       final phone = code.replaceFirst('COUPON:', '');
       _handleCouponQrcode(phone);
     } else {
@@ -60,7 +61,6 @@ class ScanQrcodeController extends GetxController {
 
   /// 处理消费券二维码
   void _handleCouponQrcode(String phone) {
-    // 验证手机号格式
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
       EasyLoading.showError('二维码无效');
       Future.delayed(const Duration(seconds: 1), () {
@@ -69,10 +69,10 @@ class ScanQrcodeController extends GetxController {
       return;
     }
 
-    // 跳转到积分转赠页面，并传递手机号
+    // 跳转到消费券互转页面，并传递手机号
     Get.back(); // 关闭扫码页面
     Get.toNamed(
-      AppRoutes.pointsTransfer,
+      AppRoutes.couponTransfer,
       arguments: {'phone': phone},
     );
   }
@@ -85,6 +85,25 @@ class ScanQrcodeController extends GetxController {
   /// 切换摄像头
   void switchCamera() {
     scannerController.switchCamera();
+  }
+
+  /// 从相册选择图片识别二维码
+  Future<void> pickFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      final result = await scannerController.analyzeImage(image.path);
+      if (result != null && result.barcodes.isNotEmpty) {
+        onDetect(result);
+      } else {
+        EasyLoading.showError('未识别到二维码');
+      }
+    } catch (e) {
+      debugPrint('从相册识别二维码失败: $e');
+      EasyLoading.showError('识别失败');
+    }
   }
 
   /// 重新扫描

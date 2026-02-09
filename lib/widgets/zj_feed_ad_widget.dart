@@ -78,27 +78,23 @@ class _ZJFeedAdWidgetState extends State<ZJFeedAdWidget> {
       return SizedBox(width: widget.width, height: adHeight);
     }
 
-    // SDK示例推荐使用整数值
-    final adWidth = widget.width.roundToDouble();
+    // 宽高比 3.75:1
+    final adWidth = widget.width;
     final adHeight = (widget.height == null || widget.height == 0)
-        ? (widget.width / 3.75).roundToDouble()
-        : widget.height!.roundToDouble();
+        ? widget.width / 3.75
+        : widget.height!;
 
     debugPrint(
       '📐 ZJFeedAdWidget: width=$adWidth, height=$adHeight, adId=${AdConfig.feedAdId}',
     );
 
     try {
-      return SizedBox(
+      return ZJNativeExpressView(
+        AdConfig.feedAdId,
         width: adWidth,
         height: adHeight,
-        child: ZJNativeExpressView(
-          AdConfig.feedAdId,
-          width: adWidth,
-          height: adHeight,
-          videoSoundEnable: widget.videoSoundEnable,
-          nativeExpressListener: _handleAdEvent,
-        ),
+        videoSoundEnable: widget.videoSoundEnable,
+        nativeExpressListener: _handleAdEvent,
       );
     } catch (e) {
       debugPrint('⚠️ ZJFeedAdWidget: 创建广告组件异常 - $e');

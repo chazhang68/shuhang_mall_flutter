@@ -66,6 +66,8 @@ import 'package:shuhang_mall_flutter/app/modules/coupon_qrcode/bindings/coupon_q
 import 'package:shuhang_mall_flutter/app/modules/coupon_qrcode/views/coupon_qrcode_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/points_transfer/bindings/points_transfer_binding.dart';
 import 'package:shuhang_mall_flutter/app/modules/points_transfer/views/points_transfer_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/coupon_transfer/bindings/coupon_transfer_binding.dart';
+import 'package:shuhang_mall_flutter/app/modules/coupon_transfer/views/coupon_transfer_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/scan_qrcode/bindings/scan_qrcode_binding.dart';
 import 'package:shuhang_mall_flutter/app/modules/scan_qrcode/views/scan_qrcode_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/news/news_list_page.dart';
@@ -339,6 +341,14 @@ class AppPages {
       name: AppRoutes.pointsTransfer,
       page: () => const PointsTransferPage(),
       binding: PointsTransferBinding(),
+      transition: Transition.rightToLeft,
+    ),
+
+    // ==================== 消费券互转 ====================
+    GetPage(
+      name: AppRoutes.couponTransfer,
+      page: () => const CouponTransferPage(),
+      binding: CouponTransferBinding(),
       transition: Transition.rightToLeft,
     ),
 

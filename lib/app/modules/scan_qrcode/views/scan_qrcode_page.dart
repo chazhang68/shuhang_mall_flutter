@@ -16,6 +16,13 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: controller.pickFromGallery,
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: '相册',
+          ),
+        ],
       ),
       body: Stack(
         children: [

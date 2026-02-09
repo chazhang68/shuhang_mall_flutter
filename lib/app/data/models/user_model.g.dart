@@ -20,7 +20,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       : _intToBool(json['is_promoter']),
   spreadUid: (json['spread_uid'] as num?)?.toInt() ?? 0,
   spreadNickname: json['spread_nickname'] as String?,
-  balance: json['balance'] == null ? 0 : stringToDouble(json['balance']),
+  balance: json['now_money'] == null ? 0 : stringToDouble(json['now_money']),
   integral: json['integral'] == null ? 0 : stringToDouble(json['integral']),
   brokeragePrice: json['brokerage_price'] == null
       ? 0
@@ -77,7 +77,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'is_promoter': _boolToInt(instance.isPromoter),
   'spread_uid': instance.spreadUid,
   'spread_nickname': instance.spreadNickname,
-  'balance': instance.balance,
+  'now_money': instance.balance,
   'integral': instance.integral,
   'brokerage_price': instance.brokeragePrice,
   'fudou': instance.fudou,
