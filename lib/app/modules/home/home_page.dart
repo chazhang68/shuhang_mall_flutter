@@ -39,6 +39,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   bool _loadEnd = false;
   bool _loadingMore = false;
   bool _showAd = true; // 控制广告显示，关闭后隐藏
+  int _adKey = 0; // 广告组件key，刷新时递增以重建广告组件
 
   @override
   bool get wantKeepAlive => true;
@@ -117,6 +118,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   Future<void> _onRefresh() async {
     _page = 1;
     _loadEnd = false;
+    _showAd = true;
+    _adKey++;
     _hotList.clear();
     await _loadIndexData();
   }
@@ -252,8 +255,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                   ),
 
                   // 广告位 - 对应uni-app的APP-PLUS广告组件
-                  // 广告关闭后隐藏，不占用空间
-                  if (_showAd) SliverToBoxAdapter(child: _buildAdView()),
+                  // 数据加载完成后才显示广告，避免Skeletonizer干扰原生广告视图
+                  if (_showAd && !_isLoading) SliverToBoxAdapter(child: _buildAdView()),
 
                   // 搜索栏
                   SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
@@ -395,35 +398,30 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     );
   }
 
-  /// 广告位 - ZJSDK信息流广告
+  /// 广告位 - ZJSDK信息流广告（左右图文-静音）
   Widget _buildAdView() {
     debugPrint('🎯 首页广告：开始构建广告组件');
 
-    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐）
     final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
-    final adHeight = adWidth / 3.75;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 左右间距12dp，上下8dp
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: ZJFeedAdWidget(
+        key: ValueKey('ad_$_adKey'),
         width: adWidth,
-        height: adHeight,
-        // 设置明确的高度
-        videoSoundEnable: false,
-        // 静音，与uni-app一致
+        height: 280, // SDK推荐高度，左右图文信息流需要足够高度渲染
+        videoSoundEnable: false, // 静音，与广告位配置一致
         onShow: () {
           debugPrint('✅ 首页广告：信息流广告展示成功');
         },
         onClose: () {
           debugPrint('❌ 首页广告：信息流广告关闭');
-          // 广告关闭后隐藏，不占用空间
           setState(() {
             _showAd = false;
           });
         },
         onError: (error) {
           debugPrint('⚠️ 首页广告：信息流广告错误 - $error');
-          // 广告加载失败也隐藏
           setState(() {
             _showAd = false;
           });

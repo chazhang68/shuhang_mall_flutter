@@ -13,6 +13,13 @@ class CartStore {
 
   final OrderProvider _orderProvider = OrderProvider();
 
+  /// 同步购物车数量到 AppController（更新 TabBar 角标）
+  void _syncCartNum() {
+    final controller = Get.find<AppController>();
+    final count = items.value.fold(0, (sum, item) => sum + item.cartNum);
+    controller.updateCartNum(count);
+  }
+
   /// 是否加载中
   final Signal<bool> isLoading = signal(false);
 
@@ -46,6 +53,7 @@ class CartStore {
     if (!controller.isLogin) {
       items.value = <CartItem>[];
       selectedIds.value = <int>{};
+      _syncCartNum();
       return;
     }
 
@@ -58,6 +66,7 @@ class CartStore {
         final list = response.data!.valid;
         items.value = list;
         selectedIds.value = list.map((e) => e.id).toSet();
+        _syncCartNum();
       } else {
         FlutterToastPro.showMessage( response.msg);
       }
@@ -94,6 +103,7 @@ class CartStore {
         items.value = items.value
             .map((e) => e.id == item.id ? e.copyWith(cartNum: newNum) : e)
             .toList();
+        _syncCartNum();
       } else {
         FlutterToastPro.showMessage( response.msg);
       }

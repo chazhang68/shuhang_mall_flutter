@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:zjsdk_android/zj_android.dart';
 import 'package:zjsdk_android/zj_custom_controller.dart';
@@ -88,6 +89,8 @@ class AdManager {
     try {
       debugPrint('🚀 启动ZJSDK广告SDK...');
 
+      final completer = Completer<bool>();
+
       ZJAndroid.start(
         onStartListener: (ret) {
           debugPrint('📢 ZJSDK启动回调: action=${ret.action}, msg=${ret.msg}');
@@ -95,16 +98,25 @@ class AdManager {
           if (ret.action == ZJEventAction.startSuccess) {
             debugPrint('✅ ZJSDK SDK启动成功');
             _isStarted = true;
+            if (!completer.isCompleted) completer.complete(true);
           } else {
             debugPrint('⚠️ ZJSDK SDK启动失败: ${ret.msg}');
+            if (!completer.isCompleted) completer.complete(false);
           }
         },
       );
 
-      // Android 启动是异步的，等待一段时间确保启动完成
-      await Future.delayed(const Duration(milliseconds: 800));
-      debugPrint('⏰ ZJSDK启动等待完成，当前状态: $_isStarted');
-      return true;
+      // 等待回调，最多等3秒
+      final result = await completer.future.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint('⏰ ZJSDK启动超时（3秒），当前状态: $_isStarted');
+          return _isStarted;
+        },
+      );
+
+      debugPrint('⏰ ZJSDK启动完成，结果: $result, 当前状态: $_isStarted');
+      return result;
     } catch (e) {
       debugPrint('❌ ZJSDK广告SDK启动异常: $e');
       return false;

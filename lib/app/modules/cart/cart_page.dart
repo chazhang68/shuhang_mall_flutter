@@ -5,8 +5,11 @@ import 'package:signals/signals_flutter.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/controllers/cart_store.dart';
 import 'package:shuhang_mall_flutter/app/data/models/cart_model.dart';
+import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
 
 /// 购物车页面
 /// 对应原 pages/order_addcart/order_addcart.vue
@@ -219,11 +222,42 @@ class _CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin 
   }
 }
 
-class _CartEmptyView extends StatelessWidget {
+class _CartEmptyView extends StatefulWidget {
   const _CartEmptyView({required this.themeColor, required this.onBrowse});
 
   final ThemeColorData themeColor;
   final VoidCallback onBrowse;
+
+  @override
+  State<_CartEmptyView> createState() => _CartEmptyViewState();
+}
+
+class _CartEmptyViewState extends State<_CartEmptyView> {
+  final PublicProvider _publicProvider = PublicProvider();
+  List<HomeHotProduct> _hotProducts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHotProducts();
+  }
+
+  Future<void> _loadHotProducts() async {
+    try {
+      final response = await _publicProvider.getHomeProductsByType(1, {
+        'page': 1,
+        'limit': 20,
+      });
+      if (response.isSuccess && response.data != null) {
+        final list = response.data ?? <HomeHotProduct>[];
+        if (list.isNotEmpty) {
+          setState(() {
+            _hotProducts = list;
+          });
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +278,7 @@ class _CartEmptyView extends StatelessWidget {
           const Text('暂无商品', style: TextStyle(fontSize: 13, color: Color(0xFFAAAAAA))),
           const SizedBox(height: 40),
           // 热门推荐区域
-          _buildHotRecommend(themeColor),
+          _buildHotRecommend(widget.themeColor),
         ],
       ),
     );
@@ -268,8 +302,37 @@ class _CartEmptyView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          // 这里可以添加热门商品列表
-          const Text('暂无推荐商品', style: TextStyle(fontSize: 12, color: Color(0xFF999999))),
+          // 热门商品网格列表
+          if (_hotProducts.isEmpty)
+            const Text('暂无推荐商品', style: TextStyle(fontSize: 12, color: Color(0xFF999999)))
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.68,
+              ),
+              itemCount: _hotProducts.length,
+              itemBuilder: (context, index) {
+                final product = _hotProducts[index];
+                return HomeProductCard(
+                  product: product,
+                  onTap: () {
+                    if (product.id > 0) {
+                      Future.microtask(() {
+                        Get.toNamed(
+                          AppRoutes.goodsDetail,
+                          arguments: {'id': product.id},
+                        );
+                      });
+                    }
+                  },
+                );
+              },
+            ),
         ],
       ),
     );
