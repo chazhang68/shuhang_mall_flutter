@@ -39,10 +39,6 @@ dependencies:
 
   # 二维码扫描
   mobile_scanner: ^7.1.4
-
-  # WebSocket
-  web_socket_channel: ^3.0.3
-
   # 图片选择
   image_picker: ^1.2.1
 
@@ -54,9 +50,6 @@ dependencies:
 
   # 权限管理
   permission_handler: ^12.0.1
-
-  # 加载动画
-  flutter_spinkit: ^5.2.2
 
   # 日志
   logger: ^2.6.2
@@ -73,26 +66,8 @@ dependencies:
   # 徽章
   badges: ^3.1.2
 
-  # 骨架屏
-  shimmer: ^3.0.0
-
-  # 评分星级
-  flutter_rating_bar: ^4.0.1
-
-  # 滑动面板
-  sliding_up_panel: ^2.0.0+1
-
-  # 分页视图
-  infinite_scroll_pagination: ^5.1.1
-
   # 图片预览
   photo_view: ^0.15.0
-
-  # 水平日历
-  table_calendar: ^3.2.0
-
-  # 剪切板
-  clipboard: ^3.0.14
 
   # URL启动
   url_launcher: ^6.3.2
@@ -124,6 +99,7 @@ dependencies:
   chat_context_menu: ^1.7.0
   just_audio: ^0.10.5
   animated_bottom_navigation_bar: ^1.4.0
+  skeletonizer: ^2.1.2
 
 dev_dependencies:
   flutter_test:

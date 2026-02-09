@@ -1,5 +1,6 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,7 +11,9 @@ import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
 import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
+import 'package:shuhang_mall_flutter/widgets/skeleton_widget.dart';
 import 'package:shuhang_mall_flutter/widgets/zj_feed_ad_widget.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 /// 首页
 /// 对应原 pages/index/index.vue
@@ -142,201 +145,161 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         final themeColor = controller.themeColor;
         return Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : EasyRefresh(
-                  header: const ClassicHeader(
-                    dragText: '下拉刷新',
-                    armedText: '松手刷新',
-                    processingText: '刷新中...',
-                    processedText: '刷新完成',
-                    failedText: '刷新失败',
-                  ),
-                  onRefresh: _onRefresh,
-                  onLoad: _loadMoreProducts,
-                  child: CustomScrollView(
-                    slivers: [
-                      // 顶部Logo
-                      SliverToBoxAdapter(child: _buildHeader()),
+          appBar: AppBar(
+            title: Image.asset(
+              'assets/images/logos.png',
+              width: 120,
+              height: 48,
+              fit: BoxFit.contain,
+            ),
+            toolbarHeight: 54,
+            centerTitle: false,
+          ),
+          body: Skeletonizer(
+            enabled: _isLoading,
+            containersColor: Colors.white,
+            child: EasyRefresh(
+              header: const ClassicHeader(
+                dragText: '下拉刷新',
+                armedText: '松手刷新',
+                processingText: '刷新中...',
+                processedText: '刷新完成',
+                failedText: '刷新失败',
+              ),
+              footer: ClassicFooter(
+                processedText: '我也是有底线的',
+                dragText: '上拉加载',
+                armedText: '松手刷新',
+                processingText: '加载中...',
+                failedText: '加载失败失败',
+              ),
+              onRefresh: _onRefresh,
+              onLoad: _loadEnd ? null : _loadMoreProducts,
+              child: CustomScrollView(
+                cacheExtent: size.height * 3,
+                slivers: [
+                  // 轮播图
+                  SliverToBoxAdapter(child: _buildBanner(size)),
 
-                      // 轮播图
-                      SliverToBoxAdapter(child: _buildBanner()),
-
-                      // 公告
-                      SliverToBoxAdapter(
-                        child: Visibility(
-                          visible: _notes.isNotEmpty,
-                          child: Container(
-                            width: size.width,
-                            height: 32,
-                            margin: const EdgeInsets.symmetric(horizontal: 12),
-                            padding: .only(left: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            alignment: .center,
-                            child: Row(
-                              crossAxisAlignment: .center,
-                              children: [
-                                // 左侧公告图标和文字
-                                Image.asset(
-                                  'assets/images/icon_notice.png',
-                                  width: 24,
-                                  height: 24,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.campaign,
-                                      color: themeColor.primary,
-                                      size: 24,
-                                    );
-                                  },
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  '公告',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF333333),
-                                    fontWeight: .bold,
-                                    fontStyle: .italic,
-                                  ),
-                                ),
-                                // 分隔线
-                                Container(
-                                  width: 1.5,
-                                  height: 16,
-                                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                                  color: const Color(0xFFDDDDDD),
-                                ),
-                                // 公告内容 - 点击跳转详情
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: _goNotice,
-                                    child: Marquee(
-                                      text: _notes,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF666666),
-                                      ),
-                                      scrollAxis: Axis.horizontal,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      blankSpace: 100.0,
-                                      velocity: 100.0,
-                                      pauseAfterRound: Duration(seconds: 1),
-                                      startPadding: 0,
-                                      accelerationDuration: Duration(seconds: 1),
-                                      accelerationCurve: Curves.linear,
-                                      decelerationDuration: Duration(milliseconds: 500),
-                                      decelerationCurve: Curves.easeOut,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                  // 公告
+                  SliverToBoxAdapter(
+                    child: Visibility(
+                      visible: _notes.isNotEmpty,
+                      replacement: SkeletonWidget(backgroundColor: Colors.white),
+                      child: Container(
+                        width: size.width,
+                        height: 32,
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: .only(left: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      ),
-
-                      // 广告位 - 对应uni-app的APP-PLUS广告组件
-                      // 广告关闭后隐藏，不占用空间
-                      if (_showAd) SliverToBoxAdapter(child: _buildAdView()),
-
-                      // 搜索栏
-                      SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
-
-                      // 商品列表
-                      _hotList.isEmpty
-                          ? const SliverToBoxAdapter(
-                              child: Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: Text('暂无商品', style: TextStyle(color: Color(0xFF999999))),
-                                ),
+                        alignment: .center,
+                        child: Row(
+                          crossAxisAlignment: .center,
+                          children: [
+                            // 左侧公告图标和文字
+                            Image.asset(
+                              'assets/images/icon_notice.png',
+                              width: 24,
+                              height: 24,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(Icons.campaign, color: themeColor.primary, size: 24);
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '公告',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF333333),
+                                fontWeight: .bold,
+                                fontStyle: .italic,
                               ),
-                            )
-                          : SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              sliver: SliverGrid(
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                  // 宽高比调整：图片169px + 文字区域约70px = 239px
-                                  // 宽度约170px，比例 170/239 ≈ 0.71
-                                  childAspectRatio: 0.68,
-                                ),
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) => HomeProductCard(
-                                    product: _hotList[index],
-                                    onTap: () => _goGoodsDetail(_hotList[index].id),
-                                  ),
-                                  childCount: _hotList.length,
+                            ),
+                            // 分隔线
+                            Container(
+                              width: 1.5,
+                              height: 16,
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              color: const Color(0xFFDDDDDD),
+                            ),
+                            // 公告内容 - 点击跳转详情
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _goNotice,
+                                child: Marquee(
+                                  text: _notes,
+                                  style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
+                                  scrollAxis: Axis.horizontal,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  blankSpace: 100.0,
+                                  velocity: 100.0,
+                                  pauseAfterRound: Duration(seconds: 1),
+                                  startPadding: 0,
+                                  accelerationDuration: Duration(seconds: 1),
+                                  accelerationCurve: Curves.linear,
+                                  decelerationDuration: Duration(milliseconds: 500),
+                                  decelerationCurve: Curves.easeOut,
                                 ),
                               ),
                             ),
-
-                      // 加载更多提示
-                      SliverToBoxAdapter(
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          alignment: Alignment.center,
-                          child: Text(
-                            _loadEnd ? '我也是有底线的' : (_loadingMore ? '加载中...' : ''),
-                            style: const TextStyle(color: Color(0xFF999999), fontSize: 12),
-                          ),
+                          ],
                         ),
                       ),
-
-                      // 底部留白
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // 广告位 - 对应uni-app的APP-PLUS广告组件
+                  // 广告关闭后隐藏，不占用空间
+                  if (_showAd) SliverToBoxAdapter(child: _buildAdView()),
+
+                  // 搜索栏
+                  SliverToBoxAdapter(child: _buildSearchBar(themeColor)),
+
+                  // 商品列表
+                  _hotList.isEmpty
+                      ? const SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40),
+                              child: Text('暂无商品', style: TextStyle(color: Color(0xFF999999))),
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              // 宽高比调整：图片169px + 文字区域约70px = 239px
+                              // 宽度约170px，比例 170/239 ≈ 0.71
+                              childAspectRatio: 0.68,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => HomeProductCard(
+                                product: _hotList[index],
+                                onTap: () => _goGoodsDetail(_hotList[index].id),
+                              ),
+                              childCount: _hotList.length,
+                            ),
+                          ),
+                        ),
+                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
   }
 
-  /// 顶部Logo
-  Widget _buildHeader() {
-    return Container(
-      color: Colors.white,
-      alignment: Alignment.centerLeft,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        left: 8,
-        right: 8,
-        bottom: 4,
-      ),
-      child: Image.asset(
-        'assets/images/logos.png',
-        width: 120,
-        height: 48,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const SizedBox(
-            width: 120,
-            height: 48,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '数航商道',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE93323),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   /// 轮播图
-  Widget _buildBanner() {
+  Widget _buildBanner(Size size) {
     if (_banners.isEmpty) {
       return Container(
         margin: const EdgeInsets.all(12),
@@ -375,16 +338,12 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               child: CachedNetworkImage(
                 imageUrl: imgUrl,
                 width: double.infinity,
+                memCacheWidth: size.width.toInt(),
+                memCacheHeight: 188,
                 height: 188,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                ),
+                placeholder: (context, url) => Container(color: Colors.grey[200]),
+                errorWidget: (context, url, error) => Container(color: Colors.grey[200]),
               ),
             ),
           );
@@ -440,14 +399,18 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   Widget _buildAdView() {
     debugPrint('🎯 首页广告：开始构建广告组件');
 
-    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐），使用屏幕全宽
-    final adWidth = MediaQuery.of(context).size.width;
+    // 计算广告高度：按照 3.75 : 1 的宽高比（SDK 推荐）
+    final adWidth = MediaQuery.of(context).size.width - 24; // 左右各12dp间距
     final adHeight = adWidth / 3.75;
 
-    return ZJFeedAdWidget(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 左右间距12dp，上下8dp
+      child: ZJFeedAdWidget(
         width: adWidth,
         height: adHeight,
-        videoSoundEnable: false, // 静音，与uni-app一致
+        // 设置明确的高度
+        videoSoundEnable: false,
+        // 静音，与uni-app一致
         onShow: () {
           debugPrint('✅ 首页广告：信息流广告展示成功');
         },
@@ -465,6 +428,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
             _showAd = false;
           });
         },
+      ),
     );
   }
 }

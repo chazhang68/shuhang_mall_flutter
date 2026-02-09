@@ -93,13 +93,16 @@ class MyApp extends StatelessWidget {
 
           // 动态主题（响应式）
           builder: (context, child) {
-            return GetBuilder<AppController>(
-              builder: (controller) {
-                return Theme(
-                  data: AppTheme.getTheme(controller.themeColor),
-                  child: FlutterEasyLoading(child: child),
-                );
-              },
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1)),
+              child: GetBuilder<AppController>(
+                builder: (controller) {
+                  return Theme(
+                    data: AppTheme.getTheme(controller.themeColor),
+                    child: FlutterEasyLoading(child: child),
+                  );
+                },
+              ),
             );
           },
 
