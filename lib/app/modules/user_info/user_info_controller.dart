@@ -6,6 +6,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../data/providers/user_provider.dart';
 import '../../data/providers/public_provider.dart';
 import '../../data/models/user_model.dart';
+import '../../controllers/app_controller.dart';
 
 /// 个人信息控制器
 /// 对应原 pages/users/user_info/index.vue
@@ -163,6 +164,11 @@ class UserInfoController extends GetxController {
         EasyLoading.showSuccess(response.msg.isNotEmpty ? response.msg : '保存成功');
         // 重新获取用户信息以更新本地缓存
         await getUserInfo();
+        // 同步到全局状态
+        if (_userInfo.value != null) {
+          final controller = Get.find<AppController>();
+          await controller.updateUserInfo(_userInfo.value!);
+        }
         return true;
       } else {
         EasyLoading.showError(response.msg.isNotEmpty ? response.msg : '保存失败');

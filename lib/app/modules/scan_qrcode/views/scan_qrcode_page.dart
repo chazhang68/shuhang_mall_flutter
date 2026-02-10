@@ -28,17 +28,44 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
             onDetect: controller.onDetect,
           ),
 
-          // 扫描框
-          Center(
-            child: Container(
+          // 半透明遮罩 + 扫描框
+          _ScanOverlay(scanSize: 250),
+
+          // 扫描线动画
+          const Center(
+            child: SizedBox(
               width: 250,
               height: 250,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
+              child: _ScanLineAnimation(),
+            ),
+          ),
+
+          // 扫描框四角装饰
+          Center(
+            child: SizedBox(
+              width: 250,
+              height: 250,
+              child: CustomPaint(
+                painter: _CornerPainter(
+                  color: const Color(0xFF00C853),
+                  cornerLength: 20,
+                  cornerWidth: 3,
                 ),
-                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          // 提示文字
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2 + 145,
+            left: 0,
+            right: 0,
+            child: const Text(
+              '将二维码放入框内，即可自动扫描',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
               ),
             ),
           ),
@@ -50,9 +77,9 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
             right: 0,
             child: GestureDetector(
               onTap: controller.toggleTorch,
-              child: Column(
+              child: const Column(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(
                     Icons.flashlight_on_outlined,
                     color: Colors.white,
@@ -166,4 +193,194 @@ class ScanQrcodePage extends GetView<ScanQrcodeController> {
       ),
     );
   }
+}
+
+/// 半透明遮罩，中间扫描框区域透明
+class _ScanOverlay extends StatelessWidget {
+  final double scanSize;
+
+  const _ScanOverlay({required this.scanSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: MediaQuery.sizeOf(context),
+      painter: _OverlayPainter(scanSize: scanSize),
+    );
+  }
+}
+
+class _OverlayPainter extends CustomPainter {
+  final double scanSize;
+
+  _OverlayPainter({required this.scanSize});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.black.withAlpha(140);
+    final scanRect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: scanSize,
+      height: scanSize,
+    );
+
+    // 绘制四周遮罩
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
+        Path()..addRRect(RRect.fromRectAndRadius(scanRect, const Radius.circular(12))),
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// 扫描框四角装饰
+class _CornerPainter extends CustomPainter {
+  final Color color;
+  final double cornerLength;
+  final double cornerWidth;
+
+  _CornerPainter({
+    required this.color,
+    required this.cornerLength,
+    required this.cornerWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = cornerWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final w = size.width;
+    final h = size.height;
+    final cl = cornerLength;
+
+    // 左上角
+    canvas.drawLine(const Offset(0, 0), Offset(cl, 0), paint);
+    canvas.drawLine(const Offset(0, 0), Offset(0, cl), paint);
+
+    // 右上角
+    canvas.drawLine(Offset(w, 0), Offset(w - cl, 0), paint);
+    canvas.drawLine(Offset(w, 0), Offset(w, cl), paint);
+
+    // 左下角
+    canvas.drawLine(Offset(0, h), Offset(cl, h), paint);
+    canvas.drawLine(Offset(0, h), Offset(0, h - cl), paint);
+
+    // 右下角
+    canvas.drawLine(Offset(w, h), Offset(w - cl, h), paint);
+    canvas.drawLine(Offset(w, h), Offset(w, h - cl), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// 微信风格扫描线动画
+class _ScanLineAnimation extends StatefulWidget {
+  const _ScanLineAnimation();
+
+  @override
+  State<_ScanLineAnimation> createState() => _ScanLineAnimationState();
+}
+
+class _ScanLineAnimationState extends State<_ScanLineAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _controller.repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _ScanLinePainter(progress: _animation.value),
+          size: Size.infinite,
+        );
+      },
+    );
+  }
+}
+
+/// 扫描线绘制器 - 带渐变光效
+class _ScanLinePainter extends CustomPainter {
+  final double progress;
+
+  _ScanLinePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height * progress;
+    final lineWidth = size.width - 20;
+    final startX = 10.0;
+
+    // 绘制扫描线的光晕效果
+    final glowPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0x0000C853),
+          const Color(0x3300C853),
+          const Color(0x8800C853),
+          const Color(0x3300C853),
+          const Color(0x0000C853),
+        ],
+        stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+      ).createShader(Rect.fromLTWH(startX, y - 20, lineWidth, 40));
+
+    canvas.drawRect(
+      Rect.fromLTWH(startX, y - 20, lineWidth, 40),
+      glowPaint,
+    );
+
+    // 绘制扫描线本身
+    final linePaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0x0000C853),
+          const Color(0xFF00C853),
+          const Color(0xFF00C853),
+          const Color(0x0000C853),
+        ],
+        stops: const [0.0, 0.2, 0.8, 1.0],
+      ).createShader(Rect.fromLTWH(startX, y, lineWidth, 2));
+
+    canvas.drawRect(
+      Rect.fromLTWH(startX, y - 1, lineWidth, 2),
+      linePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanLinePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

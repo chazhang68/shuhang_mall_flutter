@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +25,7 @@ class _UserPageState extends State<UserPage>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final UserProvider _userProvider = UserProvider();
   bool _isLoading = false;
+  List<_ServiceMenuItem> _serviceMenuList = [];
 
   @override
   void initState() {
@@ -67,13 +70,23 @@ class _UserPageState extends State<UserPage>
         await controller.updateUserInfo(response.data!);
       }
 
-      // 调用获取用户中心菜单接口并打印结果
+      // 调用获取用户中心菜单接口，参考uni-app实现
       final menuResponse = await _userProvider.getMenuList();
-      debugPrint('========== 用户中心菜单配置 ==========');
-      debugPrint('接口状态: ${menuResponse.isSuccess}');
-      debugPrint('接口消息: ${menuResponse.msg}');
-      debugPrint('菜单数据: ${menuResponse.data}');
-      debugPrint('====================================');
+      if (menuResponse.isSuccess && menuResponse.data != null) {
+        final menuData = menuResponse.data;
+        final List routineMenus = menuData['routine_my_menus'] ?? [];
+        final list = <_ServiceMenuItem>[];
+        for (final item in routineMenus) {
+          final name = item['name'] as String? ?? '';
+          final url = item['url'] as String? ?? '';
+          list.add(_ServiceMenuItem(title: name, url: url));
+        }
+        if (mounted) {
+          setState(() {
+            _serviceMenuList = list;
+          });
+        }
+      }
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
     } finally {
@@ -119,61 +132,71 @@ class _UserPageState extends State<UserPage>
     ),
   ];
 
-  // 我的服务菜单数据
-  List<_ServiceMenuItem> _getServiceMenu(bool h5Open) {
-    return [
-      _ServiceMenuItem(
-        icon: 'assets/images/shanggong.png',
-        title: '兑换宝',
-        route: 'shuhangshangdao',
-        show: h5Open,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/shimingrenzheng.png',
-        title: '实名认证',
-        route: AppRoutes.realName,
-        show: true,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/tuandui3@2x.png',
-        title: '我的好友',
-        // route: AppRoutes.teams,
-        route: '',
-        show: true,
-      ),
-      _ServiceMenuItem(
-        icon: 'assets/images/shangjiaruzhu.png',
-        title: '申请入驻',
-        route:
-            '${AppRoutes.webView}?url=aHR0cHM6Ly9jYy5zaHNkLnRvcC9tZXJjaGFudC8jL3BhZ2VzL21lcmNoYW50L2FwcGx5',
-        show: true,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/tuandui3@2x.png',
-        title: '邀请好友',
-        route: AppRoutes.spreadCode,
-        show: true,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/ditu3@2x.png',
-        title: '地址管理',
-        route: AppRoutes.addressList,
-        show: true,
-      ),
+  // uni-app页面路径 → Flutter路由 映射表
+  static const Map<String, String> _urlRouteMap = {
+    '/pages/sign/sign': AppRoutes.realName,
+    '/pages/users/teams/teams': AppRoutes.teams,
+    '/pages/users/user_spread_code/index': AppRoutes.spreadCode,
+    '/pages/users/user_address_list/index': AppRoutes.addressList,
+    '/pages/user_suggest/index': AppRoutes.feedback,
+    '/pages/users/user_info/index': AppRoutes.userInfo,
+  };
 
-      const _ServiceMenuItem(
-        icon: 'assets/images/yijianfankui-2@2x.png',
-        title: '意见反馈',
-        route: AppRoutes.feedback,
-        show: true,
-      ),
-      const _ServiceMenuItem(
-        icon: 'assets/images/my-card.png',
-        title: '我的信息',
-        route: AppRoutes.userInfo,
-        show: true,
-      ),
-    ].where((item) => item.show).toList();
+  /// 参考uni-app goMenuPage逻辑：
+  /// 1. url为空 → 不跳转
+  /// 2. url == 'shuhangshangdao' → 打开外部APP
+  /// 3. url包含http → webview打开
+  /// 4. 其他 → 通过映射表跳转Flutter路由
+  void _goMenuPage(String url, String? title) {
+    if (url.isEmpty) return;
+
+    final controller = Get.find<AppController>();
+    if (!controller.isLogin) {
+      Get.toNamed(AppRoutes.login);
+      return;
+    }
+
+    // 兑换宝 - 打开外部APP
+    if (url == 'shuhangshangdao') {
+      FlutterToastPro.showMessage('功能开发中');
+      return;
+    }
+
+    // 包含http的URL用webview打开
+    if (url.contains('http')) {
+      final encodedUrl = base64.encode(utf8.encode(url));
+      Get.toNamed('${AppRoutes.webView}?url=$encodedUrl');
+      return;
+    }
+
+    // uni-app webview格式: /pages/webview/webview?url=xxx
+    if (url.contains('/pages/webview/webview') || url.contains('/pages/annex/web_view')) {
+      final uri = Uri.tryParse(url);
+      final encodedUrl = uri?.queryParameters['url'] ?? '';
+      if (encodedUrl.isNotEmpty) {
+        Get.toNamed('${AppRoutes.webView}?url=$encodedUrl');
+      }
+      return;
+    }
+
+    // 通过映射表查找Flutter路由
+    final route = _urlRouteMap[url];
+    if (route != null) {
+      // 实名认证特殊处理
+      if (route == AppRoutes.realName) {
+        final isSigned = controller.userInfo?.isSign == true;
+        if (isSigned) {
+          FlutterToastPro.showMessage('已实名');
+          return;
+        }
+      }
+      // 我的信息返回后刷新
+      if (route == AppRoutes.userInfo) {
+        Get.toNamed(route)?.then((_) => _loadUserInfo());
+        return;
+      }
+      Get.toNamed(route);
+    }
   }
 
   @override
@@ -183,38 +206,6 @@ class _UserPageState extends State<UserPage>
   void _copyCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
     FlutterToastPro.showMessage('邀请码已复制');
-  }
-
-  // 跳转到菜单页面
-  void _goMenuPage(String route, String? title) {
-    final controller = Get.find<AppController>();
-    if (!controller.isLogin) {
-      Get.toNamed(AppRoutes.login);
-      return;
-    }
-
-    if (route == AppRoutes.realName) {
-      final isSigned = controller.userInfo?.isSign == true;
-      if (isSigned) {
-        FlutterToastPro.showMessage('已实名');
-        return;
-      }
-      Get.toNamed(AppRoutes.realName);
-      return;
-    }
-
-    if (route == AppRoutes.userInfo) {
-      Get.toNamed(AppRoutes.userInfo)?.then((_) => _loadUserInfo());
-      return;
-    }
-
-    if (route == 'shuhangshangdao') {
-      // 打开外部APP - 兑换宝
-      FlutterToastPro.showMessage('功能开发中');
-      return;
-    }
-
-    Get.toNamed(route);
   }
 
   @override
@@ -275,7 +266,7 @@ class _UserPageState extends State<UserPage>
                     SliverToBoxAdapter(child: SizedBox(height: 16.h)),
                     SliverToBoxAdapter(
                       child: _ServiceSection(
-                        serviceMenu: _getServiceMenu(userInfo?.h5Open ?? false),
+                        serviceMenu: _serviceMenuList,
                         onTap: _goMenuPage,
                       ),
                     ),
@@ -326,7 +317,7 @@ class _UserHeader extends StatelessWidget {
                       GestureDetector(
                         onTap: () => Get.toNamed(AppRoutes.scanQrcode),
                         child: Image.asset(
-                          'assets/images/icon_scan@2x.png',
+                          'assets/images/icon_qrcode_red@2x.png',
                           width: 28.w,
                           height: 28.w,
                           fit: .cover,
@@ -552,6 +543,7 @@ class _UserInfo extends StatelessWidget {
                 ),
                 child: Text(
                   '绑定手机号',
+                  
                   style: TextStyle(fontSize: 14.sp, color: Colors.white),
                 ),
               ),
@@ -895,10 +887,8 @@ class _ServiceSection extends StatelessWidget {
                       icon: item.icon,
                       label: item.title,
                       onTap: () {
-                        if (item.route.isNotEmpty) {
-                          onTap(item.route, item.title);
-                        }
-                      },
+                          onTap(item.url, item.title);
+                        },
                     ),
                   );
                 }).toList(),
@@ -955,14 +945,36 @@ class _OrderMenuItem {
 
 class _ServiceMenuItem {
   const _ServiceMenuItem({
-    required this.icon,
     required this.title,
-    required this.route,
-    required this.show,
+    required this.url,
   });
 
-  final String icon;
   final String title;
-  final String route;
-  final bool show;
+  final String url;
+
+  /// 根据uni-app url路径匹配本地图标
+  static const Map<String, String> _urlIconMap = {
+    'shuhangshangdao': 'assets/images/shanggong.png',
+    '/pages/sign/sign': 'assets/images/shimingrenzheng.png',
+    '/pages/users/teams/teams': 'assets/images/tuandui3@2x.png',
+    '/pages/users/user_spread_code/index': 'assets/images/tuandui3@2x.png',
+    '/pages/users/user_address_list/index': 'assets/images/ditu3@2x.png',
+    '/pages/user_suggest/index': 'assets/images/yijianfankui-2@2x.png',
+    '/pages/users/user_info/index': 'assets/images/my-card.png',
+  };
+
+  /// 按title兜底匹配图标（用于webview等无法通过url匹配的菜单）
+  static const Map<String, String> _titleIconMap = {
+    '兑换宝': 'assets/images/shanggong.png',
+    '实名认证': 'assets/images/shimingrenzheng.png',
+    '我的好友': 'assets/images/tuandui3@2x.png',
+    '申请入驻': 'assets/images/shangjiaruzhu.png',
+    '邀请好友': 'assets/images/tuandui3@2x.png',
+    '地址管理': 'assets/images/ditu3@2x.png',
+    '意见反馈': 'assets/images/yijianfankui-2@2x.png',
+    '我的信息': 'assets/images/my-card.png',
+  };
+
+  String get icon =>
+      _urlIconMap[url] ?? _titleIconMap[title] ?? 'assets/images/my-card.png';
 }

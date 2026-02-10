@@ -198,29 +198,30 @@ class _RyzPageState extends State<RyzPage> {
             // 导航栏
             SizedBox(
               height: 44,
-              child: Stack(
-                alignment: Alignment.center,
+              child: Row(
                 children: [
-                  // 标题
-                  const Text(
-                    '我的账户',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                   // 返回按钮
-                  Positioned(
-                    left: 0,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Get.back(),
+                  ),
+                  // 标题居中（用Expanded撑开）
+                  const Expanded(
+                    child: Text(
+                      '我的账户',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
                         color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
-                      onPressed: () => Get.back(),
                     ),
                   ),
+                  // 右侧占位，保持标题居中
+                  const SizedBox(width: 48),
                 ],
               ),
             ),

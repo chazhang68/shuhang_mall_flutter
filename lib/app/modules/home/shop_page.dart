@@ -93,7 +93,6 @@ class _ShopPageState extends State<ShopPage> with AutomaticKeepAliveClientMixin 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final statusBarHeight = MediaQuery.of(context).padding.top;
     final bannerList = _banners
         .map(
           (banner) => {
@@ -108,6 +107,16 @@ class _ShopPageState extends State<ShopPage> with AutomaticKeepAliveClientMixin 
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/logos.png',
+          width: 120,
+          height: 48,
+          fit: BoxFit.contain,
+        ),
+        toolbarHeight: 54,
+        centerTitle: false,
+      ),
       body: EasyRefresh(
         header: const ClassicHeader(
           dragText: '下拉刷新',
@@ -128,30 +137,10 @@ class _ShopPageState extends State<ShopPage> with AutomaticKeepAliveClientMixin 
         onLoad: _loadEnd ? null : _loadProductList,
         child: CustomScrollView(
           slivers: [
-            // 顶部Logo
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                padding: EdgeInsets.only(top: statusBarHeight + 8, left: 16, right: 16, bottom: 8),
-                child: Image.asset(
-                  'assets/images/logos.png',
-                  width: 120,
-                  height: 48,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Text(
-                      '商城',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    );
-                  },
-                ),
-              ),
-            ),
-
             // Banner轮播
             SliverToBoxAdapter(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
+                margin: const EdgeInsets.all(12),
                 height: 188,
                 child: bannerList.isNotEmpty
                     ? BannerSwiper(banners: bannerList, height: 188)
@@ -164,8 +153,6 @@ class _ShopPageState extends State<ShopPage> with AutomaticKeepAliveClientMixin 
                       ),
               ),
             ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
             // 商品列表
             SliverPadding(

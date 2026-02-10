@@ -59,6 +59,8 @@
 	<string>保存广告图片到相册</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>保存广告图片到相册</string>
+	<key>NSCameraUsageDescription</key>
+	<string>用于拍照上传图片</string>
 	<!-- 微信SDK配置 -->
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -77,6 +79,7 @@
 	<array>
 		<string>weixin</string>
 		<string>weixinULAPI</string>
+		<string>zhongzhen</string>
 	</array>
 </dict>
 </plist>

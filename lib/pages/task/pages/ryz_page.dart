@@ -209,25 +209,25 @@ class _RyzPageState extends State<RyzPage> with SingleTickerProviderStateMixin {
             // 导航栏
             SizedBox(
               height: 56,
-              child: Stack(
-                alignment: Alignment.center,
+              child: Row(
                 children: [
-                  const Text(
-                    '我的账户',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                    onPressed: () => Get.back(),
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      '我的账户',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  Positioned(
-                    left: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                      onPressed: () => Get.back(),
-                      padding: const EdgeInsets.all(16),
-                    ),
-                  ),
+                  const SizedBox(width: 56),
                 ],
               ),
             ),

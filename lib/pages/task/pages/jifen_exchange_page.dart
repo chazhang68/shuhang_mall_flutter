@@ -19,9 +19,9 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
   final TextEditingController _controller = TextEditingController();
 
   UserModel? _userInfo;
-  double _jfnum = 0; // 兑换数量
-  double _xfqsxfnum = 0; // 手续费数量
-  double _dznum = 0; // 到账数量
+  int _jfnum = 0; // 兑换数量
+  int _xfqsxfnum = 0; // 手续费数量
+  int _dznum = 0; // 到账数量
   bool _loading = false;
 
   @override
@@ -48,18 +48,18 @@ class _JifenExchangePageState extends State<JifenExchangePage> {
       return;
     }
 
-    final value = double.tryParse(text) ?? 0;
+    final value = int.tryParse(text) ?? 0;
     // 从用户信息中获取手续费率（百分比）
     final sxfRate = (_userInfo?.xfqSxf ?? 0) / 100;
-    
+
     debugPrint('输入值: $value');
     debugPrint('手续费率: ${_userInfo?.xfqSxf}%');
     debugPrint('手续费率(小数): $sxfRate');
 
     setState(() {
       _jfnum = value;
-      _xfqsxfnum = double.parse((value * sxfRate).toStringAsFixed(2));
-      _dznum = double.parse((value - _xfqsxfnum).toStringAsFixed(2));
+      _xfqsxfnum = (value * sxfRate).toInt();
+      _dznum = value - _xfqsxfnum;
     });
     
     debugPrint('损耗数量: $_xfqsxfnum');

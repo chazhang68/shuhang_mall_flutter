@@ -55,6 +55,17 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- FileProvider for WebView file upload -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.shuhangshangdao.app.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -68,5 +79,7 @@
         </intent>
         <!-- 微信SDK queries -->
         <package android:name="com.tencent.mm" />
+        <!-- 兑换宝：数航健康APP -->
+        <package android:name="com.shsdjiankang.app" />
     </queries>
 </manifest>

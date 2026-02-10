@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,18 +21,7 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
 
   UserModel? _userInfo;
   double _jfnum = 0; // 兑换数量
-  double xfqSxf = 0;
   bool _loading = false;
-
-  /// 手续费（损耗数量）
-  double get _sunhaoNum {
-    return _jfnum * (xfqSxf / 100);
-  }
-
-  /// 实际到账数量
-  double get _actualNum {
-    return _jfnum - _sunhaoNum;
-  }
 
   @override
   void initState() {
@@ -66,8 +53,6 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
       if (response.isSuccess && response.data != null) {
         setState(() {
           _userInfo = response.data;
-          xfqSxf = _userInfo?.xfqSxf ?? 0;
-          developer.log('消费券手续费率: $xfqSxf');
         });
       }
     } catch (e) {
@@ -104,7 +89,9 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
     Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
-      final response = await _userProvider.swpDui({'number': _jfnum.toString()});
+      final params = {'number': _jfnum.toInt().toString()};
+      debugPrint('消费券兑换积分请求参数: $params');
+      final response = await _userProvider.swpDui(params);
       Get.back();
 
       if (response.isSuccess) {
@@ -129,9 +116,6 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('消费券兑换积分'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(8),
@@ -197,28 +181,6 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
             ),
 
             const SizedBox(height: 8),
-            // 手续费
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                spacing: 4.w,
-                children: [
-                  const Text('手续费', style: TextStyle(fontSize: 12)),
-                  Text('$xfqSxf%', style: const TextStyle(fontSize: 12, color: Color(0xFFFF5A5A))),
-                  Spacer(),
-                  const Text('损耗数量', style: TextStyle(fontSize: 12)),
-                  Text(
-                    '${_sunhaoNum.toStringAsFixed(2)}个',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFFFF5A5A)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
             // 实际到账
             Container(
               padding: const EdgeInsets.all(12),
@@ -231,7 +193,7 @@ class _SwpExchangePageState extends State<SwpExchangePage> {
                 children: [
                   const Text('实际到账数量', style: TextStyle(fontSize: 12)),
                   Text(
-                    '${_actualNum.toStringAsFixed(2)}个',
+                    '${_jfnum > 0 ? _jfnum.toStringAsFixed(0) : 0}个',
                     style: const TextStyle(fontSize: 12, color: Color(0xFFFF5A5A)),
                   ),
                 ],

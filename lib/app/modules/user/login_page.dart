@@ -8,6 +8,7 @@ import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/utils/cache.dart';
 
 /// 登录页面
@@ -90,10 +91,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: appController.isLogin,
+      canPop: true,
       onPopInvokedWithResult: (canPop, result) {
-        if (!canPop) {
-          FlutterToastPro.showWaringMessage('请登录后返回');
+        if (!appController.isLogin) {
+          Get.offAllNamed(AppRoutes.main);
         }
       },
       child: Scaffold(
@@ -317,7 +318,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// 切换登录/注册
+  /// 切换登录方式
   Widget _buildSwitchTabs() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -332,18 +333,8 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: () => setState(() => _currentTab = 0),
             child: Text('账号登录', style: TextStyle(color: Theme.of(context).primaryColor)),
           ),
-        if (_currentTab == 2) const Text('已有账号', style: TextStyle(color: Colors.grey)),
         const Text(' | ', style: TextStyle(color: Colors.grey)),
-        if (_currentTab != 2)
-          TextButton(
-            onPressed: () => setState(() => _currentTab = 2),
-            child: Text('注册', style: TextStyle(color: Theme.of(context).primaryColor)),
-          ),
-        if (_currentTab == 2)
-          TextButton(
-            onPressed: () => setState(() => _currentTab = 0),
-            child: Text('去登录', style: TextStyle(color: Theme.of(context).primaryColor)),
-          ),
+        Text('注册', style: TextStyle(color: Theme.of(context).primaryColor)),
       ],
     );
   }
@@ -615,7 +606,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       debugPrint('获取用户信息失败: $e');
       await appController.logout();
-      FlutterToastPro.showMessage('获取用户信息失败');
+      FlutterToastPro.showMessage('获取用户信息失败: $e');
     }
   }
 }

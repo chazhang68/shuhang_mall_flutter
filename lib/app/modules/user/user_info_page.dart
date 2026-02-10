@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/user_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/data/models/user_model.dart';
+import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/core/constants/app_images.dart';
 
 /// 用户信息编辑页面
@@ -298,6 +299,12 @@ class _UserInfoPageState extends State<UserInfoPage> {
 
     if (response.isSuccess) {
       FlutterToastPro.showMessage(response.msg);
+      // 重新获取用户信息并同步到全局状态
+      final controller = Get.find<AppController>();
+      final userResponse = await _userProvider.getUserInfo();
+      if (userResponse.isSuccess && userResponse.data != null) {
+        await controller.updateUserInfo(userResponse.data!);
+      }
       Get.back();
     } else {
       FlutterToastPro.showMessage(response.msg);

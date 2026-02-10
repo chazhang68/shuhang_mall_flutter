@@ -2,14 +2,13 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:marquee/marquee.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
 import 'package:shuhang_mall_flutter/app/data/models/home_index_model.dart';
 import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
 import 'package:shuhang_mall_flutter/app/theme/theme_colors.dart';
+import 'package:shuhang_mall_flutter/widgets/banner_swiper.dart';
 import 'package:shuhang_mall_flutter/widgets/home_product_card.dart';
 import 'package:shuhang_mall_flutter/widgets/skeleton_widget.dart';
 import 'package:shuhang_mall_flutter/widgets/zj_feed_ad_widget.dart';
@@ -314,43 +313,24 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       );
     }
 
+    // 转换为 BannerSwiper 需要的 Map 格式
+    final bannerList = _banners.map((b) => {
+      'pic': b.imgUrl,
+      'url': b.url,
+    }).toList();
+
     return Container(
       margin: const EdgeInsets.all(12),
       height: 188,
-      child: CarouselSlider(
-        options: CarouselOptions(
-          height: 188,
-          autoPlay: true,
-          enlargeCenterPage: false,
-          viewportFraction: 1.0,
-          autoPlayInterval: const Duration(seconds: 3),
-        ),
-        items: _banners.map((banner) {
-          final imgUrl = banner.imgUrl;
-          final url = banner.url;
-
-          return GestureDetector(
-            onTap: () {
-              if (url.isNotEmpty) {
-                // 解析URL跳转
-                _handleBannerClick(url);
-              }
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: imgUrl,
-                width: double.infinity,
-                memCacheWidth: size.width.toInt(),
-                memCacheHeight: 188,
-                height: 188,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: Colors.grey[200]),
-                errorWidget: (context, url, error) => Container(color: Colors.grey[200]),
-              ),
-            ),
-          );
-        }).toList(),
+      child: BannerSwiper(
+        banners: bannerList,
+        height: 188,
+        onTap: (banner) {
+          final url = banner['url'] ?? '';
+          if (url.isNotEmpty) {
+            _handleBannerClick(url);
+          }
+        },
       ),
     );
   }

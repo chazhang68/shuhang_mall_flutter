@@ -58,16 +58,13 @@ class _BannerSwiperState extends State<BannerSwiper> {
             final banner = widget.banners[index];
             return GestureDetector(
               onTap: () => widget.onTap?.call(banner),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                  child: CachedImage(
-                    imageUrl: banner['pic'] ?? banner['image'] ?? '',
-                    width: double.infinity,
-                    height: widget.height,
-                    fit: BoxFit.cover,
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(widget.borderRadius),
+                child: CachedImage(
+                  imageUrl: banner['pic'] ?? banner['image'] ?? '',
+                  width: double.infinity,
+                  height: widget.height,
+                  fit: BoxFit.cover,
                 ),
               ),
             );

@@ -17,6 +17,7 @@ abstract class AppRoutes {
   // ==================== 引导页 ====================
   static const String guide = '/guide';
   static const String splash = '/splash';
+  static const String splashAd = '/splash-ad';
 
   // ==================== 登录注册 ====================
   static const String login = '/login';

@@ -8,6 +8,7 @@ import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 
 // Splash模块
 import 'package:shuhang_mall_flutter/app/modules/splash/splash_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/splash/splash_ad_page.dart';
 
 // Task模块
 import 'package:shuhang_mall_flutter/pages/task/pages/ryz_page.dart'
@@ -104,6 +105,7 @@ import 'package:shuhang_mall_flutter/app/modules/otc/otc_shop_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/bill_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/integral_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/team_page.dart';
+import 'package:shuhang_mall_flutter/app/modules/user/teams_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/withdraw_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/message_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/vip_page.dart';
@@ -173,6 +175,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.splash,
       page: () => const SplashPage(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: AppRoutes.splashAd,
+      page: () => const SplashAdPage(),
       transition: Transition.fadeIn,
     ),
 
@@ -583,7 +590,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.teams,
-      page: () => const TeamPage(),
+      page: () => const TeamsPage(),
       transition: Transition.rightToLeft,
     ),
     GetPage(

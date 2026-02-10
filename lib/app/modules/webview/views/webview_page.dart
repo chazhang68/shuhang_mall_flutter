@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import '../controllers/webview_controller.dart';
 
 /// WebView 页面
@@ -10,6 +11,18 @@ class WebViewPage extends GetView<WebViewPageController> {
 
   @override
   Widget build(BuildContext context) {
+    // 构建平台特定的 WebViewWidget
+    final WebViewWidget webViewWidget;
+    if (controller.webViewController.platform is AndroidWebViewController) {
+      webViewWidget = WebViewWidget.fromPlatformCreationParams(
+        params: AndroidWebViewWidgetCreationParams(
+          controller: controller.webViewController.platform as AndroidWebViewController,
+        ),
+      );
+    } else {
+      webViewWidget = WebViewWidget(controller: controller.webViewController);
+    }
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
@@ -36,7 +49,7 @@ class WebViewPage extends GetView<WebViewPageController> {
         ),
         body: Stack(
           children: [
-            WebViewWidget(controller: controller.webViewController),
+            webViewWidget,
             Obx(() => controller.isLoading.value
                 ? const Center(
                     child: CircularProgressIndicator(),
