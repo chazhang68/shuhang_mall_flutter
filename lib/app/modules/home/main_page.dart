@@ -1,15 +1,21 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shuhang_mall_flutter/app/controllers/app_controller.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/public_provider.dart';
+import 'package:shuhang_mall_flutter/app/data/providers/api_provider.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/home_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/shop_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/home/task_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/cart/cart_page.dart';
 import 'package:shuhang_mall_flutter/app/modules/user/user_page.dart';
 import 'package:shuhang_mall_flutter/app/routes/app_routes.dart';
+import 'package:shuhang_mall_flutter/app/utils/cache.dart';
+import 'package:shuhang_mall_flutter/widgets/app_update_dialog.dart';
 
 /// 主页面（包含底部导航栏）
 /// 对应原 tabBar 配置
@@ -42,6 +48,8 @@ class _MainPageState extends State<MainPage> {
         });
       }
     }
+    // 对应 uni-app: app-update 组件 created → 首页加载后自动检查版本更新
+    _checkAppUpdate();
   }
 
   @override
@@ -86,6 +94,92 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _onCenterTap() async {
     await _onItemTapped(2);
+  }
+
+  /// 自动检查APP版本更新
+  /// 对应 uni-app: app-update 组件 created → update() → getUpdateInfo()
+  Future<void> _checkAppUpdate() async {
+    // 延迟等首页渲染完成（开屏广告之后）
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+
+      final type = Platform.isIOS ? 2 : 1;
+      final response = await PublicProvider().getUpdateInfo(type);
+
+      if (!response.isSuccess || response.data == null) return;
+      // API 返回数组说明没有更新
+      if (response.data is List) return;
+
+      final data = response.data as Map<String, dynamic>;
+      final newVersion = data['version']?.toString() ?? '';
+      final info = data['info']?.toString() ?? '';
+      final url = data['url']?.toString() ?? '';
+      final isForce = data['is_force'] == 1 || data['is_force'] == true;
+      final platform = data['platform']?.toString() ?? '';
+
+      // 后台未配置当前平台的升级数据
+      if (platform.isEmpty) return;
+      // 对比版本号
+      if (!_compareVersion(currentVersion, newVersion)) return;
+
+      // 非强制更新：每天只提示一次
+      if (!isForce) {
+        final today = DateTime.now().toIso8601String().substring(0, 10);
+        final lastPromptDate = Cache.getString(CacheKey.appUpdateTime);
+        if (lastPromptDate == today) return;
+        await Cache.setString(CacheKey.appUpdateTime, today);
+      }
+
+      if (!mounted) return;
+
+      // 获取 App Logo（跟登录页一样从 API 获取）
+      String logoUrl = '';
+      try {
+        final logoResponse = await ApiProvider.instance.get('wechat/get_logo', noAuth: true);
+        if (logoResponse.isSuccess && logoResponse.data != null) {
+          final logoData = logoResponse.data as Map<String, dynamic>;
+          logoUrl = logoData['logo_url']?.toString() ?? '';
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+
+      // 显示更新弹窗
+      Get.dialog(
+        AppUpdateDialog(
+          version: newVersion,
+          info: info,
+          url: url,
+          isForce: isForce,
+          logoUrl: logoUrl,
+        ),
+        barrierDismissible: !isForce,
+        barrierColor: Colors.black.withAlpha(153),
+      );
+    } catch (e) {
+      debugPrint('自动检查更新失败: $e');
+    }
+  }
+
+  /// 对比版本号
+  bool _compareVersion(String oldVersion, String newVersion) {
+    if (oldVersion.isEmpty || newVersion.isEmpty) return false;
+    final ov = oldVersion.split('.');
+    final nv = newVersion.split('.');
+    for (int i = 0; i < ov.length && i < nv.length; i++) {
+      final no = int.tryParse(ov[i]) ?? 0;
+      final nn = int.tryParse(nv[i]) ?? 0;
+      if (nn > no) return true;
+      if (nn < no) return false;
+    }
+    if (nv.length > ov.length && newVersion.startsWith(oldVersion)) {
+      return true;
+    }
+    return false;
   }
 
   @override

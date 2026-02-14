@@ -166,4 +166,7 @@ class CacheKey {
   // 记住账号
   static const String rememberedAccount = 'REMEMBERED_ACCOUNT'; // 记住的账号
   static const String rememberAccount = 'REMEMBER_ACCOUNT'; // 是否记住账号
+
+  // 版本更新
+  static const String appUpdateTime = 'APP_UPDATE_TIME'; // 上次提示更新日期
 }

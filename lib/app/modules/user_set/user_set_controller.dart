@@ -1,14 +1,20 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../data/providers/user_provider.dart';
+import '../../data/providers/public_provider.dart';
+import '../../data/providers/api_provider.dart';
 import '../../data/models/user_model.dart';
 import '../../routes/app_routes.dart';
 import '../../controllers/app_controller.dart';
+import '../../../widgets/app_update_dialog.dart';
 
 class UserSetController extends GetxController {
   final UserProvider _userProvider = UserProvider();
+  final PublicProvider _publicProvider = PublicProvider();
 
   // 用户信息
   final Rx<UserModel?> _userInfo = Rx<UserModel?>(null);
@@ -54,10 +60,99 @@ class UserSetController extends GetxController {
   }
 
   // 检查版本更新
-  // 对应 uni-app 的 isNew 回调
-  void checkVersionUpdate() {
-    // 显示 Toast "当前为最新版本"
-    EasyLoading.showToast('当前为最新版本');
+  // 对应 uni-app 的 app-update.vue 组件
+  Future<void> checkVersionUpdate() async {
+    try {
+      EasyLoading.show(status: '检查更新中...');
+
+      // 获取当前版本号
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+
+      // 调用API获取最新版本信息 (1=Android, 2=iOS)
+      final type = Platform.isIOS ? 2 : 1;
+      final response = await _publicProvider.getUpdateInfo(type);
+
+      EasyLoading.dismiss();
+
+      if (!response.isSuccess || response.data == null) {
+        EasyLoading.showToast('当前为最新版本');
+        return;
+      }
+
+      // 如果返回的是数组，说明没有更新
+      if (response.data is List) {
+        EasyLoading.showToast('当前为最新版本');
+        return;
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final newVersion = data['version']?.toString() ?? '';
+      final info = data['info']?.toString() ?? '';
+      final url = data['url']?.toString() ?? '';
+      final isForce = data['is_force'] == 1 || data['is_force'] == true;
+      final platform = data['platform']?.toString() ?? '';
+
+      // 没有配置当前平台的升级数据
+      if (platform.isEmpty) {
+        EasyLoading.showToast('当前为最新版本');
+        return;
+      }
+
+      // 对比版本号
+      if (_compareVersion(currentVersion, newVersion)) {
+        // 获取 App Logo
+        String logoUrl = '';
+        try {
+          final logoResponse = await ApiProvider.instance.get('wechat/get_logo', noAuth: true);
+          if (logoResponse.isSuccess && logoResponse.data != null) {
+            final logoData = logoResponse.data as Map<String, dynamic>;
+            logoUrl = logoData['logo_url']?.toString() ?? '';
+          }
+        } catch (_) {}
+
+        // 需要更新，显示更新弹窗
+        Get.dialog(
+          AppUpdateDialog(
+            version: newVersion,
+            info: info,
+            url: url,
+            isForce: isForce,
+            logoUrl: logoUrl,
+          ),
+          barrierDismissible: !isForce,
+          barrierColor: Colors.black.withAlpha(153),
+        );
+      } else {
+        EasyLoading.showToast('当前为最新版本');
+      }
+    } catch (e) {
+      EasyLoading.dismiss();
+      debugPrint('检查更新失败: $e');
+      EasyLoading.showToast('检查更新失败');
+    }
+  }
+
+  /// 对比版本号，判断是否需要更新
+  /// 对应 uni-app 的 compareVersion 方法
+  bool _compareVersion(String oldVersion, String newVersion) {
+    if (oldVersion.isEmpty || newVersion.isEmpty) return false;
+
+    final ov = oldVersion.split('.');
+    final nv = newVersion.split('.');
+
+    for (int i = 0; i < ov.length && i < nv.length; i++) {
+      final no = int.tryParse(ov[i]) ?? 0;
+      final nn = int.tryParse(nv[i]) ?? 0;
+      if (nn > no) return true;
+      if (nn < no) return false;
+    }
+
+    // 新版本号段数更多且前缀相同，说明有更新
+    if (nv.length > ov.length && newVersion.startsWith(oldVersion)) {
+      return true;
+    }
+    return false;
   }
 
   // 跳转到个人信息页面

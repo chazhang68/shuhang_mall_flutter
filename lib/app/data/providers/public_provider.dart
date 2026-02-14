@@ -21,6 +21,13 @@ class PublicProvider {
     return await _api.get('system_version', noAuth: true);
   }
 
+  /// 获取APP更新信息
+  /// 对应原 api/public.js: getUpdateInfo
+  /// [type] 1=Android, 2=iOS
+  Future<ApiResponse> getUpdateInfo(int type) async {
+    return await _api.get('get_new_app/$type', noAuth: true);
+  }
+
   /// 获取城市列表
   Future<ApiResponse> getCityList() async {
     return await _api.get('city_list', noAuth: true);

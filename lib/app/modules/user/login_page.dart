@@ -280,7 +280,7 @@ class _LoginPageState extends State<LoginPage> {
           prefixIcon: Icon(prefixIcon, color: Colors.grey, size: 20.sp),
           prefixIconConstraints: BoxConstraints(maxWidth: 36.w, maxHeight: 36.w),
           suffixIcon: suffixIcon,
-          suffixIconConstraints: BoxConstraints(maxWidth: 36.w, maxHeight: 36.w),
+          suffixIconConstraints: BoxConstraints(maxWidth: 100.w, maxHeight: 36.w),
           filled: false,
           border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200)),
           enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200)),
